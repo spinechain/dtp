@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	tasknet "spinedtp/tasknet"
 	"spinedtp/ui"
 	"time"
 
@@ -19,6 +20,9 @@ func main() {
 	if AppSettings.ShowUI {
 		ui.Create()
 
+		// Set the callback pressed when connect btn is pressed
+		ui.OnConnectToNetwork = BuildConnectionToSpineNetwork
+
 		// Start the windowing thread
 		gtk.Main()
 	} else {
@@ -29,6 +33,7 @@ func main() {
 			time.Sleep(5 * time.Second)
 
 			// command line connect can happen here
+			BuildConnectionToSpineNetwork()
 		}()
 
 		// Read from the terminal and getting commands
@@ -46,6 +51,15 @@ func main() {
 	}
 
 	Shutdown()
+}
+
+func BuildConnectionToSpineNetwork() {
+
+	var n tasknet.NetworkSettings
+	var c tasknet.NetworkCallbacks
+
+	tasknet.Connect(n, c)
+
 }
 
 func Shutdown() {

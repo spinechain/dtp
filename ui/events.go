@@ -10,7 +10,7 @@ import (
 type FnOnSubmitToNetwork func(string)
 
 var OnSubmitToNetworkButton FnOnSubmitToNetwork
-var OnConnectToNetworkButton func()
+var OnConnectToNetwork func()
 
 func onBtnClearDBClick(btn *gtk.ToolButton, item *gtk.ToolButton) {
 
@@ -66,7 +66,7 @@ func onBtnPlayClick() {
 
 	fmt.Println("Connect Pressed.")
 
-	if OnConnectToNetworkButton != nil {
-		OnConnectToNetworkButton()
+	if OnConnectToNetwork != nil {
+		OnConnectToNetwork()
 	}
 }
