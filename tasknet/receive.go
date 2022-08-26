@@ -100,8 +100,6 @@ func ReceiveTaskApproval(packet *SpinePacket) {
 	if networkCallbacks.OnTaskApproved != nil {
 		networkCallbacks.OnTaskApproved("yes")
 	}
-
-	// appendages.SpineNetAppendageObj.OnNetworkTaskApproval()
 }
 
 func ReceiveTaskSubmission(packet *SpinePacket) {
@@ -243,7 +241,9 @@ func ReceiveTask(packet *SpinePacket) {
 
 	// This changes the thread and informs the UI about this new task
 	glib.TimeoutAdd(10, func() bool {
-		networkCallbacks.OnTaskReceived(packet.Body.Items["task.Command"])
+		if networkCallbacks.OnTaskReceived != nil {
+			networkCallbacks.OnTaskReceived(packet.Body.Items["task.Command"])
+		}
 		return false
 	})
 

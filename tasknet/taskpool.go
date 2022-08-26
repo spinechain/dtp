@@ -361,8 +361,11 @@ func ProcessAcceptedTasks() {
 				util.PrintYellow("Executing Task: " + task.Command)
 				tt.Submission = []byte("This would be my submission")
 
-				networkSettings.TaskReadyForProcessing(task.Command)
-				// appendages.SpineNetAppendageObj.OnNetworkTaskApproval(task.Command)
+				if networkSettings.TaskReadyForProcessing != nil {
+					networkSettings.TaskReadyForProcessing(task.Command)
+				} else {
+					fmt.Println("No callback available for task processing")
+				}
 			}
 
 		}

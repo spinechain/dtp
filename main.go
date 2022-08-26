@@ -21,7 +21,7 @@ func main() {
 		ui.Create()
 
 		// Set the callback pressed when connect btn is pressed
-		ui.OnConnectToNetwork = BuildConnectionToSpineNetwork
+		ui.OnConnectToNetwork = BuildConnectionToTaskNetwork
 		ui.OnSubmitToNetworkButton = SubmitTaskToNetwork
 
 		// Start the windowing thread
@@ -34,7 +34,7 @@ func main() {
 			time.Sleep(5 * time.Second)
 
 			// command line connect can happen here
-			BuildConnectionToSpineNetwork()
+			BuildConnectionToTaskNetwork()
 		}()
 
 		// Read from the terminal and getting commands
@@ -59,7 +59,7 @@ func SubmitTaskToNetwork(taskStr string) {
 	tasknet.ExecNetworkCommand(taskStr)
 }
 
-func BuildConnectionToSpineNetwork() {
+func BuildConnectionToTaskNetwork() {
 
 	var n tasknet.NetworkSettings
 	var c tasknet.NetworkCallbacks
