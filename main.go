@@ -58,6 +58,17 @@ func BuildConnectionToSpineNetwork() {
 	var n tasknet.NetworkSettings
 	var c tasknet.NetworkCallbacks
 
+	n.MyPeerID = AppSettings.ClientID
+	n.ServerPort = AppSettings.ServerPort
+	n.OnStatusUpdate = nil // s.OnStatusBarUpdateRequest
+	n.BidTimeoutSeconds = 5
+	n.AcceptedBidsPerTask = 3
+	n.TaskReadyForProcessing = nil // s.TaskReadyForProcessing
+	n.DataFolder = AppSettings.DataFolder
+
+	c.OnTaskReceived = nil // s.OnNewTaskReceived
+	c.OnTaskApproved = nil //s.OnNetworkTaskApproval
+
 	tasknet.Connect(n, c)
 
 }

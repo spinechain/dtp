@@ -114,7 +114,11 @@ func StatusBarUpdate(str string, section int) {
 	fmt.Println(str)
 
 	glib.TimeoutAdd(10, func() bool {
-		networkSettings.OnStatusUpdate(str, section)
+
+		if networkSettings.OnStatusUpdate != nil {
+			networkSettings.OnStatusUpdate(str, section)
+		}
+
 		return false
 	})
 }
