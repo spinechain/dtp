@@ -22,6 +22,7 @@ func main() {
 
 		// Set the callback pressed when connect btn is pressed
 		ui.OnConnectToNetwork = BuildConnectionToSpineNetwork
+		ui.OnSubmitToNetworkButton = SubmitTaskToNetwork
 
 		// Start the windowing thread
 		gtk.Main()
@@ -44,13 +45,18 @@ func main() {
 			if text == "q\n" {
 				break
 			} else {
-				fmt.Println("I don't understand")
+				SubmitTaskToNetwork(text)
+				// fmt.Println("I don't understand")
 			}
 		}
 
 	}
 
 	Shutdown()
+}
+
+func SubmitTaskToNetwork(taskStr string) {
+	tasknet.ExecNetworkCommand(taskStr)
 }
 
 func BuildConnectionToSpineNetwork() {

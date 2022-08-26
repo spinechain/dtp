@@ -2,7 +2,6 @@ package ui
 
 import (
 	"fmt"
-	"net/url"
 
 	"github.com/gotk3/gotk3/gtk"
 )
@@ -50,13 +49,8 @@ func onBtnSubmitToNetworkClick() {
 	if OnSubmitToNetworkButton != nil {
 		s, _ := commandPanel.commandTextField.GetText()
 
-		_, err := url.ParseRequestURI(s)
-		if err != nil {
-			commandPanel.AddToHistory("Invalid URL: " + s)
-		} else {
-			commandPanel.AddToHistory("Submitted: " + s)
-			OnSubmitToNetworkButton(s)
-		}
+		commandPanel.AddToHistory("Submitted: " + s)
+		OnSubmitToNetworkButton(s)
 
 	}
 

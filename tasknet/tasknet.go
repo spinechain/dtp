@@ -65,7 +65,6 @@ func Disconnect() {
 	ShutDownTaskPool()
 }
 
-// Activating a neuron will produce the signals needed
 func ExecNetworkCommand(cmd string) {
 	SendTaskToNetwork(cmd)
 
