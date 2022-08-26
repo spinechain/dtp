@@ -69,7 +69,7 @@ func BuildConnectionToTaskNetwork() {
 	n.OnStatusUpdate = nil // s.OnStatusBarUpdateRequest
 	n.BidTimeoutSeconds = 5
 	n.AcceptedBidsPerTask = 3
-	n.TaskReadyForProcessing = nil // s.TaskReadyForProcessing
+	n.TaskReadyForProcessing = TaskReadyForExecution
 	n.DataFolder = AppSettings.DataFolder
 
 	c.OnTaskReceived = nil // s.OnNewTaskReceived
@@ -77,6 +77,18 @@ func BuildConnectionToTaskNetwork() {
 
 	tasknet.Connect(n, c)
 
+}
+
+// This function is called when we have been selected to actually execute this task
+// Depending on the task, it would be routed to different places. We can execute it
+// it out of band and submit a result once done.
+func TaskReadyForExecution(cmd string) {
+	fmt.Println("Task ready for execution: " + cmd)
+
+}
+
+func TaskHasCompletedExecution(cmd string) {
+	// We call EngineHasCompletedTask
 }
 
 func Shutdown() {
