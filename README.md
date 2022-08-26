@@ -1,5 +1,5 @@
 # dtp
-SpineChain Distribution Task Platform
+SpineChain Distributed Task Platform
 
 
 # What is the it?
