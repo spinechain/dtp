@@ -11,7 +11,6 @@ import (
 // This will maintain the db api with all the tasks in the ENTIRE network.
 // Each node is a client and a server
 
-// The header of a spine packet
 type Taskpool struct {
 	Type  string // done or outstanding
 	db    *sql.DB

@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	tasknet "spinedtp/tasknet"
 	taskpool "spinedtp/taskpool"
+	"spinedtp/taskworkers"
 	"spinedtp/ui"
 	"time"
 
@@ -15,6 +16,7 @@ import (
 
 var tasksAvailable taskpool.Taskpool
 var tasksCompleted taskpool.Taskpool
+var taskWorkers taskworkers.TaskWorkers
 
 func main() {
 	fmt.Println("Starting SpineChain DTP")
@@ -27,6 +29,8 @@ func main() {
 
 	tasksAvailable.AddTask("1", "test")
 	tasksAvailable.GetAllTasks()
+
+	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), true)
 
 	if AppSettings.ShowUI {
 		ui.Create()
@@ -109,6 +113,8 @@ func Shutdown() {
 
 	tasksAvailable.Stop()
 	tasksCompleted.Stop()
+
+	taskWorkers.Stop()
 
 	fmt.Println("Shut down complete.")
 
