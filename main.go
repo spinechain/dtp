@@ -4,18 +4,29 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	tasknet "spinedtp/tasknet"
+	taskpool "spinedtp/taskpool"
 	"spinedtp/ui"
 	"time"
 
 	"github.com/gotk3/gotk3/gtk"
 )
 
+var tasksAvailable taskpool.Taskpool
+var tasksCompleted taskpool.Taskpool
+
 func main() {
 	fmt.Println("Starting SpineChain DTP")
 
 	LoadSettings()
 	SaveSettings()
+
+	tasksAvailable.Start(filepath.Join(AppSettings.DataFolder, "tasks_available.db"), true)
+	// tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), true)
+
+	tasksAvailable.AddTask("1", "test")
+	tasksAvailable.GetAllTasks()
 
 	if AppSettings.ShowUI {
 		ui.Create()
@@ -95,6 +106,9 @@ func Shutdown() {
 
 	fmt.Println("Shutting down SpineChain...")
 	SaveSettings()
+
+	tasksAvailable.Stop()
+	tasksCompleted.Stop()
 
 	fmt.Println("Shut down complete.")
 
