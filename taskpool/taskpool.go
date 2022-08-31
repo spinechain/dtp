@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"spinedtp/tasknet"
 
+	"github.com/lithammer/shortuuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -12,9 +13,10 @@ import (
 // Each node is a client and a server
 
 type Taskpool struct {
-	Type  string // done or outstanding
-	db    *sql.DB
-	Tasks []*tasknet.Task
+	Type        string // done or outstanding
+	db          *sql.DB
+	Tasks       []*tasknet.Task
+	OnTaskAdded func(string, string) // ID, Description
 }
 
 func (t *Taskpool) Start(filePath string, create bool) error {
@@ -36,9 +38,24 @@ func (t *Taskpool) Stop() {
 	}
 }
 
-func (t *Taskpool) CreateTable() error {
+func (t *Taskpool) DropAllTables() error {
 	sqlStmt := `
-	create table tasks (tid integer not null primary key, description text);
+	drop table tasks;
+	`
+	_, err := t.db.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *Taskpool) CreateTable() error {
+
+	t.DropAllTables()
+
+	sqlStmt := `
+	create table tasks (tid text not null primary key, description text);
 	delete from tasks;
 	`
 	_, err := t.db.Exec(sqlStmt)
@@ -47,6 +64,11 @@ func (t *Taskpool) CreateTable() error {
 	}
 
 	return nil
+}
+
+func (t *Taskpool) AddMyTask(taskString string) error {
+	tid := shortuuid.New()
+	return t.AddTask(tid, taskString)
 }
 
 func (t *Taskpool) AddTask(taskID string, taskString string) error {
@@ -68,6 +90,10 @@ func (t *Taskpool) AddTask(taskID string, taskString string) error {
 	}
 
 	fmt.Println(id)
+
+	if t.OnTaskAdded != nil {
+		t.OnTaskAdded(taskID, taskString)
+	}
 
 	return nil
 }

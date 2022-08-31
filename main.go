@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	tasknet "spinedtp/tasknet"
 	taskpool "spinedtp/taskpool"
 	"spinedtp/taskworkers"
 	"spinedtp/ui"
@@ -25,7 +24,10 @@ func main() {
 	SaveSettings()
 
 	tasksAvailable.Start(filepath.Join(AppSettings.DataFolder, "tasks_available.db"), true)
-	// tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), true)
+	tasksAvailable.OnTaskAdded = Event_TaskAdded
+
+	tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), true)
+	tasksCompleted.OnTaskAdded = Event_TaskAdded
 
 	tasksAvailable.AddTask("1", "test")
 	tasksAvailable.GetAllTasks()
@@ -33,11 +35,12 @@ func main() {
 	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), true)
 
 	if AppSettings.ShowUI {
-		ui.Create()
 
 		// Set the callback pressed when connect btn is pressed
-		ui.OnConnectToNetwork = BuildConnectionToTaskNetwork
-		ui.OnSubmitToNetworkButton = SubmitTaskToNetwork
+		ui.OnConnectToNetwork = Event_BuildConnectionToTaskNetwork
+		ui.OnSubmitToNetworkButton = Event_SubmitTaskToNetwork
+
+		ui.Create()
 
 		// Start the windowing thread
 		gtk.Main()
@@ -49,7 +52,7 @@ func main() {
 			time.Sleep(5 * time.Second)
 
 			// command line connect can happen here
-			BuildConnectionToTaskNetwork()
+			Event_BuildConnectionToTaskNetwork()
 		}()
 
 		// Read from the terminal and getting commands
@@ -60,7 +63,7 @@ func main() {
 			if text == "q\n" {
 				break
 			} else {
-				SubmitTaskToNetwork(text)
+				Event_SubmitTaskToNetwork(text)
 				// fmt.Println("I don't understand")
 			}
 		}
@@ -68,42 +71,6 @@ func main() {
 	}
 
 	Shutdown()
-}
-
-func SubmitTaskToNetwork(taskStr string) {
-	tasknet.ExecNetworkCommand(taskStr)
-}
-
-func BuildConnectionToTaskNetwork() {
-
-	var n tasknet.NetworkSettings
-	var c tasknet.NetworkCallbacks
-
-	n.MyPeerID = AppSettings.ClientID
-	n.ServerPort = AppSettings.ServerPort
-	n.OnStatusUpdate = nil // s.OnStatusBarUpdateRequest
-	n.BidTimeoutSeconds = 5
-	n.AcceptedBidsPerTask = 3
-	n.TaskReadyForProcessing = TaskReadyForExecution
-	n.DataFolder = AppSettings.DataFolder
-
-	c.OnTaskReceived = nil // s.OnNewTaskReceived
-	c.OnTaskApproved = nil //s.OnNetworkTaskApproval
-
-	tasknet.Connect(n, c)
-
-}
-
-// This function is called when we have been selected to actually execute this task
-// Depending on the task, it would be routed to different places. We can execute it
-// it out of band and submit a result once done.
-func TaskReadyForExecution(cmd string) {
-	fmt.Println("Task ready for execution: " + cmd)
-
-}
-
-func TaskHasCompletedExecution(cmd string) {
-	// We call EngineHasCompletedTask
 }
 
 func Shutdown() {

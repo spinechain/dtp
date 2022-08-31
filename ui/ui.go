@@ -15,10 +15,12 @@ var statusBar1 *Status
 var statusBar2 *Status
 
 // The panel
-var commandPanel *PanelCommand
-var historyPanel *PanelNetwork
-var networkPanel *PanelNetwork
+var CommandPanel *PanelCommand
+var HistoryPanel *PanelNetwork
+var NetworkPanel *PanelNetwork
+var TasksPanel *PanelTasks
 
+// Create all the windows
 func Create() {
 
 	// Create main window
@@ -42,22 +44,34 @@ func Create() {
 	mainWindow.AddStatus(statusBar2, 1)
 
 	// Create the panels on the right that are selected when a treeview item is clicked
-	commandPanel = new(PanelCommand)
-	historyPanel = new(PanelNetwork)
-	networkPanel = new(PanelNetwork)
+	CommandPanel = new(PanelCommand)
+	HistoryPanel = new(PanelNetwork)
+	NetworkPanel = new(PanelNetwork)
+	TasksPanel = new(PanelTasks)
 
 	// Add the panels to the window
-	mainWindow.AddPanel(commandPanel, "Commands")
-	mainWindow.AddPanel(historyPanel, "History")
-	mainWindow.AddPanel(networkPanel, "Network")
+	mainWindow.AddPanel(CommandPanel, "Commands")
+	mainWindow.AddPanel(HistoryPanel, "History")
+	mainWindow.AddPanel(NetworkPanel, "Network")
+	mainWindow.AddPanel(TasksPanel, "Tasks")
 
 	mainWindow.SetIcon()
 
 	mainWindow.Show()
 
+	// Add all the treeview items to switch panels
 	AddTreeviewItems()
 
+	// Select the default
 	SwitchPanel("commands")
+}
+
+// Configures all the things we want in the treeview on the left
+func AddTreeviewItems() {
+	treeViewSidebar.addRow(treeViewSidebar.treeStore, "appendage", "Commands", "commands/commands")
+	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "History", "history/history")
+	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "Network", "network/network")
+	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "Tasks", "tasks/tasks")
 }
 
 // Can be called to update the status bar at the bottom of the window
@@ -82,28 +96,29 @@ func UpdateStatusBar(s string, section int) {
 
 }
 
+// Switches to the panel we want to show. Hides the others.
 func SwitchPanel(str string) {
 
 	if str == "commands" {
-		networkPanel.Hide()
-		historyPanel.Hide()
-		commandPanel.Show()
+		NetworkPanel.Hide()
+		HistoryPanel.Hide()
+		CommandPanel.Show()
+		TasksPanel.Hide()
 	} else if str == "history" {
-		networkPanel.Hide()
-		historyPanel.Show()
-		commandPanel.Hide()
+		NetworkPanel.Hide()
+		HistoryPanel.Show()
+		CommandPanel.Hide()
+		TasksPanel.Hide()
 	} else if str == "network" {
-		networkPanel.Show()
-		historyPanel.Hide()
-		commandPanel.Hide()
+		NetworkPanel.Show()
+		HistoryPanel.Hide()
+		CommandPanel.Hide()
+		TasksPanel.Hide()
+	} else if str == "tasks" {
+		NetworkPanel.Hide()
+		HistoryPanel.Hide()
+		CommandPanel.Hide()
+		TasksPanel.Show()
 	}
-
-}
-
-func AddTreeviewItems() {
-
-	treeViewSidebar.addRow(treeViewSidebar.treeStore, "appendage", "Commands", "commands/commands")
-	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "History", "history/history")
-	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "Network", "network/network")
 
 }

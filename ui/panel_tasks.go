@@ -7,7 +7,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-type PanelNetwork struct {
+type PanelTasks struct {
 	cmdLabel *gtk.Label
 	list     *gtk.TreeView
 	frame    *gtk.Frame
@@ -16,18 +16,18 @@ type PanelNetwork struct {
 
 // IDs to access the tree view columns by
 const (
-	COLUMN_NETW_FIRST = iota
-	COLUMN_NETW_SECOND
-	COLUMN_NETW_THIRD
-	COLUMN_NETW_FOURTH
-	COLUMN_NETW_FIFTH
-	COLUMN_NETW_SIXTH
-	COLUMN_NETW_SEVENTH
-	COLUMN_NETW_EIGTH
+	COLUMN_TASK_FIRST = iota
+	COLUMN_TASK_SECOND
+	COLUMN_TASK_THIRD
+	COLUMN_TASK_FOURTH
+	COLUMN_TASK_FIFTH
+	COLUMN_TASK_SIXTH
+	COLUMN_TASK_SEVENTH
+	COLUMN_TASK_EIGTH
 )
 
 // Create a new panel that lists out all tasks
-func (tasks *PanelNetwork) Create(title string) (*gtk.Box, error) {
+func (tasks *PanelTasks) Create(title string) (*gtk.Box, error) {
 
 	box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	if err != nil {
@@ -45,14 +45,14 @@ func (tasks *PanelNetwork) Create(title string) (*gtk.Box, error) {
 		log.Fatal(err)
 	}
 
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Client", COLUMN_NETW_FIRST))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_NETW_SECOND))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Capability", COLUMN_NETW_THIRD))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_NETW_FOURTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_NETW_FIFTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Alive?", COLUMN_NETW_SIXTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Synced", COLUMN_NETW_SEVENTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Height", COLUMN_NETW_EIGTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Task", COLUMN_TASK_FIRST))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_TASK_SECOND))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Owner", COLUMN_TASK_THIRD))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_TASK_FOURTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_TASK_FIFTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Age", COLUMN_TASK_SIXTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Synced", COLUMN_TASK_SEVENTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Height", COLUMN_TASK_EIGTH))
 
 	tasks.frame.Add(tasks.list)
 	tasks.frame.SetMarginStart(20)
@@ -69,7 +69,7 @@ func (tasks *PanelNetwork) Create(title string) (*gtk.Box, error) {
 
 // Add a column to the tree view (during the initialization of the tree view)
 // We need to distinct the type of data shown in either column.
-func (tasks *PanelNetwork) CreateTasksTextColumn(title string, id int) *gtk.TreeViewColumn {
+func (tasks *PanelTasks) CreateTasksTextColumn(title string, id int) *gtk.TreeViewColumn {
 
 	// In this column we want to show text, hence create a text renderer
 	cellRenderer, err := gtk.CellRendererTextNew()
@@ -89,7 +89,7 @@ func (tasks *PanelNetwork) CreateTasksTextColumn(title string, id int) *gtk.Tree
 	return column
 }
 
-func (tasks *PanelNetwork) UpdateList(list []string) {
+func (tasks *PanelTasks) UpdateList(list []string) {
 
 	if tasks.store != nil {
 		tasks.store.Clear()
@@ -100,7 +100,7 @@ func (tasks *PanelNetwork) UpdateList(list []string) {
 	}
 }
 
-func (tasks *PanelNetwork) initList(list *gtk.TreeView) *gtk.ListStore {
+func (tasks *PanelTasks) initList(list *gtk.TreeView) *gtk.ListStore {
 	/*
 		cellRenderer, err := gtk.CellRendererTextNew()
 		if err != nil {
@@ -124,17 +124,17 @@ func (tasks *PanelNetwork) initList(list *gtk.TreeView) *gtk.ListStore {
 	return store
 }
 
-func (tasks *PanelNetwork) Destroy() {
+func (tasks *PanelTasks) Destroy() {
 
 }
 
-func (tasks *PanelNetwork) Show() {
+func (tasks *PanelTasks) Show() {
 	tasks.cmdLabel.ShowAll()
 	tasks.list.ShowAll()
 	tasks.frame.ShowAll()
 }
 
-func (tasks *PanelNetwork) Hide() {
+func (tasks *PanelTasks) Hide() {
 	tasks.cmdLabel.Hide()
 	tasks.list.Hide()
 	tasks.frame.Hide()

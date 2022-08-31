@@ -47,9 +47,9 @@ func OnTreeviewItemSelected(itemType string, center string, action string) {
 
 func onBtnSubmitToNetworkClick() {
 	if OnSubmitToNetworkButton != nil {
-		s, _ := commandPanel.commandTextField.GetText()
+		s, _ := CommandPanel.commandTextField.GetText()
 
-		commandPanel.AddToHistory("Submitted: " + s)
+		CommandPanel.AddToHistory("Submitted: " + s)
 		OnSubmitToNetworkButton(s)
 
 	}
