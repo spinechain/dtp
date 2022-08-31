@@ -55,7 +55,15 @@ func Event_TaskAdded(tid string, taskText string) {
 		//if networkSettings.OnStatusUpdate != nil {
 		//	networkSettings.OnStatusUpdate(str, section)
 		//}
-		ui.TasksPanel.UpdateList([]string{"hi world"})
+
+		tasks, _ := tasksAvailable.GetAllTasks()
+
+		var items []string
+		for i := 0; i < len(tasks); i++ {
+			items = append(items, tasks[0].Command)
+		}
+
+		ui.TasksPanel.UpdateList(items)
 		return false
 	})
 

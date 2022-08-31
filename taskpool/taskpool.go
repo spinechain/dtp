@@ -142,7 +142,7 @@ func (t *Taskpool) GetAllTasks() ([]*tasknet.Task, error) {
 		return t.Tasks, err
 	}
 
-	var tid int
+	var tid string
 	var description string
 
 	for rows.Next() {
@@ -150,6 +150,10 @@ func (t *Taskpool) GetAllTasks() ([]*tasknet.Task, error) {
 		if err == nil {
 			fmt.Println(tid)
 			fmt.Println(description)
+			var task tasknet.Task
+			task.Command = description
+			task.ID = tid
+			t.Tasks = append(t.Tasks, &task)
 		}
 	}
 
