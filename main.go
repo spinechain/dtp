@@ -73,13 +73,16 @@ func main() {
 func Start() {
 	SaveSettings()
 
-	tasksAvailable.Start(filepath.Join(AppSettings.DataFolder, "tasks_available.db"), true)
+	tasksAvailable.Start(filepath.Join(AppSettings.DataFolder, "tasks_available.db"), false)
 	tasksAvailable.OnTaskAdded = Event_TaskAdded
 
-	tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), true)
+	tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), false)
 	tasksCompleted.OnTaskAdded = Event_TaskAdded
 
-	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), true)
+	// load the existing items to listview
+	Event_TaskAdded("-1", "")
+
+	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), false)
 	taskWorkers.OnTaskWorkersAdded = Event_TaskWorkerAdded
 	taskWorkers.AddTaskWorker(GetMeAsTaskWorker())
 
