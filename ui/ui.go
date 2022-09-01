@@ -52,7 +52,7 @@ func Create() {
 	// Add the panels to the window
 	mainWindow.AddPanel(CommandPanel, "Commands")
 	mainWindow.AddPanel(HistoryPanel, "History")
-	mainWindow.AddPanel(NetworkPanel, "Network")
+	mainWindow.AddPanel(NetworkPanel, "Workers")
 	mainWindow.AddPanel(TasksPanel, "Tasks")
 
 	mainWindow.SetIcon()
@@ -70,7 +70,7 @@ func Create() {
 func AddTreeviewItems() {
 	treeViewSidebar.addRow(treeViewSidebar.treeStore, "appendage", "Commands", "commands/commands")
 	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "History", "history/history")
-	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "Network", "network/network")
+	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "Workers", "network/network")
 	treeViewSidebar.addRow(treeViewSidebar.treeStore, "list", "Tasks", "tasks/tasks")
 }
 

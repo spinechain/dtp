@@ -145,11 +145,11 @@ func (t *Taskpool) GetAllTasks() ([]*tasknet.Task, error) {
 	var tid string
 	var description string
 
+	t.Tasks = nil
+
 	for rows.Next() {
 		err = rows.Scan(&tid, &description)
 		if err == nil {
-			fmt.Println(tid)
-			fmt.Println(description)
 			var task tasknet.Task
 			task.Command = description
 			task.ID = tid

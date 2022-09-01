@@ -79,10 +79,8 @@ func Start() {
 	tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), true)
 	tasksCompleted.OnTaskAdded = Event_TaskAdded
 
-	tasksAvailable.AddTask("1", "test")
-	tasksAvailable.GetAllTasks()
-
 	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), true)
+	taskWorkers.OnTaskWorkersAdded = Event_TaskWorkerAdded
 	taskWorkers.AddTaskWorker(GetMeAsTaskWorker())
 
 }

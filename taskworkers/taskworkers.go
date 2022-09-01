@@ -127,3 +127,27 @@ func (t *TaskWorkers) AddTaskWorker(tw *TaskWorker) error {
 
 	return nil
 }
+
+func (t *TaskWorkers) GetAllTaskWorkers() ([]*TaskWorker, error) {
+	// query
+	rows, err := t.db.Query("SELECT * FROM taskworkers")
+	if err != nil {
+		return t.TaskWorkers, err
+	}
+
+	for rows.Next() {
+
+		var task TaskWorker
+
+		err = rows.Scan(&task.ID, &task.Address, &task.Port, &task.TasksDone, &task.Reputation, &task.TasksInQueue,
+			&task.AvgCompletionTime, &task.MinimumFee, &task.Deadness, &task.Capabilities,
+			&task.LastActive, &task.TasksDoneLast24Hours, &task.BestConnections)
+		if err == nil {
+			t.TaskWorkers = append(t.TaskWorkers, &task)
+		}
+	}
+
+	rows.Close()
+
+	return t.TaskWorkers, nil
+}

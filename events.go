@@ -52,19 +52,32 @@ func Event_TaskAdded(tid string, taskText string) {
 	// we switch thread to ui context
 	glib.TimeoutAdd(10, func() bool {
 
-		//if networkSettings.OnStatusUpdate != nil {
-		//	networkSettings.OnStatusUpdate(str, section)
-		//}
-
 		tasks, _ := tasksAvailable.GetAllTasks()
 
 		var items []string
 		for i := 0; i < len(tasks); i++ {
-			items = append(items, tasks[0].Command)
+			items = append(items, tasks[i].Command)
 		}
 
 		ui.TasksPanel.UpdateList(items)
 		return false
 	})
 
+}
+
+func Event_TaskWorkerAdded(tid string) {
+
+	// we switch thread to ui context
+	glib.TimeoutAdd(10, func() bool {
+
+		tasks, _ := taskWorkers.GetAllTaskWorkers()
+
+		var items []string
+		for i := 0; i < len(tasks); i++ {
+			items = append(items, tasks[0].Address)
+		}
+
+		ui.NetworkPanel.UpdateList(items)
+		return false
+	})
 }
