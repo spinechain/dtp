@@ -2,6 +2,7 @@ package taskworkers
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -9,8 +10,9 @@ import (
 // This stores all known workers (globally) as well as how to reach them
 
 type TaskWorkers struct {
-	db          *sql.DB
-	TaskWorkers []*TaskWorker
+	db                 *sql.DB
+	TaskWorkers        []*TaskWorker
+	OnTaskWorkersAdded func(string) // ID
 }
 
 type TaskWorker struct {
@@ -29,6 +31,27 @@ type TaskWorker struct {
 	BestConnections      string // IDs of the nodes that can easily reach it
 }
 
+func TaskWorkerSqlColumnString() string {
+	s := "wid string not null primary key, " +
+		"address text, port int, taskdone int, reputation real, " +
+		"tasksinqueue int, avg_completion_time real, min_fee real, " +
+		"deadness int, capabilities string, last_active int, " +
+		"last_24_hrs int, best_connections string"
+
+	return s
+}
+
+func TaskWorkerSqlColumnStringValues() string {
+
+	s := "wid, " +
+		"address, port, taskdone, reputation, " +
+		"tasksinqueue, avg_completion_time, min_fee, " +
+		"deadness, capabilities, last_active, " +
+		"last_24_hrs, best_connections"
+
+	return s
+}
+
 func (t *TaskWorkers) Start(filePath string, create bool) error {
 	var err error
 	t.db, err = sql.Open("sqlite3", filePath)
@@ -42,11 +65,23 @@ func (t *TaskWorkers) Start(filePath string, create bool) error {
 	return err
 }
 
-func (t *TaskWorkers) CreateTable() error {
+func (t *TaskWorkers) DropAllTables() error {
 	sqlStmt := `
-	create table taskworkers (tid integer not null primary key, description text);
-	delete from taskworkers;
+	drop table taskworkers;
 	`
+	_, err := t.db.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (t *TaskWorkers) CreateTable() error {
+
+	t.DropAllTables()
+
+	sqlStmt := fmt.Sprintf("create table taskworkers (%s);", TaskWorkerSqlColumnString())
 	_, err := t.db.Exec(sqlStmt)
 	if err != nil {
 		return err
@@ -61,6 +96,34 @@ func (t *TaskWorkers) Stop() {
 	}
 }
 
-func (t *TaskWorkers) AddTaskWorker() {
+func (t *TaskWorkers) AddTaskWorker(tw *TaskWorker) error {
 
+	s := fmt.Sprintf("INSERT INTO taskworkers(%s) values(?,?,?,?,?,?,?,?,?,?,?,?,?)", TaskWorkerSqlColumnStringValues())
+
+	// insert
+	stmt, err := t.db.Prepare(s)
+	if err != nil {
+		return err
+	}
+
+	res, err := stmt.Exec(tw.ID, tw.Address, tw.Port, tw.TasksDone, tw.Reputation,
+		tw.TasksInQueue, tw.AvgCompletionTime, tw.MinimumFee,
+		tw.Deadness, tw.Capabilities, tw.LastActive, tw.TasksDoneLast24Hours,
+		tw.BestConnections)
+	if err != nil {
+		return err
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println(id)
+
+	if t.OnTaskWorkersAdded != nil {
+		t.OnTaskWorkersAdded(tw.ID)
+	}
+
+	return nil
 }

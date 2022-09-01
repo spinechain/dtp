@@ -10,6 +10,7 @@ import (
 	"spinedtp/ui"
 	"time"
 
+	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 )
 
@@ -21,18 +22,6 @@ func main() {
 	fmt.Println("Starting SpineChain DTP")
 
 	LoadSettings()
-	SaveSettings()
-
-	tasksAvailable.Start(filepath.Join(AppSettings.DataFolder, "tasks_available.db"), true)
-	tasksAvailable.OnTaskAdded = Event_TaskAdded
-
-	tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), true)
-	tasksCompleted.OnTaskAdded = Event_TaskAdded
-
-	tasksAvailable.AddTask("1", "test")
-	tasksAvailable.GetAllTasks()
-
-	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), true)
 
 	if AppSettings.ShowUI {
 
@@ -42,11 +31,19 @@ func main() {
 
 		ui.Create()
 
+		glib.TimeoutAdd(250, func() bool {
+
+			go Start()
+			return false
+		})
+
 		// Start the windowing thread
 		gtk.Main()
 	} else {
 		fmt.Println("Spine running on the command line")
 		fmt.Println("How many I help?")
+
+		go Start()
 
 		go func() {
 			time.Sleep(5 * time.Second)
@@ -73,14 +70,42 @@ func main() {
 	Shutdown()
 }
 
+func Start() {
+	SaveSettings()
+
+	tasksAvailable.Start(filepath.Join(AppSettings.DataFolder, "tasks_available.db"), true)
+	tasksAvailable.OnTaskAdded = Event_TaskAdded
+
+	tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), true)
+	tasksCompleted.OnTaskAdded = Event_TaskAdded
+
+	tasksAvailable.AddTask("1", "test")
+	tasksAvailable.GetAllTasks()
+
+	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), true)
+	taskWorkers.AddTaskWorker(GetMeAsTaskWorker())
+
+}
+
+// Return the info needed to make me a taskworker
+func GetMeAsTaskWorker() *taskworkers.TaskWorker {
+	var mtw taskworkers.TaskWorker
+	mtw.Address = "127.0.0.1"
+	mtw.Port = int(AppSettings.ServerPort)
+	mtw.ID = AppSettings.ClientID
+	return &mtw
+}
+
 func Shutdown() {
 
 	fmt.Println("Shutting down SpineChain...")
 	SaveSettings()
 
+	// Close list of tasks
 	tasksAvailable.Stop()
 	tasksCompleted.Stop()
 
+	// Close list of workers that execute tasks
 	taskWorkers.Stop()
 
 	fmt.Println("Shut down complete.")
