@@ -234,7 +234,7 @@ func ReceiveTask(packet *SpinePacket) {
 	task.Status = Received
 	task.TaskOwnerID = packet.Body.Items["task.TaskOwnerID"]
 	task.FullyPropagated = false
-	task.Index = taskPool.highestIndex + 1
+	task.Index = TaskPool.highestIndex + 1
 	task.ArrivalRoute = packet.PastRoute.Nodes
 
 	TaskPool.AddToNetworkTaskPool(&task)

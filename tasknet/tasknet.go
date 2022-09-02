@@ -45,6 +45,10 @@ func Connect(n NetworkSettings, c NetworkCallbacks) {
 	networkSettings = n
 	networkCallbacks = c
 
+	// Create new channel to wait for tasks
+	taskForProcessingAvailable = make(chan int, 10)
+	taskForExecutionAvailable = make(chan int, 10)
+
 	// listen for anyone connecting to us
 	go listenForPeers()
 
@@ -78,7 +82,7 @@ func RoutePacketOn() {
 
 func connectToPeers() {
 
-	// time.Sleep(5 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	StatusBarUpdate("📺 Connecting to peers...", 1)
 
@@ -140,6 +144,7 @@ func listenForPeers() {
 
 	StatusBarUpdate("📡 Listening for peers on "+fmt.Sprint(networkSettings.ServerPort), 0)
 
+	networkSettings.ServerHost = "" // TODO
 	l, err := net.Listen("tcp4", networkSettings.ServerHost+":"+fmt.Sprint(networkSettings.ServerPort))
 	if err != nil {
 		fmt.Println(err)

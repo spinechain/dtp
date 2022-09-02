@@ -15,19 +15,17 @@ var taskForExecutionAvailable chan int
 var shutDownTaskThread bool = false
 
 var TaskPool *Taskpool
+var ProcessingThreadRunning bool = false
 
 // This thread waits for new tasks to come into the network
 func ProcessTasks() {
-
-	// Create new channel to wait for tasks
-	taskForProcessingAvailable = make(chan int)
-	taskForExecutionAvailable = make(chan int)
 
 	// Start the thread that will do the actual work (execution of each task)
 	go ProcessAcceptedTasks()
 
 	for {
 
+		ProcessingThreadRunning = true
 		<-taskForProcessingAvailable
 		ProcessAvailableTasks()
 
@@ -42,8 +40,12 @@ func ProcessTasks() {
 // This function is called to make the task processor check for new tasks
 func CheckForNewTasks() {
 	// Tell the thread to check for new tasks
-	taskForProcessingAvailable <- 1
-	taskForExecutionAvailable <- 1
+
+	if ProcessingThreadRunning {
+		taskForProcessingAvailable <- 1
+		taskForExecutionAvailable <- 1
+	}
+
 }
 
 // This function looks through all tasks, and based on their status, it decides what

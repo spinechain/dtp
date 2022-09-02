@@ -19,6 +19,7 @@ func Event_BuildConnectionToTaskNetwork() {
 	var n tasknet.NetworkSettings
 	var c tasknet.NetworkCallbacks
 
+	n.ServerHost = AppSettings.ListenAddress
 	n.MyPeerID = AppSettings.ClientID
 	n.ServerPort = AppSettings.ServerPort
 	n.OnStatusUpdate = nil // s.OnStatusBarUpdateRequest

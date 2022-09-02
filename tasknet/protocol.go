@@ -48,39 +48,6 @@ type SpinePacket struct {
 	FutureRoute SpineRoute
 }
 
-type TaskStatus int
-
-const (
-	Unprocessed TaskStatus = iota
-	Received
-	Bid
-	WaitingForBids
-	BiddingComplete
-	BidsSelected
-	AcceptedForWork
-	WorkComplete
-	Completed
-	Submitted
-)
-
-type Task struct {
-	ID              string    // The globally unique ID of this task
-	Command         string    // The actual request
-	Created         time.Time // when the creator created it
-	Fee             float64   // fee for putting it in the network
-	Reward          float64   // reward for whoever solves the task
-	TaskOwnerID     string    // node that created this
-	Index           uint64    // Non-reliable index that indicates roughly where this transaction is in global transaction pool
-	PropagatedTo    []string  // the peers I have sent it to
-	FullyPropagated bool      // Set to true if we won't send this to any other clients
-	Status          TaskStatus
-	Bids            []TaskBid
-	BidTimeout      *time.Timer
-	ArrivalRoute    []*Peer
-	Result          []byte
-	TaskHash        string // to prevent changes
-}
-
 type TaskBid struct {
 	ID           string
 	Created      time.Time

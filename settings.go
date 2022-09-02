@@ -11,17 +11,18 @@ import (
 )
 
 type SpineSettings struct {
-	ServerPort uint
-	ClientID   string
-	DataFolder string
-	ShowUI     bool
+	ServerPort    uint
+	ListenAddress string
+	ClientID      string
+	DataFolder    string
+	ShowUI        bool
 }
 
 var AppSettings SpineSettings
 
 func LoadDefaultSettings() {
 	AppSettings.ServerPort = 9100
-
+	AppSettings.ListenAddress = "127.0.0.1"
 	AppSettings.ClientID = shortuuid.New()
 	AppSettings.ShowUI = true
 
