@@ -62,7 +62,7 @@ func Disconnect() {
 
 	SavePeerTable()
 
-	ShutDownTaskPool()
+	ShutDownTaskRunner()
 }
 
 func ExecNetworkCommand(cmd string) {
@@ -130,8 +130,9 @@ func StatusBarUpdate(str string, section int) {
 // from other nodes.
 func SendTaskToNetwork(text string) {
 
-	CreateNewTask(text)
-	SendNewTaskToPeers()
+	task := CreateNewTask(text)
+	TaskPool.AddTaskStructure(task)
+	CheckForNewTasks()
 }
 
 // This function starts this client listening on this port for other clients.

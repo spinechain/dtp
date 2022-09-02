@@ -63,6 +63,7 @@ func Event_TaskAdded(tid string, taskText string) {
 		return false
 	})
 
+	tasknet.CheckForNewTasks()
 }
 
 func Event_TaskWorkerAdded(tid string) {

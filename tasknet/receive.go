@@ -237,7 +237,7 @@ func ReceiveTask(packet *SpinePacket) {
 	task.Index = taskPool.highestIndex + 1
 	task.ArrivalRoute = packet.PastRoute.Nodes
 
-	AddToNetworkTaskPool(&task)
+	TaskPool.AddToNetworkTaskPool(&task)
 
 	// This changes the thread and informs the UI about this new task
 	glib.TimeoutAdd(10, func() bool {

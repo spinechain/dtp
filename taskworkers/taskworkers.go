@@ -128,9 +128,9 @@ func (t *TaskWorkers) AddTaskWorker(tw *TaskWorker) error {
 	return nil
 }
 
-func (t *TaskWorkers) GetAllTaskWorkers() ([]*TaskWorker, error) {
+func (t *TaskWorkers) GetTaskWorkers(filter string) ([]*TaskWorker, error) {
 	// query
-	rows, err := t.db.Query("SELECT * FROM taskworkers")
+	rows, err := t.db.Query("SELECT * FROM taskworkers" + filter)
 	if err != nil {
 		return t.TaskWorkers, err
 	}
@@ -150,4 +150,8 @@ func (t *TaskWorkers) GetAllTaskWorkers() ([]*TaskWorker, error) {
 	rows.Close()
 
 	return t.TaskWorkers, nil
+}
+
+func (t *TaskWorkers) GetAllTaskWorkers() ([]*TaskWorker, error) {
+	return t.GetTaskWorkers("")
 }

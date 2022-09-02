@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	taskpool "spinedtp/taskpool"
+	tasknet "spinedtp/tasknet"
 	"spinedtp/taskworkers"
 	"spinedtp/ui"
 	"time"
@@ -14,14 +14,16 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-var tasksAvailable taskpool.Taskpool
-var tasksCompleted taskpool.Taskpool
+var tasksAvailable tasknet.Taskpool
+var tasksCompleted tasknet.Taskpool
 var taskWorkers taskworkers.TaskWorkers
 
 func main() {
 	fmt.Println("Starting SpineChain DTP")
 
 	LoadSettings()
+
+	tasknet.TaskPool = &tasksAvailable
 
 	if AppSettings.ShowUI {
 
