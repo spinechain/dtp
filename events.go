@@ -16,6 +16,8 @@ func Event_SubmitTaskToNetwork(taskStr string) {
 
 func Event_BuildConnectionToTaskNetwork() {
 
+	// TODO: Check what happens if this is called twice
+
 	var n tasknet.NetworkSettings
 	var c tasknet.NetworkCallbacks
 
