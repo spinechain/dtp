@@ -23,7 +23,7 @@ func main() {
 
 	LoadSettings()
 
-	tasknet.TaskPool = &tasksAvailable
+	tasknet.OpenTaskPool = &tasksAvailable
 
 	if AppSettings.ShowUI {
 

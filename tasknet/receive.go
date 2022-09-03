@@ -234,10 +234,10 @@ func ReceiveTask(packet *SpinePacket) {
 	task.Status = Received
 	task.TaskOwnerID = packet.Body.Items["task.TaskOwnerID"]
 	task.FullyPropagated = false
-	task.Index = TaskPool.highestIndex + 1
+	task.Index = OpenTaskPool.highestIndex + 1
 	task.ArrivalRoute = packet.PastRoute.Nodes
 
-	TaskPool.AddToNetworkTaskPool(&task)
+	OpenTaskPool.AddToNetworkTaskPool(&task)
 
 	// This changes the thread and informs the UI about this new task
 	glib.TimeoutAdd(10, func() bool {

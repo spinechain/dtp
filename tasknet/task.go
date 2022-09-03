@@ -50,7 +50,8 @@ type Task struct {
 	FullyPropagated bool      // Set to true if we won't send this to any other clients
 	Status          TaskStatus
 	Bids            []TaskBid
-	BidTimeout      *time.Timer
+	BidTimeoutTimer *time.Timer
+	BidEndTime      time.Time
 	ArrivalRoute    []*Peer
 	Result          []byte
 	TaskHash        string // to prevent changes
@@ -74,21 +75,28 @@ func (task *TaskBid) GetReturnRoute() []*Peer {
 	return task.ArrivalRoute
 }
 
+func (task *Task) MarkAsPropagated(t *Taskpool) {
+	task.FullyPropagated = true
+
+	t.UpdateTask(task)
+}
+
 func CreateNewTask(taskCmd string) *Task {
+
+	if len(networkSettings.MyPeerID) < 3 {
+		panic("Node Id should not be so short")
+	}
 
 	var task Task
 	task.Command = taskCmd
 	task.ID = shortuuid.New()
 	task.Created = time.Now()
+	task.BidEndTime = time.Now().AddDate(0, 0, 1)
 	task.Fee = 0.00001
 	task.Reward = 0.0001
 	task.TaskOwnerID = networkSettings.MyPeerID
 	task.FullyPropagated = false
 	// task.Index = taskPool.highestIndex + 1
-
-	// Add to the taskpool list with my own tasks
-	// AddTaskStructure(&task)
-	// taskPool.myTasks = append(taskPool.myTasks, &task)
 
 	IncHighestIndex(task.Index)
 

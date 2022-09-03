@@ -4,8 +4,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"spinedtp/util"
+	"time"
 
-	"github.com/lithammer/shortuuid"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -32,6 +33,11 @@ type Taskpool struct {
 }
 
 func (t *Taskpool) Start(filePath string, create bool) error {
+
+	if !util.FileExists(filePath) {
+		create = true
+	}
+
 	var err error
 	t.db, err = sql.Open("sqlite3", filePath)
 	if err != nil {
@@ -70,7 +76,10 @@ func (t *Taskpool) CreateTable() error {
 	// clients. But if a new client connects, we don't use this mechanism to propagate tasks
 	// to it, rather, it makes a request for tasks from a certain height.
 	sqlStmt := `
-	create table tasks (tid text not null primary key, description text, propagated int);
+	create table tasks (tid text not null primary key, command text, 
+						created int, fee real, reward real, owner_id string, 
+						height int, propagated int, status int, bid_timeout int,
+						task_hash string);
 	delete from tasks;
 	`
 	_, err := t.db.Exec(sqlStmt)
@@ -81,25 +90,19 @@ func (t *Taskpool) CreateTable() error {
 	return nil
 }
 
-func (t *Taskpool) AddMyTask(taskString string) error {
-	tid := shortuuid.New()
-	return t.AddTask(tid, taskString)
-}
-
-func (t *Taskpool) AddTaskStructure(task *Task) error {
-
-	return nil
-}
-
-func (t *Taskpool) AddTask(taskID string, taskString string) error {
+func (t *Taskpool) AddTask(task *Task) error {
 
 	// insert
-	stmt, err := t.db.Prepare("INSERT INTO tasks(tid, description) values(?,?)")
+	stmt, err := t.db.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
 
-	res, err := stmt.Exec(taskID, taskString)
+	res, err := stmt.Exec(task.ID, task.Command, task.Created, task.Fee,
+		task.Reward, task.TaskOwnerID, task.Index,
+		task.FullyPropagated, task.Status,
+		task.BidEndTime, task.TaskHash)
+
 	if err != nil {
 		return err
 	}
@@ -112,7 +115,7 @@ func (t *Taskpool) AddTask(taskID string, taskString string) error {
 	fmt.Println(id)
 
 	if t.OnTaskAdded != nil {
-		t.OnTaskAdded(taskID, taskString)
+		t.OnTaskAdded(task.ID, task.Command)
 	}
 
 	return nil
@@ -139,15 +142,15 @@ func (t *Taskpool) RemoveTask(taskID string) error {
 	return nil
 }
 
-func (t *Taskpool) UpdateTask(tid string, taskdesc string) error {
+func (t *Taskpool) UpdateTask(task *Task) error {
 
 	// update
-	stmt, err := t.db.Prepare("update tasks set tid=? where description=?")
+	stmt, err := t.db.Prepare("update tasks set command=?, propagated=? where tid=?")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(tid, taskdesc)
+	_, err = stmt.Exec(task.Command, task.FullyPropagated, task.ID)
 	if err != nil {
 		return err
 	}
@@ -171,17 +174,23 @@ func (t *Taskpool) GetTasks(filter string) ([]*Task, error) {
 		return t.Tasks, err
 	}
 
-	var tid string
-	var description string
-
 	t.Tasks = nil
 
 	for rows.Next() {
-		err = rows.Scan(&tid, &description)
+
+		var task Task
+
+		var created string
+		var bid_end_time string
+		err = rows.Scan(&task.ID, &task.Command, &created,
+			&task.Fee, &task.Reward, &task.TaskOwnerID,
+			&task.Index, &task.FullyPropagated, &task.Status,
+			&bid_end_time, &task.TaskHash)
 		if err == nil {
-			var task Task
-			task.Command = description
-			task.ID = tid
+
+			// date, error := time.Parse("2006-01-02", dateString)
+			task.BidEndTime, err = time.Parse("2006-01-02 15:04:05.0000000-07:00", bid_end_time)
+			task.Created, err = time.Parse("2006-01-02 15:04:05.0000000-07:00", created)
 			t.Tasks = append(t.Tasks, &task)
 		}
 	}

@@ -39,6 +39,9 @@ type NetworkCallbacks struct {
 var networkSettings NetworkSettings
 var networkCallbacks NetworkCallbacks
 
+var listeningForPeers bool = false
+var requestDisconnect = false
+
 // This will connect this node into the
 func Connect(n NetworkSettings, c NetworkCallbacks) {
 
@@ -63,6 +66,7 @@ func Disconnect() {
 	// SleepTasks()
 
 	fmt.Println("Shutting down TaskPool...")
+	requestDisconnect = true
 
 	SavePeerTable()
 
@@ -135,12 +139,17 @@ func StatusBarUpdate(str string, section int) {
 func SendTaskToNetwork(text string) {
 
 	task := CreateNewTask(text)
-	TaskPool.AddTaskStructure(task)
+	OpenTaskPool.AddTask(task)
 	CheckForNewTasks()
 }
 
 // This function starts this client listening on this port for other clients.
 func listenForPeers() {
+
+	if listeningForPeers {
+		StatusBarUpdate("📡 Listening for peers on "+fmt.Sprint(networkSettings.ServerPort), 0)
+		return
+	}
 
 	StatusBarUpdate("📡 Listening for peers on "+fmt.Sprint(networkSettings.ServerPort), 0)
 
@@ -152,6 +161,7 @@ func listenForPeers() {
 	}
 	defer l.Close()
 
+	listeningForPeers = true
 	for {
 		c, err := l.Accept()
 		if err != nil {
@@ -163,7 +173,13 @@ func listenForPeers() {
 
 		StatusBarUpdate("🔄 New connection from "+peer.Address, 0)
 		go handlePeerConnection(peer, false)
+
+		if requestDisconnect {
+			break
+		}
 	}
+
+	listeningForPeers = false
 }
 
 func ConnectAndRequestPeers(tgt_ip string, tgt_port int) {

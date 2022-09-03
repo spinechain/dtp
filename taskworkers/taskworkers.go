@@ -3,6 +3,7 @@ package taskworkers
 import (
 	"database/sql"
 	"fmt"
+	"spinedtp/util"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -53,6 +54,11 @@ func TaskWorkerSqlColumnStringValues() string {
 }
 
 func (t *TaskWorkers) Start(filePath string, create bool) error {
+
+	if !util.FileExists(filePath) {
+		create = true
+	}
+
 	var err error
 	t.db, err = sql.Open("sqlite3", filePath)
 	if err != nil {

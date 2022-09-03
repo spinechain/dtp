@@ -10,7 +10,7 @@ import (
 
 func Event_SubmitTaskToNetwork(taskStr string) {
 
-	tasksAvailable.AddMyTask(taskStr)
+	tasknet.SendTaskToNetwork(taskStr)
 	// tasknet.ExecNetworkCommand(taskStr)
 }
 

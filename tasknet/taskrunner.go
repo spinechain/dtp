@@ -14,7 +14,7 @@ var taskForProcessingAvailable chan int
 var taskForExecutionAvailable chan int
 var shutDownTaskThread bool = false
 
-var TaskPool *Taskpool
+var OpenTaskPool *Taskpool
 var ProcessingThreadRunning bool = false
 
 // This thread waits for new tasks to come into the network
@@ -54,7 +54,7 @@ func ProcessAvailableTasks() {
 
 	// Retrieve all open tasks. In future we may want to limit the max tasks retrievable
 	// if the taskpool gets too large
-	tasks, _ := TaskPool.GetAllTasks()
+	tasks, _ := OpenTaskPool.GetAllTasks()
 
 	// Send all tasks that have not been propagated yet to peers. Our own tasks we added
 	// would also be propagated if they are newly added
@@ -115,7 +115,7 @@ func SendNewTaskToPeers(myTasks []*Task) {
 			// Todo: probably needs to be removed
 			// taskPool.tasks = RemoveIndex(taskPool.tasks, i)
 			SendPacketToAllPeers(packet)
-			task.FullyPropagated = true
+			task.MarkAsPropagated(OpenTaskPool)
 
 			// Set a timeout
 			go WaitForBidExpiry(task)
