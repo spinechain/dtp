@@ -72,18 +72,7 @@ func ProcessAvailableTasks() {
 		case Received:
 			util.PrintYellow("Found a new unprocessed task: " + task.Command)
 
-			task.Status = Bid
-
-			// We now bid for this task. We need to find the route that this
-			// packet came in through to respond through the same one
-			// TODO: this is likely not needed here
-			for _, routePeer := range task.ArrivalRoute {
-
-				peer := FindPeer(routePeer.ID)
-
-				peer.BidForTask(task)
-				break
-			}
+			BidForTask(task)
 
 		case WorkComplete:
 			util.PrintYellow("Found a completed task. Submitting: " + task.Command)
@@ -97,6 +86,31 @@ func ProcessAvailableTasks() {
 				break
 			}
 		}
+	}
+
+}
+
+func BidForTask(task *Task) {
+
+	// We would normally check if this is my own task, so I don't
+	task.Status = Bid
+
+	/*
+		// We now bid for this task. We need to find the route that this
+		// packet came in through to respond through the same one
+		// TODO: this is likely not needed here
+		for _, routePeer := range task.ArrivalRoute {
+
+			peer := FindPeer(routePeer.ID)
+
+			peer.BidForTask(task)
+			break
+		}
+	*/
+
+	for _, peer := range Peers {
+		peer.BidForTask(task)
+		break
 	}
 
 }

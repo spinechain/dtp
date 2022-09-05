@@ -65,7 +65,7 @@ func (task *Task) StatusAsString() string {
 	case Received:
 		return "Received"
 	case Bid:
-		return "Bid"
+		return "Sent Bid"
 	case WaitingForBids:
 		return "Waiting for bids"
 	case BiddingComplete:
