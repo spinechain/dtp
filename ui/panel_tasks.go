@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"spinedtp/tasknet"
 
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
@@ -50,7 +51,7 @@ func (tasks *PanelTasks) Create(title string) (*gtk.Box, error) {
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Owner", COLUMN_TASK_THIRD))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_TASK_FOURTH))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_TASK_FIFTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Age", COLUMN_TASK_SIXTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Created", COLUMN_TASK_SIXTH))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Synced", COLUMN_TASK_SEVENTH))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Height", COLUMN_TASK_EIGTH))
 
@@ -89,13 +90,20 @@ func (tasks *PanelTasks) CreateTasksTextColumn(title string, id int) *gtk.TreeVi
 	return column
 }
 
-func (tasks *PanelTasks) UpdateList(list []string) {
+func (tasks *PanelTasks) UpdateList(list []*tasknet.Task) {
 
 	if tasks.store != nil {
 		tasks.store.Clear()
 		for _, item := range list {
 			iter := tasks.store.Append()
-			tasks.store.SetValue(iter, 0, item)
+			tasks.store.SetValue(iter, 0, item.Command)
+			tasks.store.SetValue(iter, 1, item.ID)
+			tasks.store.SetValue(iter, 2, item.TaskOwnerID)
+			tasks.store.SetValue(iter, 3, item.Fee)
+			tasks.store.SetValue(iter, 4, item.Reward)
+			tasks.store.SetValue(iter, 5, item.Created)
+			tasks.store.SetValue(iter, 6, item.FullyPropagated)
+			tasks.store.SetValue(iter, 7, item.Index)
 		}
 	}
 }

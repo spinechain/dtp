@@ -57,12 +57,7 @@ func Event_TaskAdded(tid string, taskText string) {
 
 		tasks, _ := tasksAvailable.GetAllTasks()
 
-		var items []string
-		for i := 0; i < len(tasks); i++ {
-			items = append(items, tasks[i].Command)
-		}
-
-		ui.TasksPanel.UpdateList(items)
+		ui.TasksPanel.UpdateList(tasks)
 		return false
 	})
 
@@ -74,14 +69,9 @@ func Event_TaskWorkerAdded(tid string) {
 	// we switch thread to ui context
 	glib.TimeoutAdd(10, func() bool {
 
-		tasks, _ := taskWorkers.GetAllTaskWorkers()
+		taskWorkers, _ := taskWorkers.GetAllTaskWorkers()
 
-		var items []string
-		for i := 0; i < len(tasks); i++ {
-			items = append(items, tasks[0].Address)
-		}
-
-		ui.NetworkPanel.UpdateList(items)
+		ui.NetworkPanel.UpdateList(taskWorkers)
 		return false
 	})
 }

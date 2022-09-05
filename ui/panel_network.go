@@ -2,6 +2,7 @@ package ui
 
 import (
 	"log"
+	"spinedtp/taskworkers"
 
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
@@ -89,13 +90,14 @@ func (tasks *PanelNetwork) CreateTasksTextColumn(title string, id int) *gtk.Tree
 	return column
 }
 
-func (tasks *PanelNetwork) UpdateList(list []string) {
+func (tasks *PanelNetwork) UpdateList(list []*taskworkers.TaskWorker) {
 
 	if tasks.store != nil {
 		tasks.store.Clear()
 		for _, item := range list {
 			iter := tasks.store.Append()
-			tasks.store.SetValue(iter, 0, item)
+			tasks.store.SetValue(iter, 0, item.ID)
+			tasks.store.SetValue(iter, 1, item.Address)
 		}
 	}
 }

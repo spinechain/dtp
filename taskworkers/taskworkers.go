@@ -104,6 +104,8 @@ func (t *TaskWorkers) Stop() {
 
 func (t *TaskWorkers) AddTaskWorker(tw *TaskWorker) error {
 
+	// TODO: check if worker ID already exists and update the values
+
 	s := fmt.Sprintf("INSERT INTO taskworkers(%s) values(?,?,?,?,?,?,?,?,?,?,?,?,?)", TaskWorkerSqlColumnStringValues())
 
 	// insert
@@ -117,6 +119,7 @@ func (t *TaskWorkers) AddTaskWorker(tw *TaskWorker) error {
 		tw.Deadness, tw.Capabilities, tw.LastActive, tw.TasksDoneLast24Hours,
 		tw.BestConnections)
 	if err != nil {
+		t.OnTaskWorkersAdded(tw.ID)
 		return err
 	}
 
