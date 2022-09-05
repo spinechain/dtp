@@ -121,6 +121,29 @@ func (t *Taskpool) AddTask(task *Task) error {
 	return nil
 }
 
+func (t *Taskpool) RemoveAllTasks() error {
+
+	// delete
+	stmt, err := t.db.Prepare("delete from tasks")
+	if err != nil {
+		return err
+	}
+
+	res, err := stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	_, err = res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	t.Tasks = nil
+
+	return nil
+}
+
 func (t *Taskpool) RemoveTask(taskID string) error {
 
 	// delete

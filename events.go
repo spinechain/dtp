@@ -75,3 +75,17 @@ func Event_TaskWorkerAdded(tid string) {
 		return false
 	})
 }
+
+func Event_ClearTasksDB() {
+
+	tasksAvailable.RemoveAllTasks()
+
+	// we switch thread to ui context
+	glib.TimeoutAdd(10, func() bool {
+
+		tasks, _ := tasksAvailable.GetAllTasks()
+
+		ui.TasksPanel.UpdateList(tasks)
+		return false
+	})
+}

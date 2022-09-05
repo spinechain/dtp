@@ -30,6 +30,7 @@ func main() {
 		// Set the callback pressed when connect btn is pressed
 		ui.OnConnectToNetwork = Event_BuildConnectionToTaskNetwork
 		ui.OnSubmitToNetworkButton = Event_SubmitTaskToNetwork
+		ui.OnClearTasksDb = Event_ClearTasksDB
 
 		ui.Create()
 

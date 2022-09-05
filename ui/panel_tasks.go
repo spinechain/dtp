@@ -13,6 +13,7 @@ type PanelTasks struct {
 	list     *gtk.TreeView
 	frame    *gtk.Frame
 	store    *gtk.ListStore
+	btnClear *gtk.Button
 }
 
 // IDs to access the tree view columns by
@@ -59,9 +60,14 @@ func (tasks *PanelTasks) Create(title string) (*gtk.Box, error) {
 	tasks.frame.SetMarginStart(20)
 	tasks.frame.SetMarginEnd(20)
 
+	tasks.btnClear, _ = gtk.ButtonNew()
+	tasks.btnClear.SetLabel("Clear Tasks")
+	tasks.btnClear.Connect("clicked", onBtnClearTasksClick)
+
 	tasks.list.SetHeadersVisible(true)
 
 	box.PackStart(tasks.frame, true, true, 25)
+	box.PackStart(tasks.btnClear, false, false, 25)
 
 	tasks.store = tasks.initList(tasks.list)
 
@@ -140,10 +146,12 @@ func (tasks *PanelTasks) Show() {
 	tasks.cmdLabel.ShowAll()
 	tasks.list.ShowAll()
 	tasks.frame.ShowAll()
+	tasks.btnClear.ShowAll()
 }
 
 func (tasks *PanelTasks) Hide() {
 	tasks.cmdLabel.Hide()
 	tasks.list.Hide()
 	tasks.frame.Hide()
+	tasks.btnClear.Hide()
 }
