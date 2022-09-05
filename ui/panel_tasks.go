@@ -18,14 +18,15 @@ type PanelTasks struct {
 
 // IDs to access the tree view columns by
 const (
-	COLUMN_TASK_FIRST = iota
-	COLUMN_TASK_SECOND
-	COLUMN_TASK_THIRD
-	COLUMN_TASK_FOURTH
-	COLUMN_TASK_FIFTH
-	COLUMN_TASK_SIXTH
-	COLUMN_TASK_SEVENTH
-	COLUMN_TASK_EIGTH
+	COLUMN_TASK_ID = iota
+	COLUMN_TASK_TASK
+	COLUMN_TASK_OWNER
+	COLUMN_TASK_STATUS
+	COLUMN_TASK_FEE
+	COLUMN_TASK_REWARD
+	COLUMN_TASK_CREATED
+	COLUMN_TASK_SYNCED
+	COLUMN_TASK_HEIGHT
 )
 
 // Create a new panel that lists out all tasks
@@ -47,14 +48,15 @@ func (tasks *PanelTasks) Create(title string) (*gtk.Box, error) {
 		log.Fatal(err)
 	}
 
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Task", COLUMN_TASK_FIRST))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_TASK_SECOND))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Owner", COLUMN_TASK_THIRD))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_TASK_FOURTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_TASK_FIFTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Created", COLUMN_TASK_SIXTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Synced", COLUMN_TASK_SEVENTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Height", COLUMN_TASK_EIGTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_TASK_ID))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Task", COLUMN_TASK_TASK))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Owner", COLUMN_TASK_OWNER))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status", COLUMN_TASK_STATUS))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_TASK_FEE))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_TASK_REWARD))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Created", COLUMN_TASK_CREATED))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Synced", COLUMN_TASK_SYNCED))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Height", COLUMN_TASK_HEIGHT))
 
 	tasks.frame.Add(tasks.list)
 	tasks.frame.SetMarginStart(20)
@@ -93,6 +95,10 @@ func (tasks *PanelTasks) CreateTasksTextColumn(title string, id int) *gtk.TreeVi
 		log.Fatal("Unable to create cell column:", err)
 	}
 
+	if id == COLUMN_TASK_ID {
+		column.SetMaxWidth(20)
+	}
+
 	return column
 }
 
@@ -102,14 +108,18 @@ func (tasks *PanelTasks) UpdateList(list []*tasknet.Task) {
 		tasks.store.Clear()
 		for _, item := range list {
 			iter := tasks.store.Append()
-			tasks.store.SetValue(iter, 0, item.Command)
-			tasks.store.SetValue(iter, 1, item.ID)
-			tasks.store.SetValue(iter, 2, item.TaskOwnerID)
-			tasks.store.SetValue(iter, 3, item.Fee)
-			tasks.store.SetValue(iter, 4, item.Reward)
-			tasks.store.SetValue(iter, 5, item.Created)
-			tasks.store.SetValue(iter, 6, item.FullyPropagated)
-			tasks.store.SetValue(iter, 7, item.Index)
+			tasks.store.SetValue(iter, COLUMN_TASK_ID, item.ID)
+			tasks.store.SetValue(iter, COLUMN_TASK_TASK, item.Command)
+			tasks.store.SetValue(iter, COLUMN_TASK_OWNER, item.TaskOwnerID)
+			tasks.store.SetValue(iter, COLUMN_TASK_FEE, item.Fee)
+			tasks.store.SetValue(iter, COLUMN_TASK_REWARD, item.Reward)
+			tasks.store.SetValue(iter, COLUMN_TASK_CREATED, item.Created)
+			tasks.store.SetValue(iter, COLUMN_TASK_SYNCED, item.FullyPropagated)
+			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, item.Index)
+			tasks.store.SetValue(iter, COLUMN_TASK_STATUS, item.StatusAsString())
+
+			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, item.Index)
+
 		}
 	}
 }

@@ -57,6 +57,35 @@ type Task struct {
 	TaskHash        string // to prevent changes
 }
 
+func (task *Task) StatusAsString() string {
+
+	switch task.Status {
+	case Unprocessed:
+		return "Unprocessed"
+	case Received:
+		return "Received"
+
+	case Bid:
+		return "Bid"
+	case WaitingForBids:
+		return "Waiting for bids"
+	case BiddingComplete:
+		return "Bidding Complete"
+	case BidsSelected:
+		return "Bids Selected"
+	case AcceptedForWork:
+		return "Accepted for Work"
+	case WorkComplete:
+		return "Work Complete"
+	case Completed:
+		return "Completed"
+	case Submitted:
+		return "Submitted"
+	}
+
+	return "Unknown Status"
+}
+
 func (task *Task) GetReturnRoute() []*Peer {
 	return task.ArrivalRoute
 }
