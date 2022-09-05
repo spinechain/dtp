@@ -18,8 +18,8 @@ type PanelTasks struct {
 
 // IDs to access the tree view columns by
 const (
-	COLUMN_TASK_ID = iota
-	COLUMN_TASK_TASK
+	COLUMN_TASK_TASK = iota
+	COLUMN_TASK_ID
 	COLUMN_TASK_OWNER
 	COLUMN_TASK_STATUS
 	COLUMN_TASK_FEE
@@ -48,8 +48,8 @@ func (tasks *PanelTasks) Create(title string) (*gtk.Box, error) {
 		log.Fatal(err)
 	}
 
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_TASK_ID))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Task", COLUMN_TASK_TASK))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_TASK_ID))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Owner", COLUMN_TASK_OWNER))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status", COLUMN_TASK_STATUS))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_TASK_FEE))
@@ -95,8 +95,14 @@ func (tasks *PanelTasks) CreateTasksTextColumn(title string, id int) *gtk.TreeVi
 		log.Fatal("Unable to create cell column:", err)
 	}
 
-	if id == COLUMN_TASK_ID {
-		column.SetMaxWidth(20)
+	column.SetResizable(true)
+
+	if id == COLUMN_TASK_ID || id == COLUMN_TASK_OWNER {
+		column.SetFixedWidth(50)
+	}
+
+	if id == COLUMN_TASK_FEE || id == COLUMN_TASK_REWARD {
+		column.SetFixedWidth(60)
 	}
 
 	return column
