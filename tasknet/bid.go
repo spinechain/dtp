@@ -10,7 +10,7 @@ import (
 // Waits till the expiry of the bid timeout for a particular task
 func WaitForBidExpiry(task *Task) {
 
-	task.BidTimeoutTimer = time.NewTimer(networkSettings.BidTimeoutSeconds * time.Second)
+	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeoutSeconds * time.Second)
 	<-task.BidTimeoutTimer.C
 	task.Status = BiddingComplete
 	taskForProcessingAvailable <- 1
@@ -38,7 +38,7 @@ func SelectWinningBids(task *Task) {
 			break
 		}
 
-		if i >= int(networkSettings.AcceptedBidsPerTask) {
+		if i >= int(NetworkSettings.AcceptedBidsPerTask) {
 			break
 		}
 

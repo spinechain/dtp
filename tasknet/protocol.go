@@ -139,9 +139,9 @@ func CreateSpinePacketWithData(data map[string]string, pastroute []*Peer, future
 
 func GetMePeer() *Peer {
 	var mepeer Peer
-	mepeer.ID = networkSettings.MyPeerID
-	mepeer.Address = networkSettings.ServerHost
-	mepeer.Port = int(networkSettings.ServerPort)
+	mepeer.ID = NetworkSettings.MyPeerID
+	mepeer.Address = NetworkSettings.ServerHost
+	mepeer.Port = int(NetworkSettings.ServerPort)
 	return &mepeer
 }
 
@@ -204,7 +204,7 @@ func ConstructTaskBidPacket(taskbid *TaskBid, returnRoute []*Peer) (*SpinePacket
 	packet.Body.Items["task-bid.BidValue"] = fmt.Sprintf("%f", taskbid.BidValue)
 	packet.Body.Items["task-bid.TaskOwnerID"] = taskbid.TaskOwnerID
 	packet.Body.Items["task-bid.TaskID"] = taskbid.TaskID
-	packet.Body.Items["task-bid.BidderID"] = networkSettings.MyPeerID
+	packet.Body.Items["task-bid.BidderID"] = NetworkSettings.MyPeerID
 	packet.Body.Items["task-bid.Geo"] = taskbid.Geo
 	packet.Body.Items["task-bid.Hash"] = "NOHASHYET"
 

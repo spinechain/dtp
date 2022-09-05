@@ -10,6 +10,8 @@ import (
 
 func Event_SubmitTaskToNetwork(taskStr string) {
 
+	SetNetworkSettings()
+
 	tasknet.SendTaskToNetwork(taskStr)
 	// tasknet.ExecNetworkCommand(taskStr)
 }
@@ -18,22 +20,8 @@ func Event_BuildConnectionToTaskNetwork() {
 
 	// TODO: Check what happens if this is called twice
 
-	var n tasknet.NetworkSettings
-	var c tasknet.NetworkCallbacks
-
-	n.ServerHost = AppSettings.ListenAddress
-	n.MyPeerID = AppSettings.ClientID
-	n.ServerPort = AppSettings.ServerPort
-	n.OnStatusUpdate = nil // s.OnStatusBarUpdateRequest
-	n.BidTimeoutSeconds = 5
-	n.AcceptedBidsPerTask = 3
-	n.TaskReadyForProcessing = Event_TaskReadyForExecution
-	n.DataFolder = AppSettings.DataFolder
-
-	c.OnTaskReceived = nil // s.OnNewTaskReceived
-	c.OnTaskApproved = nil //s.OnNetworkTaskApproval
-
-	tasknet.Connect(n, c)
+	SetNetworkSettings()
+	tasknet.Connect()
 
 }
 

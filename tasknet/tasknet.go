@@ -15,7 +15,7 @@ import (
 // Types of Callback functions
 type StatusUpdateFn func(string, int)
 
-type NetworkSettings struct {
+type NetSettings struct {
 	ServerPort             uint
 	ServerHost             string
 	MyPeerID               string
@@ -30,23 +30,24 @@ type NetworkSettings struct {
 type TaskReceiveFn func(string)
 type TaskApprovedFn func(string)
 
-type NetworkCallbacks struct {
+type NetCallbacks struct {
 	OnTaskReceived TaskReceiveFn
 	OnTaskApproved TaskApprovedFn
 }
 
 // For storing everything we need to participate in the Spine network
-var networkSettings NetworkSettings
-var networkCallbacks NetworkCallbacks
+var NetworkSettings NetSettings
+var NetworkCallbacks NetCallbacks
 
 var listeningForPeers bool = false
 var requestDisconnect = false
 
 // This will connect this node into the
-func Connect(n NetworkSettings, c NetworkCallbacks) {
+func Connect() {
 
-	networkSettings = n
-	networkCallbacks = c
+	if len(NetworkSettings.MyPeerID) < 3 {
+		panic("Network settings have not been set!")
+	}
 
 	// Create new channel to wait for tasks
 	taskForProcessingAvailable = make(chan int, 10)
@@ -122,8 +123,8 @@ func StatusBarUpdate(str string, section int) {
 
 	glib.TimeoutAdd(10, func() bool {
 
-		if networkSettings.OnStatusUpdate != nil {
-			networkSettings.OnStatusUpdate(str, section)
+		if NetworkSettings.OnStatusUpdate != nil {
+			NetworkSettings.OnStatusUpdate(str, section)
 		}
 
 		return false
@@ -147,14 +148,14 @@ func SendTaskToNetwork(text string) {
 func listenForPeers() {
 
 	if listeningForPeers {
-		StatusBarUpdate("📡 Listening for peers on "+fmt.Sprint(networkSettings.ServerPort), 0)
+		StatusBarUpdate("📡 Listening for peers on "+fmt.Sprint(NetworkSettings.ServerPort), 0)
 		return
 	}
 
-	StatusBarUpdate("📡 Listening for peers on "+fmt.Sprint(networkSettings.ServerPort), 0)
+	StatusBarUpdate("📡 Listening for peers on "+fmt.Sprint(NetworkSettings.ServerPort), 0)
 
-	networkSettings.ServerHost = "" // TODO
-	l, err := net.Listen("tcp4", networkSettings.ServerHost+":"+fmt.Sprint(networkSettings.ServerPort))
+	NetworkSettings.ServerHost = "" // TODO
+	l, err := net.Listen("tcp4", NetworkSettings.ServerHost+":"+fmt.Sprint(NetworkSettings.ServerPort))
 	if err != nil {
 		fmt.Println(err)
 		return

@@ -25,6 +25,8 @@ func main() {
 
 	tasknet.OpenTaskPool = &tasksAvailable
 
+	SetNetworkSettings()
+
 	if AppSettings.ShowUI {
 
 		// Set the callback pressed when connect btn is pressed

@@ -55,7 +55,7 @@ func CreatePeer(c net.Conn) *Peer {
 
 func LoadPeerTable() {
 
-	file, err := os.Open(filepath.Join(networkSettings.DataFolder, "peers.txt"))
+	file, err := os.Open(filepath.Join(NetworkSettings.DataFolder, "peers.txt"))
 	if err != nil {
 		fmt.Println("No Peers.txt file")
 		return
@@ -96,7 +96,7 @@ func AddPeerWithIPAndPort(ip string, port int) *Peer {
 
 func SavePeerTable() {
 
-	file, err := os.Create(filepath.Join(networkSettings.DataFolder, "peers.txt"))
+	file, err := os.Create(filepath.Join(NetworkSettings.DataFolder, "peers.txt"))
 	if err != nil {
 		log.Fatalf("failed creating file: %s", err)
 	}
@@ -212,7 +212,7 @@ func (peer *Peer) RequestPeerList() error {
 func (peer *Peer) SendConnectString() {
 
 	data := map[string]string{
-		"PEER-ID":       networkSettings.MyPeerID,
+		"PEER-ID":       NetworkSettings.MyPeerID,
 		"SIBLING-COUNT": fmt.Sprint(len(peer.PeerList)),
 		"SANITY-CHECK":  "(>人<)&¯\\_(ツ)_/¯", // This is to ensure the parser is correctly escaping these characters
 	}
@@ -264,7 +264,7 @@ func (peer *Peer) BidForTask(task *Task) error {
 
 	var t TaskBid
 	t.BidValue = task.Reward - 0.0001
-	t.BidderID = networkSettings.MyPeerID
+	t.BidderID = NetworkSettings.MyPeerID
 	t.Fee = 0
 	t.Geo = "US"
 	t.ID = shortuuid.New()
@@ -288,7 +288,7 @@ func (peer *Peer) BidForTask(task *Task) error {
 func (peer *Peer) AcceptBid(task *Task, taskbid TaskBid) error {
 
 	var t TaskAccept
-	t.BidderID = networkSettings.MyPeerID
+	t.BidderID = NetworkSettings.MyPeerID
 	t.Created = time.Now()
 	t.Fee = 0
 	t.ID = shortuuid.New()
@@ -311,7 +311,7 @@ func (peer *Peer) AcceptBid(task *Task, taskbid TaskBid) error {
 func (peer *Peer) SubmitTaskResult(task *Task) error {
 
 	var taskSubmit TaskSubmission
-	taskSubmit.BidderID = networkSettings.MyPeerID
+	taskSubmit.BidderID = NetworkSettings.MyPeerID
 	taskSubmit.Submission = task.Result
 	taskSubmit.Created = time.Now()
 	taskSubmit.ID = shortuuid.New()

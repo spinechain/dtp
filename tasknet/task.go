@@ -111,7 +111,7 @@ func (task *Task) MarkAsPropagated(t *Taskpool) {
 
 func CreateNewTask(taskCmd string) *Task {
 
-	if len(networkSettings.MyPeerID) < 3 {
+	if len(NetworkSettings.MyPeerID) < 3 {
 		panic("Node Id should not be so short")
 	}
 
@@ -122,7 +122,7 @@ func CreateNewTask(taskCmd string) *Task {
 	task.BidEndTime = time.Now().AddDate(0, 0, 1)
 	task.Fee = 0.00001
 	task.Reward = 0.0001
-	task.TaskOwnerID = networkSettings.MyPeerID
+	task.TaskOwnerID = NetworkSettings.MyPeerID
 	task.FullyPropagated = false
 	task.Index = OpenTaskPool.highestIndex + 1
 
@@ -133,7 +133,7 @@ func CreateNewTask(taskCmd string) *Task {
 
 func NewTaskBidArrived(tb TaskBid) {
 
-	if tb.TaskOwnerID == networkSettings.MyPeerID {
+	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
 		// This is a bid for a task of mine
 
 		task, err := FindInMyTaskPool(tb.TaskID)

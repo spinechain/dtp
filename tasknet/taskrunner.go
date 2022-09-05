@@ -158,8 +158,8 @@ func ProcessAcceptedTasks() {
 				util.PrintYellow("Executing Task: " + task.Command)
 				tt.Submission = []byte("This would be my submission")
 
-				if networkSettings.TaskReadyForProcessing != nil {
-					networkSettings.TaskReadyForProcessing(task.Command)
+				if NetworkSettings.TaskReadyForProcessing != nil {
+					NetworkSettings.TaskReadyForProcessing(task.Command)
 				} else {
 					fmt.Println("No callback available for task processing")
 				}

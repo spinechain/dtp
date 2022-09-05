@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	tasknet "spinedtp/tasknet"
 
 	"github.com/lithammer/shortuuid/v3"
 )
@@ -75,4 +76,19 @@ func SaveSettings() {
 	file.Write(jdata1)
 
 	defer file.Close()
+}
+
+func SetNetworkSettings() {
+
+	tasknet.NetworkSettings.ServerHost = AppSettings.ListenAddress
+	tasknet.NetworkSettings.MyPeerID = AppSettings.ClientID
+	tasknet.NetworkSettings.ServerPort = AppSettings.ServerPort
+	tasknet.NetworkSettings.OnStatusUpdate = nil // s.OnStatusBarUpdateRequest
+	tasknet.NetworkSettings.BidTimeoutSeconds = 5
+	tasknet.NetworkSettings.AcceptedBidsPerTask = 3
+	tasknet.NetworkSettings.TaskReadyForProcessing = Event_TaskReadyForExecution
+	tasknet.NetworkSettings.DataFolder = AppSettings.DataFolder
+
+	tasknet.NetworkCallbacks.OnTaskReceived = nil // s.OnNewTaskReceived
+	tasknet.NetworkCallbacks.OnTaskApproved = nil //s.OnNetworkTaskApproval
 }
