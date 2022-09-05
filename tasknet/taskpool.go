@@ -165,6 +165,22 @@ func (t *Taskpool) RemoveTask(taskID string) error {
 	return nil
 }
 
+func (t *Taskpool) UpdateTaskStatus(task *Task, newStatus TaskStatus) error {
+
+	// update
+	stmt, err := t.db.Prepare("update tasks set status=? where tid=?")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec(task.Status, task.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (t *Taskpool) UpdateTask(task *Task) error {
 
 	// update
@@ -190,9 +206,23 @@ func (t *Taskpool) GetAllTasks() ([]*Task, error) {
 	return t.GetTasks("")
 }
 
-func (t *Taskpool) GetTasks(filter string) ([]*Task, error) {
+func (t *Taskpool) GetTasks(filter string, args ...any) ([]*Task, error) {
 	// query
-	rows, err := t.db.Query("SELECT * FROM tasks" + filter)
+
+	full_query := "SELECT * FROM tasks " + filter
+
+	stmt, err := t.db.Prepare(full_query)
+	if err != nil {
+		return t.Tasks, err
+	}
+
+	var rows *sql.Rows
+	if args != nil {
+		rows, err = stmt.Query(args...)
+	} else {
+		rows, err = stmt.Query()
+	}
+
 	if err != nil {
 		return t.Tasks, err
 	}
@@ -212,8 +242,8 @@ func (t *Taskpool) GetTasks(filter string) ([]*Task, error) {
 		if err == nil {
 
 			// date, error := time.Parse("2006-01-02", dateString)
-			task.BidEndTime, err = time.Parse("2006-01-02 15:04:05.0000000-07:00", bid_end_time)
-			task.Created, err = time.Parse("2006-01-02 15:04:05.0000000-07:00", created)
+			task.BidEndTime, _ = time.Parse("2006-01-02 15:04:05.0000000-07:00", bid_end_time)
+			task.Created, _ = time.Parse("2006-01-02 15:04:05.0000000-07:00", created)
 			t.Tasks = append(t.Tasks, &task)
 		}
 	}
@@ -221,6 +251,12 @@ func (t *Taskpool) GetTasks(filter string) ([]*Task, error) {
 	rows.Close()
 
 	return t.Tasks, nil
+}
+
+func (t *Taskpool) IncHighestIndex(newVal uint64) {
+	if newVal > t.highestIndex {
+		t.highestIndex = newVal
+	}
 }
 
 func (t *Taskpool) GetTaskApprovedForClient() ([]*Task, error) {
@@ -233,6 +269,19 @@ func (t *Taskpool) GetTaskApprovedForClient() ([]*Task, error) {
 // our taskpool to connected peers
 func (t *Taskpool) AddToNetworkTaskPool(task *Task) {
 
+	// We check if we have it
+	tasks, err := t.GetTasks("where tid=?", task.ID)
+
+	if tasks == nil || err != nil || len(tasks) == 0 {
+		// we do not have this task in our db. We can add it directly
+		t.AddTask(task)
+		return
+	}
+
+	OpenTaskPool.IncHighestIndex(task.Index)
+
+	// We have the task. We need to update the status
+	t.UpdateTaskStatus(task, Received)
 	/*
 		for _, t := range taskPool.networkTasks {
 			if t.ID == task.ID {

@@ -64,7 +64,6 @@ func (task *Task) StatusAsString() string {
 		return "Unprocessed"
 	case Received:
 		return "Received"
-
 	case Bid:
 		return "Bid"
 	case WaitingForBids:
@@ -125,19 +124,11 @@ func CreateNewTask(taskCmd string) *Task {
 	task.Reward = 0.0001
 	task.TaskOwnerID = networkSettings.MyPeerID
 	task.FullyPropagated = false
-	// task.Index = taskPool.highestIndex + 1
+	task.Index = OpenTaskPool.highestIndex + 1
 
-	IncHighestIndex(task.Index)
+	OpenTaskPool.IncHighestIndex(task.Index)
 
 	return &task
-}
-
-func IncHighestIndex(newVal uint64) {
-	/*
-		if newVal > taskPool.highestIndex {
-			taskPool.highestIndex = newVal
-		}
-	*/
 }
 
 func NewTaskBidArrived(tb TaskBid) {
