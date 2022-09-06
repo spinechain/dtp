@@ -83,7 +83,7 @@ func SetNetworkSettings() {
 	tasknet.NetworkSettings.ServerHost = AppSettings.ListenAddress
 	tasknet.NetworkSettings.MyPeerID = AppSettings.ClientID
 	tasknet.NetworkSettings.ServerPort = AppSettings.ServerPort
-	tasknet.NetworkSettings.OnStatusUpdate = nil // s.OnStatusBarUpdateRequest
+	tasknet.NetworkSettings.OnStatusUpdate = Event_StatusUpdate
 	tasknet.NetworkSettings.BidTimeoutSeconds = 5
 	tasknet.NetworkSettings.AcceptedBidsPerTask = 3
 	tasknet.NetworkSettings.TaskReadyForProcessing = Event_TaskReadyForExecution

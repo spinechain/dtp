@@ -52,6 +52,15 @@ func Event_TaskAdded(tid string, taskText string) {
 	tasknet.CheckForNewTasks()
 }
 
+func Event_StatusUpdate(txt string, section int) {
+	// we switch thread to ui context
+	glib.TimeoutAdd(10, func() bool {
+
+		ui.UpdateStatusBar(txt, section)
+		return false
+	})
+}
+
 func Event_TaskWorkerAdded(tid string) {
 
 	// we switch thread to ui context
