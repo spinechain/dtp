@@ -50,8 +50,8 @@ func Connect() {
 	}
 
 	// Create new channel to wait for tasks
-	taskForProcessingAvailable = make(chan int, 10)
-	taskForExecutionAvailable = make(chan int, 10)
+	taskForProcessingAvailable = make(chan int)
+	taskForExecutionAvailable = make(chan int)
 
 	// listen for anyone connecting to us
 	go listenForPeers()
@@ -183,6 +183,7 @@ func listenForPeers() {
 	listeningForPeers = false
 }
 
+/*
 func ConnectAndRequestPeers(tgt_ip string, tgt_port int) {
 
 	print("Requesting peers from " + tgt_ip)
@@ -197,6 +198,7 @@ func ConnectAndRequestPeers(tgt_ip string, tgt_port int) {
 	connectToPeers()
 
 }
+*/
 
 func MakeRoute(peer *Peer) []*Peer {
 

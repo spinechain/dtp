@@ -4,7 +4,6 @@ import (
 	"fmt"
 	util "spinedtp/util"
 	"strconv"
-	"strings"
 	"time"
 
 	"github.com/gotk3/gotk3/glib"
@@ -43,12 +42,12 @@ func ReceivePacket(packet *SpinePacket, peer *Peer) {
 
 func ReceivePeerList(packet *SpinePacket, peer *Peer) {
 
-	s_peer_list := packet.Body.Items["peer-list"]
-	peer_list := strings.Split(s_peer_list, ";")
+	//s_peer_list := packet.Body.Items["peer-list"]
+	//peer_list := strings.Split(s_peer_list, ";")
 
-	for _, ip_port := range peer_list {
-		AddPeerWithIPColonPort(ip_port)
-	}
+	//for _, ip_port := range peer_list {
+	// AddPeerWithIPColonPort(ip_port)
+	//}
 	SavePeerTable()
 }
 
@@ -233,7 +232,7 @@ func ReceiveTask(packet *SpinePacket) {
 	task.Created = t1
 	task.Fee = ffee
 	task.Reward = freward
-	task.LocalStatus = StatusNew
+	task.LocalStatus = StatusNewFromNetwork
 	task.GlobalStatus = GlobalTaskStatus(status)
 	task.TaskOwnerID = packet.Body.Items["task.TaskOwnerID"]
 	task.FullyPropagated = false

@@ -91,6 +91,15 @@ func Start() {
 	taskWorkers.OnTaskWorkersAdded = Event_TaskWorkerAdded
 	taskWorkers.AddTaskWorker(GetMeAsTaskWorker())
 
+	tasknet.LoadPeerTable()
+
+	// Add this node as a peer. Will not be needed in future. Good for testing
+	var peer tasknet.Peer
+	peer.Address = AppSettings.ListenAddress
+	peer.Port = int(AppSettings.ServerPort)
+	peer.ID = AppSettings.ClientID
+	tasknet.AddToPeerTable(&peer)
+
 }
 
 // Return the info needed to make me a taskworker
@@ -113,6 +122,8 @@ func Shutdown() {
 
 	// Close list of workers that execute tasks
 	taskWorkers.Stop()
+
+	tasknet.SavePeerTable()
 
 	fmt.Println("Shut down complete.")
 

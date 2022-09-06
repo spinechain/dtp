@@ -39,7 +39,9 @@ const (
 
 // Local status, not to be propagated, but kept in our db
 const (
-	StatusNew LocalTaskStatus = iota
+	StatusNewFromNetwork LocalTaskStatus = iota
+	StatusNewFromLocal
+	StatusWaitingForBidsForMe
 	StatusSentBid
 	StatusNotGoingToBid
 	StatusSubmittedResults
@@ -93,8 +95,12 @@ func (task *Task) GlobalStatusAsString() string {
 func (task *Task) LocalStatusAsString() string {
 
 	switch task.LocalStatus {
-	case StatusNew:
-		return "New"
+	case StatusNewFromLocal:
+		return "New (mine)"
+	case StatusNewFromNetwork:
+		return "New (remote)"
+	case StatusWaitingForBidsForMe:
+		return "Waiting for Bids"
 	case StatusSentBid:
 		return "Sent Bid"
 	case StatusNotGoingToBid:
@@ -148,6 +154,8 @@ func CreateNewTask(taskCmd string) *Task {
 	task.Created = time.Now()
 	task.BidEndTime = time.Now().AddDate(0, 0, 1)
 	task.Fee = 0.00001
+	task.GlobalStatus = StatusWaitingForBids
+	task.LocalStatus = StatusNewFromLocal
 	task.Reward = 0.0001
 	task.TaskOwnerID = NetworkSettings.MyPeerID
 	task.FullyPropagated = false

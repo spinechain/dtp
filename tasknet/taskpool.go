@@ -45,7 +45,10 @@ func (t *Taskpool) Start(filePath string, create bool) error {
 	}
 
 	if create {
-		t.CreateTable()
+		err := t.CreateTable()
+		if err != nil {
+			panic("Could not create tasks table!")
+		}
 	}
 	return err
 }
@@ -76,7 +79,7 @@ func (t *Taskpool) CreateTable() error {
 	// clients. But if a new client connects, we don't use this mechanism to propagate tasks
 	// to it, rather, it makes a request for tasks from a certain height.
 	sqlStmt := `
-	create table tasks (tid text not null primary key, command text, 
+	create table tasks (tid text not null unique primary key, command text, 
 						created int, fee real, reward real, owner_id string, 
 						height int, propagated int, local_status int, global_status int, bid_timeout int,
 						task_hash string);

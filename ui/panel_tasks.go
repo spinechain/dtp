@@ -3,6 +3,7 @@ package ui
 import (
 	"log"
 	"spinedtp/tasknet"
+	"strconv"
 
 	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
@@ -123,11 +124,9 @@ func (tasks *PanelTasks) UpdateList(list []*tasknet.Task) {
 			tasks.store.SetValue(iter, COLUMN_TASK_REWARD, item.Reward)
 			tasks.store.SetValue(iter, COLUMN_TASK_CREATED, item.Created)
 			tasks.store.SetValue(iter, COLUMN_TASK_SYNCED, item.FullyPropagated)
-			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, item.Index)
+			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, strconv.Itoa(int(item.Index)))
 			tasks.store.SetValue(iter, COLUMN_TASK_LOCALSTATUS, item.LocalStatusAsString())
 			tasks.store.SetValue(iter, COLUMN_TASK_GLOBALSTATUS, item.GlobalStatusAsString())
-
-			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, item.Index)
 
 		}
 	}
@@ -148,7 +147,17 @@ func (tasks *PanelTasks) initList(list *gtk.TreeView) *gtk.ListStore {
 			list.AppendColumn(column)
 	*/
 
-	store, err := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING)
+	store, err := gtk.ListStoreNew(glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING,
+		glib.TYPE_STRING)
 	if err != nil {
 		log.Fatal(err)
 	}

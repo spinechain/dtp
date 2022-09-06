@@ -33,7 +33,7 @@ type TaskWorker struct {
 }
 
 func TaskWorkerSqlColumnString() string {
-	s := "wid string not null primary key, " +
+	s := "wid string not null unique primary key, " +
 		"address text, port int, taskdone int, reputation real, " +
 		"tasksinqueue int, avg_completion_time real, min_fee real, " +
 		"deadness int, capabilities string, last_active int, " +
@@ -66,7 +66,10 @@ func (t *TaskWorkers) Start(filePath string, create bool) error {
 	}
 
 	if create {
-		t.CreateTable()
+		err := t.CreateTable()
+		if err != nil {
+			panic("Could not create workers table!")
+		}
 	}
 	return err
 }

@@ -2,11 +2,10 @@ package tasknet
 
 import (
 	"bufio"
+	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 	"net"
-	"os"
 	"path/filepath"
 	"spinedtp/util"
 	"strconv"
@@ -17,18 +16,21 @@ import (
 )
 
 type Peer struct {
-	conn          net.Conn
-	reader        *bufio.Reader
-	ID            string
-	Address       string
-	Port          int
-	Connected     bool
-	Deadness      uint
-	IsMetaTracker bool     // indicates if I should publish my peer list here
-	PeerList      []string // a list of all the peers this peer is connected to. Not guaranteed to be there
-	SiblingCount  uint64   // number of people it is connected to
-	WeConnected   bool     // true if we built connection, false if it connected to us
-	FirstCommand  string   // if we connect to this peer for a specific reason, we can specify it here. E.g "peers"
+	conn                net.Conn
+	reader              *bufio.Reader
+	ID                  string
+	Address             string
+	Port                int
+	Connected           bool
+	ConnectSuccessCount int
+	ConnectFailCount    int
+	LastConnected       int
+	Deadness            uint
+	IsMetaTracker       bool     // indicates if I should publish my peer list here
+	PeerList            []string // a list of all the peers this peer is connected to. Not guaranteed to be there
+	SiblingCount        uint64   // number of people it is connected to
+	WeConnected         bool     // true if we built connection, false if it connected to us
+	FirstCommand        string   // if we connect to this peer for a specific reason, we can specify it here. E.g "peers"
 
 }
 
@@ -53,72 +55,92 @@ func CreatePeer(c net.Conn) *Peer {
 	return &p
 }
 
-func LoadPeerTable() {
+func LoadPeerTable() error {
 
-	file, err := os.Open(filepath.Join(NetworkSettings.DataFolder, "peers.txt"))
+	filePath := filepath.Join(NetworkSettings.DataFolder, "peers.db")
+	var create bool
+	if !util.FileExists(filePath) {
+		create = true
+	}
+
+	db, err := sql.Open("sqlite3", filePath)
 	if err != nil {
-		fmt.Println("No Peers.txt file")
-		return
-	}
-	defer func() {
-		file.Close()
-	}()
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() { // internally, it advances token based on sperator
-
-		AddPeerWithIPColonPort(scanner.Text())
+		return err
 	}
 
-}
+	defer db.Close()
 
-func AddPeerWithIPColonPort(ip_port string) *Peer {
-	saddr := strings.Split(ip_port, ":")
-	if len(saddr) != 2 {
-		return nil
-	}
+	if create {
+		sqlStmt := `drop table peers;`
+		_, err := db.Exec(sqlStmt)
 
-	p, _ := strconv.Atoi(saddr[1])
-	return AddPeerWithIPAndPort(saddr[0], p)
-}
-
-func AddPeerWithIPAndPort(ip string, port int) *Peer {
-	var peer Peer
-
-	peer.Address = ip
-	peer.Port = port
-
-	AddToPeerTable(&peer)
-
-	return &peer
-}
-
-func SavePeerTable() {
-
-	file, err := os.Create(filepath.Join(NetworkSettings.DataFolder, "peers.txt"))
-	if err != nil {
-		log.Fatalf("failed creating file: %s", err)
-	}
-
-	datawriter := bufio.NewWriter(file)
-
-	addr := map[string]bool{}
-
-	for _, peer := range Peers {
-
-		// avoid repeating addresses. addreses can be repeated in online peer table because of
-		// IDs, but no need in our file
-		_, exists := addr[peer.GetFullAddress()]
-		if !exists {
-			addr[peer.GetFullAddress()] = true
-			_, _ = datawriter.WriteString(peer.GetFullAddress() + "\n")
+		sqlStmt = fmt.Sprintf("create table peers (pid string not null unique primary key,address text, port int, connect_success int, connect_fail int, last_connected int);")
+		_, err = db.Exec(sqlStmt)
+		if err != nil {
+			return err
 		}
 	}
 
-	datawriter.Flush()
-	file.Close()
+	rows, err := db.Query("SELECT * FROM peers")
+	if err != nil {
+		return err
+	}
 
+	for rows.Next() {
+
+		var peer Peer
+
+		err = rows.Scan(&peer.ID, &peer.Address,
+			&peer.Port, &peer.ConnectSuccessCount,
+			&peer.ConnectFailCount,
+			&peer.LastConnected)
+		if err == nil {
+			AddToPeerTable(&peer)
+		}
+	}
+
+	rows.Close()
+
+	return nil
+}
+
+func SavePeerTable() error {
+
+	filePath := filepath.Join(NetworkSettings.DataFolder, "peers.db")
+	db, err := sql.Open("sqlite3", filePath)
+	if err != nil {
+		return err
+	}
+
+	defer db.Close()
+
+	// delete
+	stmt, err := db.Prepare("delete from peers")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	for _, peer := range Peers {
+		s := fmt.Sprintf("INSERT INTO peers(pid, address, port, connect_success, connect_fail, last_connected) values(?,?,?,?,?,?)")
+
+		// insert
+		stmt, err := db.Prepare(s)
+		if err != nil {
+			return err
+		}
+
+		_, err = stmt.Exec(peer.ID, peer.Address, peer.Port, peer.ConnectSuccessCount,
+			peer.ConnectFailCount, peer.LastConnected)
+		if err != nil {
+		}
+	}
+
+	return nil
 }
 
 func AddToPeerTable(peer *Peer) {

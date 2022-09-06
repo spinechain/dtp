@@ -56,20 +56,22 @@ func ProcessAvailableTasks() {
 	// if the taskpool gets too large
 	tasks, _ := OpenTaskPool.GetAllTasks()
 
-	// Send all tasks that have not been propagated yet to peers. Our own tasks we added
-	// would also be propagated if they are newly added
-	SendNewTaskToPeers(tasks)
-
 	// Go through all other tasks and ensure that they are appropriately handled based on their
 	// status.
 	for _, task := range tasks {
 		switch task.LocalStatus {
 		// A task comes in that we need to bid for. In this iteration we bid for all tasks, but later
 		// we will discriminate a bit
-		case StatusNew:
+		case StatusNewFromLocal:
+			// Send all tasks that have not been propagated yet to peers.
+			SendNewTaskToPeers(tasks)
+
+		case StatusNewFromNetwork:
 			util.PrintYellow("Found a new unprocessed task: " + task.Command)
 
 			BidForTask(task)
+
+			// we need to propagate this task further to peers
 
 			// when we get an update on that task (via an incoming msg)
 			// the local state will change
@@ -119,13 +121,11 @@ func SendNewTaskToPeers(myTasks []*Task) {
 				continue
 			}
 
-			task.GlobalStatus = StatusWaitingForBids
-			task.LocalStatus = StatusNew
-
-			// Todo: probably needs to be removed
-			// taskPool.tasks = RemoveIndex(taskPool.tasks, i)
-			SendPacketToAllPeers(packet)
 			task.MarkAsPropagated(OpenTaskPool)
+			task.GlobalStatus = StatusWaitingForBids
+			task.LocalStatus = StatusWaitingForBidsForMe
+
+			SendPacketToAllPeers(packet)
 
 			// Set a timeout
 			go WaitForBidExpiry(task)
