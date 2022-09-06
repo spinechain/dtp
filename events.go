@@ -68,7 +68,7 @@ func Event_TaskWorkerAdded(tid string) {
 
 		taskWorkers, _ := taskWorkers.GetAllTaskWorkers()
 
-		ui.NetworkPanel.UpdateList(taskWorkers)
+		ui.WorkersPanel.UpdateList(taskWorkers)
 		return false
 	})
 }

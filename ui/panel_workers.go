@@ -8,7 +8,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-type PanelNetwork struct {
+type PanelWorkers struct {
 	cmdLabel *gtk.Label
 	list     *gtk.TreeView
 	frame    *gtk.Frame
@@ -17,18 +17,15 @@ type PanelNetwork struct {
 
 // IDs to access the tree view columns by
 const (
-	COLUMN_NETW_FIRST = iota
-	COLUMN_NETW_SECOND
-	COLUMN_NETW_THIRD
-	COLUMN_NETW_FOURTH
-	COLUMN_NETW_FIFTH
-	COLUMN_NETW_SIXTH
-	COLUMN_NETW_SEVENTH
-	COLUMN_NETW_EIGTH
+	COLUMN_WORKERS_ID = iota
+	COLUMN_WORKERS_ADDR
+	COLUMN_WORKERS_PORT
+	COLUMN_WORKERS_TASKSDONE
+	COLUMN_WORKERS_REPUTATION
 )
 
 // Create a new panel that lists out all tasks
-func (tasks *PanelNetwork) Create(title string) (*gtk.Box, error) {
+func (tasks *PanelWorkers) Create(title string) (*gtk.Box, error) {
 
 	box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	if err != nil {
@@ -46,14 +43,11 @@ func (tasks *PanelNetwork) Create(title string) (*gtk.Box, error) {
 		log.Fatal(err)
 	}
 
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Client", COLUMN_NETW_FIRST))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_NETW_SECOND))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Capability", COLUMN_NETW_THIRD))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_NETW_FOURTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_NETW_FIFTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Alive?", COLUMN_NETW_SIXTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Synced", COLUMN_NETW_SEVENTH))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Height", COLUMN_NETW_EIGTH))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_WORKERS_ID))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Address", COLUMN_WORKERS_ADDR))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Port", COLUMN_WORKERS_PORT))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Tasks Done", COLUMN_WORKERS_TASKSDONE))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reputation", COLUMN_WORKERS_REPUTATION))
 
 	tasks.frame.Add(tasks.list)
 	tasks.frame.SetMarginStart(20)
@@ -70,7 +64,7 @@ func (tasks *PanelNetwork) Create(title string) (*gtk.Box, error) {
 
 // Add a column to the tree view (during the initialization of the tree view)
 // We need to distinct the type of data shown in either column.
-func (tasks *PanelNetwork) CreateTasksTextColumn(title string, id int) *gtk.TreeViewColumn {
+func (tasks *PanelWorkers) CreateTasksTextColumn(title string, id int) *gtk.TreeViewColumn {
 
 	// In this column we want to show text, hence create a text renderer
 	cellRenderer, err := gtk.CellRendererTextNew()
@@ -90,19 +84,22 @@ func (tasks *PanelNetwork) CreateTasksTextColumn(title string, id int) *gtk.Tree
 	return column
 }
 
-func (tasks *PanelNetwork) UpdateList(list []*taskworkers.TaskWorker) {
+func (tasks *PanelWorkers) UpdateList(list []*taskworkers.TaskWorker) {
 
 	if tasks.store != nil {
 		tasks.store.Clear()
 		for _, item := range list {
 			iter := tasks.store.Append()
-			tasks.store.SetValue(iter, 0, item.ID)
-			tasks.store.SetValue(iter, 1, item.Address)
+			tasks.store.SetValue(iter, COLUMN_WORKERS_ID, item.ID)
+			tasks.store.SetValue(iter, COLUMN_WORKERS_ADDR, item.Address)
+			tasks.store.SetValue(iter, COLUMN_WORKERS_PORT, item.Port)
+			tasks.store.SetValue(iter, COLUMN_WORKERS_TASKSDONE, item.TasksDone)
+			tasks.store.SetValue(iter, COLUMN_WORKERS_REPUTATION, item.Reputation)
 		}
 	}
 }
 
-func (tasks *PanelNetwork) initList(list *gtk.TreeView) *gtk.ListStore {
+func (tasks *PanelWorkers) initList(list *gtk.TreeView) *gtk.ListStore {
 	/*
 		cellRenderer, err := gtk.CellRendererTextNew()
 		if err != nil {
@@ -117,7 +114,7 @@ func (tasks *PanelNetwork) initList(list *gtk.TreeView) *gtk.ListStore {
 			list.AppendColumn(column)
 	*/
 
-	store, err := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING)
+	store, err := gtk.ListStoreNew(glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING, glib.TYPE_STRING)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -126,17 +123,17 @@ func (tasks *PanelNetwork) initList(list *gtk.TreeView) *gtk.ListStore {
 	return store
 }
 
-func (tasks *PanelNetwork) Destroy() {
+func (tasks *PanelWorkers) Destroy() {
 
 }
 
-func (tasks *PanelNetwork) Show() {
+func (tasks *PanelWorkers) Show() {
 	tasks.cmdLabel.ShowAll()
 	tasks.list.ShowAll()
 	tasks.frame.ShowAll()
 }
 
-func (tasks *PanelNetwork) Hide() {
+func (tasks *PanelWorkers) Hide() {
 	tasks.cmdLabel.Hide()
 	tasks.list.Hide()
 	tasks.frame.Hide()

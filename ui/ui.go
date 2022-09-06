@@ -16,8 +16,8 @@ var statusBar2 *Status
 
 // The panel
 var CommandPanel *PanelCommand
-var HistoryPanel *PanelNetwork
-var NetworkPanel *PanelNetwork
+var HistoryPanel *PanelWorkers
+var WorkersPanel *PanelWorkers
 var TasksPanel *PanelTasks
 
 // Create all the windows
@@ -45,14 +45,14 @@ func Create() {
 
 	// Create the panels on the right that are selected when a treeview item is clicked
 	CommandPanel = new(PanelCommand)
-	HistoryPanel = new(PanelNetwork)
-	NetworkPanel = new(PanelNetwork)
+	HistoryPanel = new(PanelWorkers)
+	WorkersPanel = new(PanelWorkers)
 	TasksPanel = new(PanelTasks)
 
 	// Add the panels to the window
 	mainWindow.AddPanel(CommandPanel, "Commands")
 	mainWindow.AddPanel(HistoryPanel, "History")
-	mainWindow.AddPanel(NetworkPanel, "Workers")
+	mainWindow.AddPanel(WorkersPanel, "Workers")
 	mainWindow.AddPanel(TasksPanel, "Tasks")
 
 	mainWindow.SetIcon()
@@ -100,22 +100,22 @@ func UpdateStatusBar(s string, section int) {
 func SwitchPanel(str string) {
 
 	if str == "commands" {
-		NetworkPanel.Hide()
+		WorkersPanel.Hide()
 		HistoryPanel.Hide()
 		CommandPanel.Show()
 		TasksPanel.Hide()
 	} else if str == "history" {
-		NetworkPanel.Hide()
+		WorkersPanel.Hide()
 		HistoryPanel.Show()
 		CommandPanel.Hide()
 		TasksPanel.Hide()
 	} else if str == "network" {
-		NetworkPanel.Show()
+		WorkersPanel.Show()
 		HistoryPanel.Hide()
 		CommandPanel.Hide()
 		TasksPanel.Hide()
 	} else if str == "tasks" {
-		NetworkPanel.Hide()
+		WorkersPanel.Hide()
 		HistoryPanel.Hide()
 		CommandPanel.Hide()
 		TasksPanel.Show()
