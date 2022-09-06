@@ -63,50 +63,44 @@ func ProcessAvailableTasks() {
 	// Go through all other tasks and ensure that they are appropriately handled based on their
 	// status.
 	for _, task := range tasks {
-		switch task.Status {
-		case BiddingComplete:
-			util.PrintPurple("Found a task with bidding period complete")
-			SelectWinningBids(task)
-			task.Status = BidsSelected
-
-		case Received:
+		switch task.LocalStatus {
+		// A task comes in that we need to bid for. In this iteration we bid for all tasks, but later
+		// we will discriminate a bit
+		case StatusNew:
 			util.PrintYellow("Found a new unprocessed task: " + task.Command)
 
 			BidForTask(task)
 
-		case WorkComplete:
-			util.PrintYellow("Found a completed task. Submitting: " + task.Command)
-			for _, routePeer := range task.ArrivalRoute {
+			// when we get an update on that task (via an incoming msg)
+			// the local state will change
 
-				peer := FindPeer(routePeer.ID)
+			/*
+				case BiddingComplete:
+					util.PrintPurple("Found a task with bidding period complete")
+					SelectWinningBids(task)
+					task.Status = BidsSelected
 
-				util.PrintYellow("Submitting task to " + peer.ID)
-				peer.SubmitTaskResult(task)
+				case WorkComplete:
+					util.PrintYellow("Found a completed task. Submitting: " + task.Command)
+					for _, routePeer := range task.ArrivalRoute {
 
-				break
-			}
+						peer := FindPeer(routePeer.ID)
+
+						util.PrintYellow("Submitting task to " + peer.ID)
+						peer.SubmitTaskResult(task)
+
+						break
+					}
+			*/
 		}
+
 	}
 
 }
 
 func BidForTask(task *Task) {
 
-	// We would normally check if this is my own task, so I don't
-	task.Status = Bid
-
-	/*
-		// We now bid for this task. We need to find the route that this
-		// packet came in through to respond through the same one
-		// TODO: this is likely not needed here
-		for _, routePeer := range task.ArrivalRoute {
-
-			peer := FindPeer(routePeer.ID)
-
-			peer.BidForTask(task)
-			break
-		}
-	*/
+	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusSentBid)
 
 	for _, peer := range Peers {
 		peer.BidForTask(task)
@@ -125,7 +119,9 @@ func SendNewTaskToPeers(myTasks []*Task) {
 				continue
 			}
 
-			task.Status = WaitingForBids
+			task.GlobalStatus = StatusWaitingForBids
+			task.LocalStatus = StatusNew
+
 			// Todo: probably needs to be removed
 			// taskPool.tasks = RemoveIndex(taskPool.tasks, i)
 			SendPacketToAllPeers(packet)
@@ -154,7 +150,7 @@ func ProcessAcceptedTasks() {
 			tt.ID = shortuuid.New()
 			tt.Created = time.Now()
 
-			if task.Status == AcceptedForWork {
+			if task.LocalStatus == StatusApprovedForMe {
 				util.PrintYellow("Executing Task: " + task.Command)
 				tt.Submission = []byte("This would be my submission")
 

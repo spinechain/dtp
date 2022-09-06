@@ -12,7 +12,7 @@ func WaitForBidExpiry(task *Task) {
 
 	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeoutSeconds * time.Second)
 	<-task.BidTimeoutTimer.C
-	task.Status = BiddingComplete
+	task.GlobalStatus = StatusBiddingComplete
 	taskForProcessingAvailable <- 1
 }
 

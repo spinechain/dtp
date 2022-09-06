@@ -78,7 +78,7 @@ func (t *Taskpool) CreateTable() error {
 	sqlStmt := `
 	create table tasks (tid text not null primary key, command text, 
 						created int, fee real, reward real, owner_id string, 
-						height int, propagated int, status int, bid_timeout int,
+						height int, propagated int, local_status int, global_status int, bid_timeout int,
 						task_hash string);
 	delete from tasks;
 	`
@@ -93,14 +93,14 @@ func (t *Taskpool) CreateTable() error {
 func (t *Taskpool) AddTask(task *Task) error {
 
 	// insert
-	stmt, err := t.db.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := t.db.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, local_status, global_status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
 
 	res, err := stmt.Exec(task.ID, task.Command, task.Created, task.Fee,
 		task.Reward, task.TaskOwnerID, task.Index,
-		task.FullyPropagated, task.Status,
+		task.FullyPropagated, task.LocalStatus, task.GlobalStatus,
 		task.BidEndTime, task.TaskHash)
 
 	if err != nil {
@@ -165,15 +165,17 @@ func (t *Taskpool) RemoveTask(taskID string) error {
 	return nil
 }
 
-func (t *Taskpool) UpdateTaskStatus(task *Task, newStatus TaskStatus) error {
+func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus, newLocalStatus LocalTaskStatus) error {
 
+	task.LocalStatus = newLocalStatus
+	task.GlobalStatus = newGlobalStatus
 	// update
-	stmt, err := t.db.Prepare("update tasks set status=? where tid=?")
+	stmt, err := t.db.Prepare("update tasks set local_status=?, global_status=? where tid=?")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(task.Status, task.ID)
+	_, err = stmt.Exec(task.LocalStatus, task.GlobalStatus, task.ID)
 	if err != nil {
 		return err
 	}
@@ -237,7 +239,7 @@ func (t *Taskpool) GetTasks(filter string, args ...any) ([]*Task, error) {
 		var bid_end_time string
 		err = rows.Scan(&task.ID, &task.Command, &created,
 			&task.Fee, &task.Reward, &task.TaskOwnerID,
-			&task.Index, &task.FullyPropagated, &task.Status,
+			&task.Index, &task.FullyPropagated, &task.LocalStatus, &task.GlobalStatus,
 			&bid_end_time, &task.TaskHash)
 		if err == nil {
 
@@ -267,7 +269,7 @@ func (t *Taskpool) GetTaskApprovedForClient() ([]*Task, error) {
 // format. Then we drop it into our taskpool. It will be maintained
 // there till the taskpool expires. We will also regularly propagate
 // our taskpool to connected peers
-func (t *Taskpool) AddToNetworkTaskPool(task *Task) {
+func (t *Taskpool) AddToTaskPool(task *Task) {
 
 	// We check if we have it
 	tasks, err := t.GetTasks("where tid=?", task.ID)
@@ -281,7 +283,7 @@ func (t *Taskpool) AddToNetworkTaskPool(task *Task) {
 	OpenTaskPool.IncHighestIndex(task.Index)
 
 	// We have the task. We need to update the status
-	t.UpdateTaskStatus(task, Received)
+	// t.UpdateTaskStatus(task, Received, task.LocalStatus)
 	/*
 		for _, t := range taskPool.networkTasks {
 			if t.ID == task.ID {

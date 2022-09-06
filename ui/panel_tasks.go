@@ -21,7 +21,8 @@ const (
 	COLUMN_TASK_TASK = iota
 	COLUMN_TASK_ID
 	COLUMN_TASK_OWNER
-	COLUMN_TASK_STATUS
+	COLUMN_TASK_GLOBALSTATUS
+	COLUMN_TASK_LOCALSTATUS
 	COLUMN_TASK_FEE
 	COLUMN_TASK_REWARD
 	COLUMN_TASK_CREATED
@@ -51,7 +52,8 @@ func (tasks *PanelTasks) Create(title string) (*gtk.Box, error) {
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Task", COLUMN_TASK_TASK))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_TASK_ID))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Owner", COLUMN_TASK_OWNER))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status", COLUMN_TASK_STATUS))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status (Global)", COLUMN_TASK_GLOBALSTATUS))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status (Local)", COLUMN_TASK_LOCALSTATUS))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_TASK_FEE))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_TASK_REWARD))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Created", COLUMN_TASK_CREATED))
@@ -122,7 +124,8 @@ func (tasks *PanelTasks) UpdateList(list []*tasknet.Task) {
 			tasks.store.SetValue(iter, COLUMN_TASK_CREATED, item.Created)
 			tasks.store.SetValue(iter, COLUMN_TASK_SYNCED, item.FullyPropagated)
 			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, item.Index)
-			tasks.store.SetValue(iter, COLUMN_TASK_STATUS, item.StatusAsString())
+			tasks.store.SetValue(iter, COLUMN_TASK_LOCALSTATUS, item.LocalStatusAsString())
+			tasks.store.SetValue(iter, COLUMN_TASK_GLOBALSTATUS, item.GlobalStatusAsString())
 
 			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, item.Index)
 

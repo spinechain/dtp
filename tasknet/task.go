@@ -23,19 +23,29 @@ Also look at:
 	https://blog.kaiko.com/an-in-depth-guide-into-how-the-mempool-works-c758b781c608
 */
 
-type TaskStatus int
+type GlobalTaskStatus int
+type LocalTaskStatus int
 
+// Global status on a task. To be propagated
 const (
-	Unprocessed TaskStatus = iota
-	Received
-	Bid
-	WaitingForBids
-	BiddingComplete
-	BidsSelected
-	AcceptedForWork
-	WorkComplete
-	Completed
-	Submitted
+	StatusWaitingForBids GlobalTaskStatus = iota
+	StatusBiddingComplete
+	StatusBidsSelected
+	StatusAcceptedWorkers
+	StatusWorkComplete
+	StatusCompletedAndPaid
+	StatusTimeoutAndDead
+)
+
+// Local status, not to be propagated, but kept in our db
+const (
+	StatusNew LocalTaskStatus = iota
+	StatusSentBid
+	StatusNotGoingToBid
+	StatusSubmittedResults
+	StatusApprovedForMe
+	StatusNotSelectedNoPay
+	StatusSuccessfullAndPaid
 )
 
 type Task struct {
@@ -48,7 +58,8 @@ type Task struct {
 	Index           uint64    // Non-reliable index that indicates roughly where this transaction is in global transaction pool
 	PropagatedTo    []string  // the peers I have sent it to
 	FullyPropagated bool      // Set to true if we won't send this to any other clients
-	Status          TaskStatus
+	GlobalStatus    GlobalTaskStatus
+	LocalStatus     LocalTaskStatus
 	Bids            []TaskBid
 	BidTimeoutTimer *time.Timer
 	BidEndTime      time.Time
@@ -57,29 +68,45 @@ type Task struct {
 	TaskHash        string // to prevent changes
 }
 
-func (task *Task) StatusAsString() string {
+func (task *Task) GlobalStatusAsString() string {
 
-	switch task.Status {
-	case Unprocessed:
-		return "Unprocessed"
-	case Received:
-		return "Received"
-	case Bid:
-		return "Sent Bid"
-	case WaitingForBids:
-		return "Waiting for bids"
-	case BiddingComplete:
+	switch task.GlobalStatus {
+	case StatusWaitingForBids:
+		return "Waiting for Bids"
+	case StatusBiddingComplete:
 		return "Bidding Complete"
-	case BidsSelected:
-		return "Bids Selected"
-	case AcceptedForWork:
-		return "Accepted for Work"
-	case WorkComplete:
+	case StatusBidsSelected:
+		return "Bid Selected"
+	case StatusAcceptedWorkers:
+		return "Accepted Workers"
+	case StatusWorkComplete:
 		return "Work Complete"
-	case Completed:
-		return "Completed"
-	case Submitted:
-		return "Submitted"
+	case StatusCompletedAndPaid:
+		return "Completed - Paid"
+	case StatusTimeoutAndDead:
+		return "Timeout - Dead"
+	}
+
+	return "Unknown Status"
+}
+
+func (task *Task) LocalStatusAsString() string {
+
+	switch task.LocalStatus {
+	case StatusNew:
+		return "New"
+	case StatusSentBid:
+		return "Sent Bid"
+	case StatusNotGoingToBid:
+		return "Not bidding"
+	case StatusApprovedForMe:
+		return "Approved"
+	case StatusSubmittedResults:
+		return "Submitted Results"
+	case StatusNotSelectedNoPay:
+		return "Task Cancelled"
+	case StatusSuccessfullAndPaid:
+		return "Accepted - Paid"
 	}
 
 	return "Unknown Status"

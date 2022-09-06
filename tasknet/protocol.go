@@ -158,6 +158,7 @@ func ConstructTaskPropagationPacket(tt *Task) (*SpinePacket, error) {
 	packet.Body.Items["task.Fee"] = strconv.FormatFloat(tt.Fee, 'E', -1, 64)
 	packet.Body.Items["task.Reward"] = strconv.FormatFloat(tt.Reward, 'E', -1, 64)
 	packet.Body.Items["task.TaskOwnerID"] = tt.TaskOwnerID
+	packet.Body.Items["task.Status"] = strconv.Itoa(int(tt.GlobalStatus))
 	packet.Body.Items["task.Index"] = strconv.FormatUint(tt.Index, 10)
 	packet.Body.Items["task.GeoRequirement"] = "DE, FR, US"
 	packet.Body.Items["task.Hash"] = tt.TaskHash

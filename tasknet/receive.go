@@ -227,17 +227,20 @@ func ReceiveTask(packet *SpinePacket) {
 		return
 	}
 
+	status, _ := strconv.Atoi(packet.Body.Items["task.Status"])
+
 	task.ID = packet.Body.Items["task.ID"]
 	task.Created = t1
 	task.Fee = ffee
 	task.Reward = freward
-	task.Status = Received
+	task.LocalStatus = StatusNew
+	task.GlobalStatus = GlobalTaskStatus(status)
 	task.TaskOwnerID = packet.Body.Items["task.TaskOwnerID"]
 	task.FullyPropagated = false
 	task.Index = OpenTaskPool.highestIndex + 1
 	task.ArrivalRoute = packet.PastRoute.Nodes
 
-	OpenTaskPool.AddToNetworkTaskPool(&task)
+	OpenTaskPool.AddToTaskPool(&task)
 
 	// This changes the thread and informs the UI about this new task
 	glib.TimeoutAdd(10, func() bool {
