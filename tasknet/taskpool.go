@@ -375,7 +375,7 @@ func (t *Taskpool) AddBid(bid *TaskBid) error {
 
 	var arrivalRoute string
 	for i := 0; i < len(bid.ArrivalRoute); i++ {
-		arrivalRoute = arrivalRoute + ";" + bid.ArrivalRoute[i].ID
+		arrivalRoute = bid.ArrivalRoute[i].ID + ";" + arrivalRoute
 	}
 
 	_, err = stmt.Exec(bid.ID, task.ID, bid.Created, bid.Fee,

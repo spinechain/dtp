@@ -1,8 +1,6 @@
 package tasknet
 
 import (
-	"fmt"
-	"sort"
 	"spinedtp/util"
 	"time"
 )
@@ -13,36 +11,53 @@ func WaitForBidExpiry(task *Task) {
 	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeoutSeconds * time.Second)
 	<-task.BidTimeoutTimer.C
 	task.GlobalStatus = StatusBiddingComplete
+	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, task.LocalStatus)
 	taskForProcessingAvailable <- 1
 }
 
-func SelectWinningBids(task *Task) {
+func SelectWinningBids(task *Task) error {
 
-	fmt.Println("Found a task with bidding complete: " + task.Command)
+	// Check that the same person is not bidding for the same task twice
+	full_query := "SELECT * FROM bids where task_id=? ORDER BY bid_value ASC"
+	stmt, err := OpenTaskPool.db.Prepare(full_query)
+	if err != nil {
+		return err
+	}
 
-	sort.SliceStable(task.Bids, func(i, j int) bool {
-		return task.Bids[i].BidValue < task.Bids[j].BidValue
-	})
+	rows, err := stmt.Query(task.ID)
+	if err != nil {
+		return err
+	}
 
-	for i, bid := range task.Bids {
+	var i int
+	for rows.Next() {
 
-		if bid.BidValue > task.Reward {
-			continue
+		// bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected
+		var bid TaskBid
+		var created string
+		var arrival_route string
+		err = rows.Scan(&bid.ID, &bid.TaskID, &created, &bid.Fee, &bid.BidValue, &bid.BidderID, &bid.Geo, &arrival_route, &bid.Selected)
+		if err != nil {
+			return err
 		}
 
-		for _, routePeer := range bid.GetReturnRoute() {
-
-			peer := FindPeer(routePeer.ID)
-
-			peer.AcceptBid(task, bid)
-			break
+		bid.Created, _ = time.Parse("2006-01-02 15:04:05-07:00", created)
+		if bid.BidValue > task.Reward {
+			continue
 		}
 
 		if i >= int(NetworkSettings.AcceptedBidsPerTask) {
 			break
 		}
 
+		for _, peer := range Peers {
+			peer.AcceptBid(task, bid)
+		}
+
+		i++
 	}
+
+	return nil
 }
 
 func TaskSubmissionReceived(tt *TaskSubmission) {

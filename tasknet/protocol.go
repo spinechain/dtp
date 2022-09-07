@@ -58,6 +58,7 @@ type TaskBid struct {
 	BidderID     string
 	Geo          string
 	ArrivalRoute []*Peer
+	Selected     int
 }
 
 type TaskAccept struct {

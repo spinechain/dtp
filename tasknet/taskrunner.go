@@ -59,29 +59,15 @@ func ProcessAvailableTasks() {
 	// Go through all other tasks and ensure that they are appropriately handled based on their
 	// status.
 	for _, task := range tasks {
-		switch task.LocalStatus {
-		// A task comes in that we need to bid for. In this iteration we bid for all tasks, but later
-		// we will discriminate a bit
-		case StatusNewFromLocal:
-			// Send all tasks that have not been propagated yet to peers.
-			SendNewTaskToPeers(tasks)
 
-		case StatusNewFromNetwork:
-			util.PrintYellow("Found a new unprocessed task: " + task.Command)
-
-			BidForTask(task)
-
-			// we need to propagate this task further to peers
-
-			// when we get an update on that task (via an incoming msg)
-			// the local state will change
+		switch task.GlobalStatus {
+		case StatusBiddingComplete:
+			util.PrintPurple("Found a task with bidding period complete")
+			SelectWinningBids(task)
+			task.GlobalStatus = StatusBidsSelected
+			task.LocalStatus = StatusWaitingForExecution
 
 			/*
-				case BiddingComplete:
-					util.PrintPurple("Found a task with bidding period complete")
-					SelectWinningBids(task)
-					task.Status = BidsSelected
-
 				case WorkComplete:
 					util.PrintYellow("Found a completed task. Submitting: " + task.Command)
 					for _, routePeer := range task.ArrivalRoute {
@@ -94,6 +80,20 @@ func ProcessAvailableTasks() {
 						break
 					}
 			*/
+		}
+
+		switch task.LocalStatus {
+		// A task comes in that we need to bid for. In this iteration we bid for all tasks, but later
+		// we will discriminate a bit
+		case StatusNewFromLocal:
+			// Send all tasks that have not been propagated yet to peers.
+			SendNewTaskToPeers(tasks)
+
+		case StatusNewFromNetwork:
+			util.PrintYellow("Found a new unprocessed task: " + task.Command)
+
+			BidForTask(task)
+
 		}
 
 	}
