@@ -107,7 +107,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
 		// This is a bid for a task of mine
 
-		OpenTaskPool.AddBid(tb)
+		AddBid(OpenTaskPool.db, tb)
 
 	} else {
 		// This is a bid for another peer that is not me. We route
@@ -121,8 +121,12 @@ func BidForTask(task *Task) {
 
 	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusSentBid)
 
+	task_bid := CreateTaskBid(task)
+
+	AddBid(OpenTaskPool.db, task_bid)
+
 	for _, peer := range Peers {
-		peer.BidForTask(task)
+		peer.BidForTask(task, task_bid)
 		break
 	}
 

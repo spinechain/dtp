@@ -284,19 +284,9 @@ func (peer *Peer) SendPeerList(peerList []string) error {
 	return err
 }
 
-func (peer *Peer) BidForTask(task *Task) error {
+func (peer *Peer) BidForTask(task *Task, taskbid *TaskBid) error {
 
-	var t TaskBid
-	t.BidValue = task.Reward - 0.0001
-	t.BidderID = NetworkSettings.MyPeerID
-	t.Fee = 0
-	t.Geo = "US"
-	t.ID = shortuuid.New()
-	t.TaskOwnerID = task.TaskOwnerID
-	t.TaskID = task.ID
-	t.Created = time.Now()
-
-	packet, err := ConstructTaskBidPacket(&t, task.GetReturnRoute())
+	packet, err := ConstructTaskBidPacket(taskbid, task.GetReturnRoute())
 	if err != nil {
 		return err
 	}
@@ -309,7 +299,7 @@ func (peer *Peer) BidForTask(task *Task) error {
 	return err
 }
 
-func (peer *Peer) AcceptBid(task *Task, taskbid TaskBid) error {
+func (peer *Peer) AcceptBid(task *Task, taskbid *TaskBid) error {
 
 	var t TaskAccept
 	t.BidderID = NetworkSettings.MyPeerID

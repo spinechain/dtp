@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"spinedtp/util"
-	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -333,60 +332,6 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 
 		IncHighestIndex(task.Index)
 	*/
-}
-
-func (t *Taskpool) AddBid(bid *TaskBid) error {
-
-	task := t.GetTask(bid.TaskID)
-	if task == nil {
-		return errors.New("task not found")
-	}
-
-	// Check that the same person is not bidding for the same task twice
-	full_query := "SELECT count(*) FROM bids where bidder_id=? and task_id=?"
-	stmt, err := t.db.Prepare(full_query)
-	if err != nil {
-		return err
-	}
-
-	rows, err := stmt.Query(bid.ID, task.ID)
-	if err != nil {
-		return err
-	}
-	for rows.Next() {
-
-		var item_count string
-		err = rows.Scan(&item_count)
-		if err != nil {
-			return err
-		}
-
-		cnt, _ := strconv.Atoi(item_count)
-		if cnt != 0 {
-			return errors.New("bid exists")
-		}
-	}
-
-	// insert the bid to db
-	stmt, err = t.db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected) values(?,?,?,?,?,?,?,?,?)")
-	if err != nil {
-		return err
-	}
-
-	var arrivalRoute string
-	for i := 0; i < len(bid.ArrivalRoute); i++ {
-		arrivalRoute = bid.ArrivalRoute[i].ID + ";" + arrivalRoute
-	}
-
-	_, err = stmt.Exec(bid.ID, task.ID, bid.Created, bid.Fee,
-		bid.BidValue, bid.BidderID, bid.Geo,
-		arrivalRoute, 0)
-
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func FindInNetworkTaskPool(id string) (*Task, error) {
