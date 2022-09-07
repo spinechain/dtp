@@ -283,10 +283,14 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 		return
 	}
 
+	existingTask := tasks[0]
 	OpenTaskPool.IncHighestIndex(task.Index)
 
 	// We have the task. We need to update the status
-	// t.UpdateTaskStatus(task, Received, task.LocalStatus)
+	if existingTask.LocalStatus == StatusNewFromLocal && task.LocalStatus == StatusNewFromNetwork {
+		t.UpdateTaskStatus(task, task.GlobalStatus, task.LocalStatus)
+	}
+
 	/*
 		for _, t := range taskPool.networkTasks {
 			if t.ID == task.ID {
