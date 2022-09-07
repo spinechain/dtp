@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"spinedtp/util"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -68,6 +69,14 @@ func (t *Taskpool) DropAllTables() error {
 		return err
 	}
 
+	sqlStmt = `
+	drop table bids;
+	`
+	_, err = t.db.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -86,6 +95,17 @@ func (t *Taskpool) CreateTable() error {
 	delete from tasks;
 	`
 	_, err := t.db.Exec(sqlStmt)
+	if err != nil {
+		return err
+	}
+
+	sqlStmt = `
+	create table bids (bid_id text not null unique primary key, task_id text, 
+						created int, fee real, bid_value real, bidder_id string, 
+						geo string, arrival_route string, selected int);
+	delete from bids;
+	`
+	_, err = t.db.Exec(sqlStmt)
 	if err != nil {
 		return err
 	}
@@ -211,6 +231,15 @@ func (t *Taskpool) GetAllTasks() ([]*Task, error) {
 	return t.GetTasks("")
 }
 
+func (t *Taskpool) GetTask(task_id string) *Task {
+	task, err := t.GetTasks("where tid=?", task_id)
+	if err != nil || len(task) < 1 {
+		return nil
+	}
+
+	return task[0]
+}
+
 func (t *Taskpool) GetTasks(filter string, args ...any) ([]*Task, error) {
 	// query
 
@@ -304,6 +333,60 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 
 		IncHighestIndex(task.Index)
 	*/
+}
+
+func (t *Taskpool) AddBid(bid *TaskBid) error {
+
+	task := t.GetTask(bid.TaskID)
+	if task == nil {
+		return errors.New("task not found")
+	}
+
+	// Check that the same person is not bidding for the same task twice
+	full_query := "SELECT count(*) FROM bids where bidder_id=? and task_id=?"
+	stmt, err := t.db.Prepare(full_query)
+	if err != nil {
+		return err
+	}
+
+	rows, err := stmt.Query(bid.ID, task.ID)
+	if err != nil {
+		return err
+	}
+	for rows.Next() {
+
+		var item_count string
+		err = rows.Scan(&item_count)
+		if err != nil {
+			return err
+		}
+
+		cnt, _ := strconv.Atoi(item_count)
+		if cnt != 0 {
+			return errors.New("bid exists")
+		}
+	}
+
+	// insert the bid to db
+	stmt, err = t.db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected) values(?,?,?,?,?,?,?,?,?)")
+	if err != nil {
+		return err
+	}
+
+	var arrivalRoute string
+	for i := 0; i < len(bid.ArrivalRoute); i++ {
+		arrivalRoute = arrivalRoute + ";" + bid.ArrivalRoute[i].ID
+	}
+
+	_, err = stmt.Exec(bid.ID, task.ID, bid.Created, bid.Fee,
+		bid.BidValue, bid.BidderID, bid.Geo,
+		arrivalRoute, 0)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func FindInNetworkTaskPool(id string) (*Task, error) {

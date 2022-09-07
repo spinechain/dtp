@@ -100,6 +100,23 @@ func ProcessAvailableTasks() {
 
 }
 
+// Call when a new task bid arrives. We add it to the database. When our bid
+// period expires is when we check for all bids and select the best
+func NewTaskBidArrived(tb *TaskBid) {
+
+	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
+		// This is a bid for a task of mine
+
+		OpenTaskPool.AddBid(tb)
+
+	} else {
+		// This is a bid for another peer that is not me. We route
+		// it to the best connection we have
+
+		RoutePacketOn()
+	}
+}
+
 func BidForTask(task *Task) {
 
 	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusSentBid)

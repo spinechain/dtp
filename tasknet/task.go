@@ -166,25 +166,6 @@ func CreateNewTask(taskCmd string) *Task {
 	return &task
 }
 
-func NewTaskBidArrived(tb TaskBid) {
-
-	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
-		// This is a bid for a task of mine
-
-		task, err := FindInMyTaskPool(tb.TaskID)
-
-		if err == nil {
-			task.Bids = append(task.Bids, tb)
-		}
-
-	} else {
-		// This is a bid for another peer that is not me. We route
-		// it to the best connection we have
-
-		RoutePacketOn()
-	}
-}
-
 func RemoveIndex(s []*Task, index int) []*Task {
 	return append(s[:index], s[index+1:]...)
 }

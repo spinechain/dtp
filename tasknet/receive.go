@@ -195,7 +195,7 @@ func ReceiveTaskBid(packet *SpinePacket) {
 	t.Geo = packet.Body.Items["task-bid.Geo"]
 	t.ArrivalRoute = packet.PastRoute.Nodes
 
-	NewTaskBidArrived(t)
+	NewTaskBidArrived(&t)
 }
 
 func ReceivePeersRequest(packet *SpinePacket) {
