@@ -64,7 +64,7 @@ func ProcessAvailableTasks() {
 		case StatusBiddingComplete:
 			util.PrintPurple("Found a task with bidding period complete")
 			SelectWinningBids(task)
-			task.GlobalStatus = StatusBidsSelected
+			task.GlobalStatus = StatusAcceptedWorkers
 			task.LocalStatus = StatusWaitingForExecution
 
 			/*
@@ -107,7 +107,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
 		// This is a bid for a task of mine
 
-		AddBid(OpenTaskPool.db, tb)
+		AddBid(taskDb, tb)
 
 	} else {
 		// This is a bid for another peer that is not me. We route
@@ -123,7 +123,7 @@ func BidForTask(task *Task) {
 
 	task_bid := CreateTaskBid(task)
 
-	AddBid(OpenTaskPool.db, task_bid)
+	AddBid(taskDb, task_bid)
 
 	for _, peer := range Peers {
 		peer.BidForTask(task, task_bid)
@@ -162,24 +162,37 @@ func ProcessAcceptedTasks() {
 
 		<-taskForExecutionAvailable
 
-		var acceptedTasks []*Task
 		// retrieve the tasks from the taskpool
+		acceptedTasks, err := OpenTaskPool.GetTasks("where local_status=? and global_status=?", StatusApprovedForMe, StatusAcceptedWorkers)
+		if err != nil {
+			continue
+		}
 
 		for _, task := range acceptedTasks {
+
+			// We confirm again that we actually bid for this task
+			// yes, we checked this before, but we need sanity checks
+			bids, err := GetBids("where task_id=? and bidder_id=? and selected=? and my_bid=17", task.ID, NetworkSettings.MyPeerID)
+			if err != nil {
+				continue
+			}
+
+			if len(bids) != 1 {
+				// It would only be greater than 1 if there is a bug. Better we know
+				continue
+			}
 
 			var tt TaskSubmission
 			tt.ID = shortuuid.New()
 			tt.Created = time.Now()
 
-			if task.LocalStatus == StatusApprovedForMe {
-				util.PrintYellow("Executing Task: " + task.Command)
-				tt.Submission = []byte("This would be my submission")
+			util.PrintYellow("Executing Task: " + task.Command)
+			tt.Submission = []byte("This would be my submission")
 
-				if NetworkSettings.TaskReadyForProcessing != nil {
-					NetworkSettings.TaskReadyForProcessing(task.Command)
-				} else {
-					fmt.Println("No callback available for task processing")
-				}
+			if NetworkSettings.TaskReadyForProcessing != nil {
+				NetworkSettings.TaskReadyForProcessing(task.Command)
+			} else {
+				fmt.Println("No callback available for task processing")
 			}
 
 		}

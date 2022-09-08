@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"spinedtp/util"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -26,7 +25,6 @@ const TASKPOOL_EXPIRY_DAYS = 7
 
 type Taskpool struct {
 	Type         string // done or outstanding
-	db           *sql.DB
 	Tasks        []*Task
 	OnTaskAdded  func(string, string) // ID, Description
 	highestIndex uint64
@@ -34,88 +32,17 @@ type Taskpool struct {
 
 func (t *Taskpool) Start(filePath string, create bool) error {
 
-	if !util.FileExists(filePath) {
-		create = true
-	}
-
-	var err error
-	t.db, err = sql.Open("sqlite3", filePath)
-	if err != nil {
-		return err
-	}
-
-	if create {
-		err := t.CreateTable()
-		if err != nil {
-			panic("Could not create tasks table!")
-		}
-	}
-	return err
+	return OpenDB(filePath)
 }
 
 func (t *Taskpool) Stop() {
-	if t.db != nil {
-		t.db.Close()
-	}
-}
-
-func (t *Taskpool) DropAllTables() error {
-	sqlStmt := `
-	drop table tasks;
-	`
-	_, err := t.db.Exec(sqlStmt)
-	if err != nil {
-		return err
-	}
-
-	sqlStmt = `
-	drop table bids;
-	`
-	_, err = t.db.Exec(sqlStmt)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func (t *Taskpool) CreateTable() error {
-
-	t.DropAllTables()
-
-	// propagated variable happens when we receive a task. We propagate it to all connected
-	// clients. But if a new client connects, we don't use this mechanism to propagate tasks
-	// to it, rather, it makes a request for tasks from a certain height.
-	sqlStmt := `
-	create table tasks (tid text not null unique primary key, command text, 
-						created int, fee real, reward real, owner_id string, 
-						height int, propagated int, local_status int, global_status int, bid_timeout int,
-						task_hash string);
-	delete from tasks;
-	`
-	_, err := t.db.Exec(sqlStmt)
-	if err != nil {
-		return err
-	}
-
-	sqlStmt = `
-	create table bids (bid_id text not null unique primary key, task_id text, 
-						created int, fee real, bid_value real, bidder_id string, 
-						geo string, arrival_route string, selected int);
-	delete from bids;
-	`
-	_, err = t.db.Exec(sqlStmt)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	CloseDB()
 }
 
 func (t *Taskpool) AddTask(task *Task) error {
 
 	// insert
-	stmt, err := t.db.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, local_status, global_status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := taskDb.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, local_status, global_status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
@@ -146,7 +73,7 @@ func (t *Taskpool) AddTask(task *Task) error {
 func (t *Taskpool) RemoveAllTasks() error {
 
 	// delete
-	stmt, err := t.db.Prepare("delete from tasks")
+	stmt, err := taskDb.Prepare("delete from tasks")
 	if err != nil {
 		return err
 	}
@@ -169,7 +96,7 @@ func (t *Taskpool) RemoveAllTasks() error {
 func (t *Taskpool) RemoveTask(taskID string) error {
 
 	// delete
-	stmt, err := t.db.Prepare("delete from tasks where tid=?")
+	stmt, err := taskDb.Prepare("delete from tasks where tid=?")
 	if err != nil {
 		return err
 	}
@@ -192,7 +119,7 @@ func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus
 	task.LocalStatus = newLocalStatus
 	task.GlobalStatus = newGlobalStatus
 	// update
-	stmt, err := t.db.Prepare("update tasks set local_status=?, global_status=? where tid=?")
+	stmt, err := taskDb.Prepare("update tasks set local_status=?, global_status=? where tid=?")
 	if err != nil {
 		return err
 	}
@@ -208,7 +135,7 @@ func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus
 func (t *Taskpool) UpdateTask(task *Task) error {
 
 	// update
-	stmt, err := t.db.Prepare("update tasks set command=?, propagated=? where tid=?")
+	stmt, err := taskDb.Prepare("update tasks set command=?, propagated=? where tid=?")
 	if err != nil {
 		return err
 	}
@@ -244,7 +171,7 @@ func (t *Taskpool) GetTasks(filter string, args ...any) ([]*Task, error) {
 
 	full_query := "SELECT * FROM tasks " + filter
 
-	stmt, err := t.db.Prepare(full_query)
+	stmt, err := taskDb.Prepare(full_query)
 	if err != nil {
 		return t.Tasks, err
 	}

@@ -30,7 +30,6 @@ type LocalTaskStatus int
 const (
 	StatusWaitingForBids GlobalTaskStatus = iota
 	StatusBiddingComplete
-	StatusBidsSelected
 	StatusAcceptedWorkers
 	StatusWorkComplete
 	StatusCompletedAndPaid
@@ -78,8 +77,6 @@ func (task *Task) GlobalStatusAsString() string {
 		return "Waiting for Bids"
 	case StatusBiddingComplete:
 		return "Bidding Complete"
-	case StatusBidsSelected:
-		return "Bid Selected"
 	case StatusAcceptedWorkers:
 		return "Accepted Workers"
 	case StatusWorkComplete:

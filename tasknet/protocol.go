@@ -59,6 +59,12 @@ type TaskBid struct {
 	Geo          string
 	ArrivalRoute []*Peer
 	Selected     int
+
+	// this must never be propagated or read from the network
+	// Even though it can be infered from bidderID, bidderID is propagated
+	// from the network and could be faked. This one is saved in local db
+	// but never retrieved from the db. !17 = not my bid. 17 = My Bid
+	MyBid int
 }
 
 type TaskAccept struct {

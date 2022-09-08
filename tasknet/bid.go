@@ -80,6 +80,8 @@ func AddBid(db *sql.DB, bid *TaskBid) error {
 		}
 	}
 
+	rows.Close()
+
 	// insert the bid to db
 	stmt, err = db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected) values(?,?,?,?,?,?,?,?,?)")
 	if err != nil {
@@ -107,7 +109,7 @@ func GetBids(filter string, args ...any) ([]*TaskBid, error) {
 
 	full_query := "SELECT * FROM bids " + filter
 
-	stmt, err := OpenTaskPool.db.Prepare(full_query)
+	stmt, err := taskDb.Prepare(full_query)
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +144,7 @@ func SelectWinningBids(task *Task) error {
 
 	// Check that the same person is not bidding for the same task twice
 	full_query := "SELECT * FROM bids where task_id=? ORDER BY bid_value ASC"
-	stmt, err := OpenTaskPool.db.Prepare(full_query)
+	stmt, err := taskDb.Prepare(full_query)
 	if err != nil {
 		return err
 	}
