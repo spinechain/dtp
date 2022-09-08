@@ -41,6 +41,7 @@ const (
 	StatusNewFromNetwork LocalTaskStatus = iota
 	StatusNewFromLocal
 	StatusWaitingForBidsForMe
+	StatusBiddingPeriodExpired
 	StatusWaitingForExecution
 	StatusSentBid
 	StatusNotGoingToBid
@@ -51,23 +52,24 @@ const (
 )
 
 type Task struct {
-	ID              string    // The globally unique ID of this task
-	Command         string    // The actual request
-	Created         time.Time // when the creator created it
-	Fee             float64   // fee for putting it in the network
-	Reward          float64   // reward for whoever solves the task
-	TaskOwnerID     string    // node that created this
-	Index           uint64    // Non-reliable index that indicates roughly where this transaction is in global transaction pool
-	PropagatedTo    []string  // the peers I have sent it to
-	FullyPropagated bool      // Set to true if we won't send this to any other clients
-	GlobalStatus    GlobalTaskStatus
-	LocalStatus     LocalTaskStatus
-	Bids            []TaskBid
-	BidTimeoutTimer *time.Timer
-	BidEndTime      time.Time
-	ArrivalRoute    []*Peer
-	Result          []byte
-	TaskHash        string // to prevent changes
+	ID                      string    // The globally unique ID of this task
+	Command                 string    // The actual request
+	Created                 time.Time // when the creator created it
+	Fee                     float64   // fee for putting it in the network
+	Reward                  float64   // reward for whoever solves the task
+	TaskOwnerID             string    // node that created this
+	Index                   uint64    // Non-reliable index that indicates roughly where this transaction is in global transaction pool
+	PropagatedTo            []string  // the peers I have sent it to
+	FullyPropagated         bool      // Set to true if we won't send this to any other clients
+	GlobalStatus            GlobalTaskStatus
+	LocalWorkerStatus       LocalTaskStatus // indicates the status of this task for us as a worker
+	LocalWorkProviderStatus LocalTaskStatus // indicates the status of this task for us if we initiated this task for the network
+	Bids                    []TaskBid
+	BidTimeoutTimer         *time.Timer
+	BidEndTime              time.Time
+	ArrivalRoute            []*Peer
+	Result                  []byte
+	TaskHash                string // to prevent changes
 }
 
 func (task *Task) GlobalStatusAsString() string {
@@ -90,11 +92,13 @@ func (task *Task) GlobalStatusAsString() string {
 	return "Unknown Status"
 }
 
-func (task *Task) LocalStatusAsString() string {
+func (task *Task) LocalStatusAsString(status LocalTaskStatus) string {
 
-	switch task.LocalStatus {
+	switch status {
 	case StatusNewFromLocal:
 		return "New (mine)"
+	case StatusBiddingPeriodExpired:
+		return "Bidding over"
 	case StatusNewFromNetwork:
 		return "New (remote)"
 	case StatusWaitingForBidsForMe:
@@ -153,7 +157,8 @@ func CreateNewTask(taskCmd string) *Task {
 	task.BidEndTime = time.Now().AddDate(0, 0, 1)
 	task.Fee = 0.00001
 	task.GlobalStatus = StatusWaitingForBids
-	task.LocalStatus = StatusNewFromLocal
+	task.LocalWorkerStatus = StatusNewFromLocal
+	task.LocalWorkProviderStatus = StatusNewFromLocal
 	task.Reward = 0.0001
 	task.TaskOwnerID = NetworkSettings.MyPeerID
 	task.FullyPropagated = false

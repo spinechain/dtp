@@ -23,7 +23,8 @@ const (
 	COLUMN_TASK_ID
 	COLUMN_TASK_OWNER
 	COLUMN_TASK_GLOBALSTATUS
-	COLUMN_TASK_LOCALSTATUS
+	COLUMN_TASK_LOCALWORKERSTATUS
+	COLUMN_TASK_LOCALWORKPROVIDERSTATUS
 	COLUMN_TASK_FEE
 	COLUMN_TASK_REWARD
 	COLUMN_TASK_CREATED
@@ -54,7 +55,8 @@ func (tasks *PanelTasks) Create(title string) (*gtk.Box, error) {
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("ID", COLUMN_TASK_ID))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Owner", COLUMN_TASK_OWNER))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status (Global)", COLUMN_TASK_GLOBALSTATUS))
-	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status (Local)", COLUMN_TASK_LOCALSTATUS))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status - Local Worker", COLUMN_TASK_LOCALWORKERSTATUS))
+	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Status - Local Work Providers", COLUMN_TASK_LOCALWORKPROVIDERSTATUS))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Fee", COLUMN_TASK_FEE))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Reward", COLUMN_TASK_REWARD))
 	tasks.list.AppendColumn(tasks.CreateTasksTextColumn("Created", COLUMN_TASK_CREATED))
@@ -125,7 +127,8 @@ func (tasks *PanelTasks) UpdateList(list []*tasknet.Task) {
 			tasks.store.SetValue(iter, COLUMN_TASK_CREATED, item.Created)
 			tasks.store.SetValue(iter, COLUMN_TASK_SYNCED, item.FullyPropagated)
 			tasks.store.SetValue(iter, COLUMN_TASK_HEIGHT, strconv.Itoa(int(item.Index)))
-			tasks.store.SetValue(iter, COLUMN_TASK_LOCALSTATUS, item.LocalStatusAsString())
+			tasks.store.SetValue(iter, COLUMN_TASK_LOCALWORKERSTATUS, item.LocalStatusAsString(item.LocalWorkerStatus))
+			tasks.store.SetValue(iter, COLUMN_TASK_LOCALWORKPROVIDERSTATUS, item.LocalStatusAsString(item.LocalWorkProviderStatus))
 			tasks.store.SetValue(iter, COLUMN_TASK_GLOBALSTATUS, item.GlobalStatusAsString())
 
 		}
@@ -148,6 +151,7 @@ func (tasks *PanelTasks) initList(list *gtk.TreeView) *gtk.ListStore {
 	*/
 
 	store, err := gtk.ListStoreNew(glib.TYPE_STRING,
+		glib.TYPE_STRING,
 		glib.TYPE_STRING,
 		glib.TYPE_STRING,
 		glib.TYPE_STRING,

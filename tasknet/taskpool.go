@@ -42,14 +42,15 @@ func (t *Taskpool) Stop() {
 func (t *Taskpool) AddTask(task *Task) error {
 
 	// insert
-	stmt, err := taskDb.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, local_status, global_status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := taskDb.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, local_worker_status, local_work_provider_status, global_status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
 
 	res, err := stmt.Exec(task.ID, task.Command, task.Created, task.Fee,
 		task.Reward, task.TaskOwnerID, task.Index,
-		task.FullyPropagated, task.LocalStatus, task.GlobalStatus,
+		task.FullyPropagated, task.LocalWorkerStatus,
+		task.LocalWorkProviderStatus, task.GlobalStatus,
 		task.BidEndTime, task.TaskHash)
 
 	if err != nil {
@@ -114,17 +115,18 @@ func (t *Taskpool) RemoveTask(taskID string) error {
 	return nil
 }
 
-func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus, newLocalStatus LocalTaskStatus) error {
+func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus, newLocalWorkerStatus LocalTaskStatus, newLocalWorkProviderStatus LocalTaskStatus) error {
 
-	task.LocalStatus = newLocalStatus
-	task.GlobalStatus = newGlobalStatus
+	task.LocalWorkerStatus = newLocalWorkerStatus
+	task.LocalWorkProviderStatus = newLocalWorkProviderStatus
+
 	// update
-	stmt, err := taskDb.Prepare("update tasks set local_status=?, global_status=? where tid=?")
+	stmt, err := taskDb.Prepare("update tasks set local_worker_status=?, local_work_provider_status=?, global_status=? where tid=?")
 	if err != nil {
 		return err
 	}
 
-	_, err = stmt.Exec(task.LocalStatus, task.GlobalStatus, task.ID)
+	_, err = stmt.Exec(task.LocalWorkerStatus, task.LocalWorkProviderStatus, task.GlobalStatus, task.ID)
 	if err != nil {
 		return err
 	}
@@ -199,7 +201,7 @@ func (t *Taskpool) GetTasks(filter string, args ...any) ([]*Task, error) {
 		var bid_end_time string
 		err = rows.Scan(&task.ID, &task.Command, &created,
 			&task.Fee, &task.Reward, &task.TaskOwnerID,
-			&task.Index, &task.FullyPropagated, &task.LocalStatus, &task.GlobalStatus,
+			&task.Index, &task.FullyPropagated, &task.LocalWorkerStatus, &task.LocalWorkProviderStatus, &task.GlobalStatus,
 			&bid_end_time, &task.TaskHash)
 		if err == nil {
 
@@ -238,13 +240,13 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 		return
 	}
 
-	existingTask := tasks[0]
+	// existingTask := tasks[0]
 	OpenTaskPool.IncHighestIndex(task.Index)
 
 	// We have the task. We need to update the status
-	if existingTask.LocalStatus == StatusNewFromLocal && task.LocalStatus == StatusNewFromNetwork {
-		t.UpdateTaskStatus(task, task.GlobalStatus, task.LocalStatus)
-	}
+	//if existingTask.LocalStatus == StatusNewFromLocal && task.LocalStatus == StatusNewFromNetwork {
+	//	t.UpdateTaskStatus(task, task.GlobalStatus, task.LocalStatus)
+	//}
 
 	/*
 		for _, t := range taskPool.networkTasks {

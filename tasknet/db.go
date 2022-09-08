@@ -70,7 +70,8 @@ func CreateTables() error {
 	sqlStmt := `
 	create table tasks (tid text not null unique primary key, command text, 
 						created int, fee real, reward real, owner_id string, 
-						height int, propagated int, local_status int, global_status int, bid_timeout int,
+						height int, propagated int, local_worker_status int, local_work_provider_status int, 
+						global_status int, bid_timeout int,
 						task_hash string);
 	delete from tasks;
 	`

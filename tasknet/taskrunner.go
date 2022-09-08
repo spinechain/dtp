@@ -64,8 +64,9 @@ func ProcessAvailableTasks() {
 		case StatusBiddingComplete:
 			util.PrintPurple("Found a task with bidding period complete")
 			SelectWinningBids(task)
-			task.GlobalStatus = StatusAcceptedWorkers
-			task.LocalStatus = StatusWaitingForExecution
+			//task.GlobalStatus = StatusAcceptedWorkers
+			// task.LocalStatus = StatusWaitingForExecution
+			OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusWaitingForExecution)
 
 			/*
 				case WorkComplete:
@@ -82,18 +83,20 @@ func ProcessAvailableTasks() {
 			*/
 		}
 
-		switch task.LocalStatus {
+		switch task.LocalWorkerStatus {
 		// A task comes in that we need to bid for. In this iteration we bid for all tasks, but later
 		// we will discriminate a bit
-		case StatusNewFromLocal:
-			// Send all tasks that have not been propagated yet to peers.
-			SendNewTaskToPeers(tasks)
-
 		case StatusNewFromNetwork:
 			util.PrintYellow("Found a new unprocessed task: " + task.Command)
 
 			BidForTask(task)
 
+		}
+
+		switch task.LocalWorkProviderStatus {
+		case StatusNewFromLocal:
+			// Send all tasks that have not been propagated yet to peers.
+			SendNewTaskToPeers(tasks)
 		}
 
 	}
@@ -119,7 +122,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 
 func BidForTask(task *Task) {
 
-	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusSentBid)
+	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusSentBid, task.LocalWorkProviderStatus)
 
 	task_bid := CreateTaskBid(task)
 
@@ -144,7 +147,8 @@ func SendNewTaskToPeers(myTasks []*Task) {
 
 			task.MarkAsPropagated(OpenTaskPool)
 			task.GlobalStatus = StatusWaitingForBids
-			task.LocalStatus = StatusWaitingForBidsForMe
+
+			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, task.LocalWorkerStatus, StatusWaitingForBidsForMe)
 
 			SendPacketToAllPeers(packet)
 

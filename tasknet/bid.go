@@ -30,7 +30,7 @@ func WaitForBidExpiry(task *Task) {
 	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeoutSeconds * time.Second)
 	<-task.BidTimeoutTimer.C
 	task.GlobalStatus = StatusBiddingComplete
-	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, task.LocalStatus)
+	OpenTaskPool.UpdateTaskStatus(task, StatusBiddingComplete, task.LocalWorkerStatus, StatusBiddingPeriodExpired)
 	taskForProcessingAvailable <- 1
 }
 
@@ -232,7 +232,7 @@ func TaskAcceptanceReceived(tt *TaskAccept) {
 		// In this case, we really did bid for this
 		// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
 		// accept it
-		OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusApprovedForMe)
+		OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusApprovedForMe, task.LocalWorkProviderStatus)
 		taskForExecutionAvailable <- 1
 
 	}

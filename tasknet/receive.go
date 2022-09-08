@@ -232,7 +232,8 @@ func ReceiveTask(packet *SpinePacket) {
 	task.Created = t1
 	task.Fee = ffee
 	task.Reward = freward
-	task.LocalStatus = StatusNewFromNetwork
+	task.LocalWorkerStatus = StatusNewFromNetwork
+	task.LocalWorkProviderStatus = StatusNewFromNetwork
 	task.GlobalStatus = GlobalTaskStatus(status)
 	task.TaskOwnerID = packet.Body.Items["task.TaskOwnerID"]
 	task.FullyPropagated = false
