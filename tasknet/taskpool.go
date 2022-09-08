@@ -189,6 +189,8 @@ func (t *Taskpool) GetTasks(filter string, args ...any) ([]*Task, error) {
 
 	t.Tasks = nil
 
+	defer rows.Close()
+
 	for rows.Next() {
 
 		var task Task
@@ -207,8 +209,6 @@ func (t *Taskpool) GetTasks(filter string, args ...any) ([]*Task, error) {
 			t.Tasks = append(t.Tasks, &task)
 		}
 	}
-
-	rows.Close()
 
 	return t.Tasks, nil
 }

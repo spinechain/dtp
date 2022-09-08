@@ -86,6 +86,8 @@ func LoadPeerTable() error {
 		return err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 
 		var peer Peer
@@ -98,8 +100,6 @@ func LoadPeerTable() error {
 			AddToPeerTable(&peer)
 		}
 	}
-
-	rows.Close()
 
 	return nil
 }

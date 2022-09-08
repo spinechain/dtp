@@ -66,6 +66,9 @@ func AddBid(db *sql.DB, bid *TaskBid) error {
 	if err != nil {
 		return err
 	}
+
+	defer rows.Close()
+
 	for rows.Next() {
 
 		var item_count string
@@ -79,8 +82,6 @@ func AddBid(db *sql.DB, bid *TaskBid) error {
 			return errors.New("bid exists")
 		}
 	}
-
-	rows.Close()
 
 	// insert the bid to db
 	stmt, err = db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected) values(?,?,?,?,?,?,?,?,?)")
@@ -121,6 +122,8 @@ func GetBids(filter string, args ...any) ([]*TaskBid, error) {
 		rows, err = stmt.Query()
 	}
 
+	defer rows.Close()
+
 	if err != nil {
 		return nil, err
 	}
@@ -134,8 +137,6 @@ func GetBids(filter string, args ...any) ([]*TaskBid, error) {
 
 		bids = append(bids, &bid)
 	}
-
-	rows.Close()
 
 	return bids, nil
 }
@@ -153,6 +154,8 @@ func SelectWinningBids(task *Task) error {
 	if err != nil {
 		return err
 	}
+
+	defer rows.Close()
 
 	var i int
 	for rows.Next() {

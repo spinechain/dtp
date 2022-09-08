@@ -147,6 +147,8 @@ func (t *TaskWorkers) GetTaskWorkers(filter string) ([]*TaskWorker, error) {
 		return t.TaskWorkers, err
 	}
 
+	defer rows.Close()
+
 	for rows.Next() {
 
 		var task TaskWorker
@@ -158,8 +160,6 @@ func (t *TaskWorkers) GetTaskWorkers(filter string) ([]*TaskWorker, error) {
 			t.TaskWorkers = append(t.TaskWorkers, &task)
 		}
 	}
-
-	rows.Close()
 
 	return t.TaskWorkers, nil
 }
