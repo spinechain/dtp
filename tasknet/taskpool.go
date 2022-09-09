@@ -42,7 +42,7 @@ func (t *Taskpool) Stop() {
 func (t *Taskpool) AddTask(task *Task) error {
 
 	// insert
-	stmt, err := taskDb.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, local_worker_status, local_work_provider_status, global_status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?,?)")
+	stmt, err := taskDb.Prepare("INSERT INTO tasks(tid, command, created, fee, reward, owner_id, height, propagated, local_worker_status, local_work_provider_status, global_status, bid_timeout, task_hash) values(?,?,?,?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		return err
 	}
@@ -240,8 +240,12 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 		return
 	}
 
-	// existingTask := tasks[0]
 	OpenTaskPool.IncHighestIndex(task.Index)
+
+	// We update the local statii of the existing task in the db
+	// TODO: this looks risky, as we are taking this info from network
+	existingTask := tasks[0]
+	t.UpdateTaskStatus(task, existingTask.GlobalStatus, task.LocalWorkerStatus, task.LocalWorkProviderStatus)
 
 	// We have the task. We need to update the status
 	//if existingTask.LocalStatus == StatusNewFromLocal && task.LocalStatus == StatusNewFromNetwork {
