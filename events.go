@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	tasknet "spinedtp/tasknet"
 	"spinedtp/ui"
 
@@ -23,18 +22,6 @@ func Event_BuildConnectionToTaskNetwork() {
 	SetNetworkSettings()
 	tasknet.Connect()
 
-}
-
-// This function is called when we have been selected to actually execute this task
-// Depending on the task, it would be routed to different places. We can execute it
-// it out of band and submit a result once done.
-func Event_TaskReadyForExecution(cmd string) {
-	fmt.Println("Task ready for execution: " + cmd)
-
-}
-
-func Event_TaskHasCompletedExecution(cmd string) {
-	// We call EngineHasCompletedTask
 }
 
 // This is called anytime the tasks are updated

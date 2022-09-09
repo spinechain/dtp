@@ -86,7 +86,6 @@ func SetNetworkSettings() {
 	tasknet.NetworkSettings.OnStatusUpdate = Event_StatusUpdate
 	tasknet.NetworkSettings.BidTimeoutSeconds = 5
 	tasknet.NetworkSettings.AcceptedBidsPerTask = 3
-	tasknet.NetworkSettings.TaskReadyForProcessing = Event_TaskReadyForExecution
 	tasknet.NetworkSettings.DataFolder = AppSettings.DataFolder
 
 	tasknet.NetworkCallbacks.OnTaskReceived = nil // s.OnNewTaskReceived

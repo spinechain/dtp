@@ -16,15 +16,14 @@ import (
 type StatusUpdateFn func(string, int)
 
 type NetSettings struct {
-	ServerPort             uint
-	ServerHost             string
-	MyPeerID               string
-	MaximumPeers           uint
-	BidTimeoutSeconds      time.Duration
-	AcceptedBidsPerTask    int
-	OnStatusUpdate         StatusUpdateFn
-	TaskReadyForProcessing func(string)
-	DataFolder             string
+	ServerPort          uint
+	ServerHost          string
+	MyPeerID            string
+	MaximumPeers        uint
+	BidTimeoutSeconds   time.Duration
+	AcceptedBidsPerTask int
+	OnStatusUpdate      StatusUpdateFn
+	DataFolder          string
 }
 
 type TaskReceiveFn func(string)

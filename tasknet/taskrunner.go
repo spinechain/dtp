@@ -3,9 +3,6 @@ package tasknet
 import (
 	"fmt"
 	"spinedtp/util"
-	"time"
-
-	"github.com/lithammer/shortuuid/v3"
 )
 
 // This file contains the thread that watches the taskpool for changes and makes appropriate actions
@@ -188,18 +185,9 @@ func ProcessAcceptedTasks() {
 				continue
 			}
 
-			var tt TaskSubmission
-			tt.ID = shortuuid.New()
-			tt.Created = time.Now()
+			data := []byte("This would be my submission")
 
-			util.PrintYellow("Executing Task: " + task.Command)
-			tt.Submission = []byte("This would be my submission")
-
-			if NetworkSettings.TaskReadyForProcessing != nil {
-				NetworkSettings.TaskReadyForProcessing(task.Command)
-			} else {
-				fmt.Println("No callback available for task processing")
-			}
+			SendTaskResult(task, &data)
 
 		}
 
@@ -207,6 +195,27 @@ func ProcessAcceptedTasks() {
 			util.PrintYellow("Task execution Thread Shutdown")
 			return
 		}
+	}
+
+}
+
+// This function will need to be improved a lot. This is because the submissions can be quite large.
+// Sending the result through all peers and potentially over the entire network is not going to be good
+// Solutions:
+// 1. The acceptance packet should contain all peers that the task-giver is connected to.
+// 2. The acceptance packet naturally contains the route over which it came
+// 3. The worker sends the result to the route it arrived from. It also provides the connection list
+//     The next peer checks if it can reach the task giver. If not, it gives up and informs worker.
+// 4. In this situation, the worker sends to all the connected peers. If no peer has any of the connected
+//    ones connected to it, then they give up. This way we need maximum of two hops between worker and
+//    the task giver. This is better for network fairness, so everyone has a chance to get jobs.
+// 5. If the above method still congests the network, we will use 'judges' who will provide IP routes. They
+//    can also do the transfer for a fee. Generally, there should be a fee for those transferring results.
+func SendTaskResult(task *Task, submissionData *[]byte) {
+
+	for _, peer := range Peers {
+		task.Result = *submissionData
+		peer.SubmitTaskResult(task)
 	}
 
 }
