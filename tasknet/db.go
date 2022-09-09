@@ -83,7 +83,7 @@ func CreateTables() error {
 	sqlStmt = `
 	create table bids (bid_id text not null unique primary key, task_id text, 
 						created int, fee real, bid_value real, bidder_id string, 
-						geo string, arrival_route string, selected int);
+						geo string, arrival_route string, selected int, my_bid int);
 	delete from bids;
 	`
 	_, err = taskDb.Exec(sqlStmt)

@@ -43,7 +43,7 @@ func CheckForNewTasks() {
 
 	if ProcessingThreadRunning {
 		taskForProcessingAvailable <- 1
-		taskForExecutionAvailable <- 1
+		// taskForExecutionAvailable <- 1
 	}
 
 }
@@ -110,7 +110,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
 		// This is a bid for a task of mine
 
-		AddBid(taskDb, tb)
+		AddBid(taskDb, tb, false)
 
 	} else {
 		// This is a bid for another peer that is not me. We route
@@ -126,7 +126,7 @@ func BidForTask(task *Task) {
 
 	task_bid := CreateTaskBid(task)
 
-	AddBid(taskDb, task_bid)
+	AddBid(taskDb, task_bid, true)
 
 	for _, peer := range Peers {
 		peer.BidForTask(task, task_bid)
@@ -167,7 +167,7 @@ func ProcessAcceptedTasks() {
 		<-taskForExecutionAvailable
 
 		// retrieve the tasks from the taskpool
-		acceptedTasks, err := OpenTaskPool.GetTasks("where local_status=? and global_status=?", StatusApprovedForMe, StatusAcceptedWorkers)
+		acceptedTasks, err := OpenTaskPool.GetTasks("where local_worker_status=?", StatusApprovedForMe)
 		if err != nil {
 			continue
 		}
@@ -176,13 +176,15 @@ func ProcessAcceptedTasks() {
 
 			// We confirm again that we actually bid for this task
 			// yes, we checked this before, but we need sanity checks
-			bids, err := GetBids("where task_id=? and bidder_id=? and selected=? and my_bid=17", task.ID, NetworkSettings.MyPeerID)
+			bids, err := GetBids("where task_id=? and bidder_id=? and selected=? and my_bid=17", task.ID, NetworkSettings.MyPeerID, 1)
 			if err != nil {
+				util.PrintRed("☢️ Found a task for me, but we never bid on this 😨")
 				continue
 			}
 
 			if len(bids) != 1 {
 				// It would only be greater than 1 if there is a bug. Better we know
+				util.PrintRed("🐛 It looks like we bid more than once on task. How can??? 🙆‍♂️")
 				continue
 			}
 

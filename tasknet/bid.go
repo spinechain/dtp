@@ -14,14 +14,39 @@ func (bid *TaskBid) Scan(rows *sql.Rows) error {
 
 	var created string
 	var arrival_route string
-	err := rows.Scan(&bid.ID, &bid.TaskID, &created, &bid.Fee, &bid.BidValue, &bid.BidderID, &bid.Geo, &arrival_route, &bid.Selected)
+	err := rows.Scan(&bid.ID, &bid.TaskID, &created, &bid.Fee, &bid.BidValue, &bid.BidderID, &bid.Geo, &arrival_route, &bid.Selected, &bid.MyBid)
 	if err != nil {
+		util.PrintRed(err.Error())
 		return err
 	}
 
 	bid.Created, _ = time.Parse("2006-01-02 15:04:05-07:00", created)
 
 	return err
+}
+
+func (bid *TaskBid) MarkAsAccepted() error {
+
+	bid.Selected = 1
+	return bid.UpdateBid(bid)
+}
+
+func (bid *TaskBid) UpdateBid(b *TaskBid) error {
+
+	// update
+	stmt, err := taskDb.Prepare("update bids set selected=? where bid_id=?")
+	if err != nil {
+		util.PrintRed("UpdatedBid: " + err.Error())
+		return err
+	}
+
+	_, err = stmt.Exec(b.Selected, bid.ID)
+	if err != nil {
+		util.PrintRed("UpdatedBid: " + err.Error())
+		return err
+	}
+
+	return nil
 }
 
 // Waits till the expiry of the bid timeout for a particular task
@@ -44,26 +69,35 @@ func CreateTaskBid(task *Task) *TaskBid {
 	t.TaskOwnerID = task.TaskOwnerID
 	t.TaskID = task.ID
 	t.Created = time.Now()
+	t.MyBid = 17
 
 	return &t
 }
 
-func AddBid(db *sql.DB, bid *TaskBid) error {
+func AddBid(db *sql.DB, bid *TaskBid, isMyBid bool) error {
 
 	task := OpenTaskPool.GetTask(bid.TaskID)
 	if task == nil {
 		return errors.New("task not found")
 	}
 
+	if isMyBid {
+		if bid.MyBid != 17 {
+			panic("You must set MyBid to 17 if this is your own bid. Security reasons.")
+		}
+	}
+
 	// Check that the same person is not bidding for the same task twice
 	full_query := "SELECT count(*) FROM bids where bidder_id=? and task_id=?"
 	stmt, err := db.Prepare(full_query)
 	if err != nil {
+		util.PrintRed(err.Error())
 		return err
 	}
 
 	rows, err := stmt.Query(bid.BidderID, task.ID)
 	if err != nil {
+		util.PrintRed(err.Error())
 		return err
 	}
 
@@ -84,8 +118,9 @@ func AddBid(db *sql.DB, bid *TaskBid) error {
 	}
 
 	// insert the bid to db
-	stmt, err = db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected) values(?,?,?,?,?,?,?,?,?)")
+	stmt, err = db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected, my_bid) values(?,?,?,?,?,?,?,?,?,?)")
 	if err != nil {
+		util.PrintRed(err.Error())
 		return err
 	}
 
@@ -96,9 +131,10 @@ func AddBid(db *sql.DB, bid *TaskBid) error {
 
 	_, err = stmt.Exec(bid.ID, task.ID, bid.Created, bid.Fee,
 		bid.BidValue, bid.BidderID, bid.Geo,
-		arrivalRoute, 0)
+		arrivalRoute, 0, bid.MyBid)
 
 	if err != nil {
+		util.PrintRed(err.Error())
 		return err
 	}
 
@@ -112,6 +148,7 @@ func GetBids(filter string, args ...any) ([]*TaskBid, error) {
 
 	stmt, err := taskDb.Prepare(full_query)
 	if err != nil {
+		util.PrintRed(err.Error())
 		return nil, err
 	}
 
@@ -125,6 +162,7 @@ func GetBids(filter string, args ...any) ([]*TaskBid, error) {
 	defer rows.Close()
 
 	if err != nil {
+		util.PrintRed(err.Error())
 		return nil, err
 	}
 
@@ -147,11 +185,13 @@ func SelectWinningBids(task *Task) error {
 	full_query := "SELECT * FROM bids where task_id=? ORDER BY bid_value ASC"
 	stmt, err := taskDb.Prepare(full_query)
 	if err != nil {
+		util.PrintRed(err.Error())
 		return err
 	}
 
 	rows, err := stmt.Query(task.ID)
 	if err != nil {
+		util.PrintRed(err.Error())
 		return err
 	}
 
@@ -160,21 +200,8 @@ func SelectWinningBids(task *Task) error {
 	var i int
 	for rows.Next() {
 
-		// bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected
 		var bid TaskBid
 		bid.Scan(rows)
-
-		var created string
-		var arrival_route string
-		err = rows.Scan(&bid.ID, &bid.TaskID, &created, &bid.Fee, &bid.BidValue, &bid.BidderID, &bid.Geo, &arrival_route, &bid.Selected)
-		if err != nil {
-			return err
-		}
-
-		bid.Created, _ = time.Parse("2006-01-02 15:04:05-07:00", created)
-		if bid.BidValue > task.Reward {
-			continue
-		}
 
 		if i >= int(NetworkSettings.AcceptedBidsPerTask) {
 			break
@@ -233,6 +260,7 @@ func TaskAcceptanceReceived(tt *TaskAccept) {
 		// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
 		// accept it
 		OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusApprovedForMe, task.LocalWorkProviderStatus)
+		ourBid[0].MarkAsAccepted()
 		taskForExecutionAvailable <- 1
 
 	}
