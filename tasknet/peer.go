@@ -73,10 +73,15 @@ func LoadPeerTable() error {
 	if create {
 		sqlStmt := `drop table peers;`
 		_, err := db.Exec(sqlStmt)
+		if err != nil {
+			util.PrintRed("Could not drop peer table")
+			return err
+		}
 
-		sqlStmt = fmt.Sprintf("create table peers (pid string not null unique primary key,address text, port int, connect_success int, connect_fail int, last_connected int);")
+		sqlStmt = "create table peers (pid string not null unique primary key,address text, port int, connect_success int, connect_fail int, last_connected int);"
 		_, err = db.Exec(sqlStmt)
 		if err != nil {
+			util.PrintRed("Could not create peer table")
 			return err
 		}
 	}
@@ -102,6 +107,10 @@ func LoadPeerTable() error {
 	}
 
 	return nil
+}
+
+func LoadDefaultPeerTable(default_peers string) {
+	fmt.Println("Loading default peers: " + default_peers)
 }
 
 func SavePeerTable() error {

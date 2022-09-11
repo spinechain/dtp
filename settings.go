@@ -61,6 +61,7 @@ func LoadSettings() {
 		fmt.Println("error:", err)
 	}
 
+	tasknet.LoadDefaultPeerTable(default_peers)
 }
 
 func SaveSettings() {

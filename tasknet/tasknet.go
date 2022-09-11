@@ -86,7 +86,7 @@ func RoutePacketOn() {
 
 func connectToPeers() {
 
-	time.Sleep(5 * time.Second)
+	time.Sleep(2 * time.Second)
 
 	StatusBarUpdate("📺 Connecting to peers...", 1)
 
