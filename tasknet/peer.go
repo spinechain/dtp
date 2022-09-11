@@ -55,6 +55,14 @@ func CreatePeer(c net.Conn) *Peer {
 	return &p
 }
 
+func CreatePeerFromIPAndPort(ip string, port int) *Peer {
+	var peer Peer
+	peer.Address = ip
+	peer.Port = port
+
+	return &peer
+}
+
 func LoadPeerTable() error {
 
 	filePath := filepath.Join(NetworkSettings.DataFolder, "peers.db")
@@ -75,7 +83,6 @@ func LoadPeerTable() error {
 		_, err := db.Exec(sqlStmt)
 		if err != nil {
 			util.PrintRed("Could not drop peer table")
-			return err
 		}
 
 		sqlStmt = "create table peers (pid string not null unique primary key,address text, port int, connect_success int, connect_fail int, last_connected int);"
@@ -111,6 +118,30 @@ func LoadPeerTable() error {
 
 func LoadDefaultPeerTable(default_peers string) {
 	fmt.Println("Loading default peers: " + default_peers)
+
+	// Load default peers from file
+	single_peers := strings.Split(default_peers, "\n")
+	for _, single_peer := range single_peers {
+		// Split the peer into address and port
+		single_peer = strings.TrimSpace(single_peer)
+		if single_peer == "" {
+			continue
+		}
+
+		single_peer_l := strings.Split(single_peer, ":")
+		if len(single_peer_l) != 2 {
+			continue
+		}
+
+		port, err := strconv.Atoi(single_peer_l[1])
+		if err != nil {
+			continue
+		}
+
+		peer := CreatePeerFromIPAndPort(single_peer_l[0], port)
+		AddToPeerTable(peer)
+	}
+
 }
 
 func SavePeerTable() error {
@@ -157,7 +188,7 @@ func AddToPeerTable(peer *Peer) {
 	// It is possible that the same peer reconnected, but we have the same
 	// peer ID in our table already with an old IP. Let's first check that
 	for _, epeer := range Peers {
-		if epeer.ID == peer.ID {
+		if epeer.ID != "" && epeer.ID == peer.ID {
 
 			// update the peer if the address has changed
 			// TODO: This is a potential bug - anyone can claim the ID of another peer

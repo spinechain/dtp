@@ -106,8 +106,8 @@ func connectToPeers() {
 		// connect to a single peer
 		c, err := net.Dial("tcp", peer.GetFullAddress())
 		if err != nil {
-			fmt.Println(err)
-			return
+			util.PrintPurple(err.Error())
+			continue
 		}
 
 		peer.conn = c
