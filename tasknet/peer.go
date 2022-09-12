@@ -291,6 +291,9 @@ func (peer *Peer) Send(data map[string]string, PastRoute []*Peer, FutureRoute []
 		util.PrintRed("Error when writing to socket" + err.Error())
 	}
 }
+func (peer *Peer) IsConnected() bool {
+	return peer.Connected
+}
 
 // Read a packet from this peer.
 func (peer *Peer) Read(reader *bufio.Reader) (*SpinePacket, error) {
@@ -326,6 +329,10 @@ func (peer *Peer) SendPeerList(peerList []string) error {
 
 func (peer *Peer) BidForTask(task *Task, taskbid *TaskBid) error {
 
+	if !peer.IsConnected() {
+		return errors.New("peer is not connected")
+	}
+
 	packet, err := ConstructTaskBidPacket(taskbid, task.GetReturnRoute())
 	if err != nil {
 		return err
@@ -340,6 +347,10 @@ func (peer *Peer) BidForTask(task *Task, taskbid *TaskBid) error {
 }
 
 func (peer *Peer) AcceptBid(task *Task, taskbid *TaskBid) error {
+
+	if !peer.IsConnected() {
+		return errors.New("peer is not connected")
+	}
 
 	var t TaskAccept
 	t.BidderID = NetworkSettings.MyPeerID
@@ -363,6 +374,10 @@ func (peer *Peer) AcceptBid(task *Task, taskbid *TaskBid) error {
 }
 
 func (peer *Peer) SubmitTaskResult(task *Task) error {
+
+	if !peer.IsConnected() {
+		return errors.New("peer is not connected")
+	}
 
 	var taskSubmit TaskSubmission
 	taskSubmit.BidderID = NetworkSettings.MyPeerID

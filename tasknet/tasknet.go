@@ -211,7 +211,9 @@ func MakeRoute(peer *Peer) []*Peer {
 func SendPacketToAllPeers(packet *SpinePacket) {
 
 	for _, peer := range Peers {
-		peer.conn.Write([]byte(packet.ToString()))
+		if peer.IsConnected() {
+			peer.conn.Write([]byte(packet.ToString()))
+		}
 	}
 }
 
