@@ -245,6 +245,8 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 			return
 		}
 
+		peer = AddToPeerTable(peer)
+
 		peer.OutConnection = true
 		peer.Connected = true
 
@@ -268,7 +270,7 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 		}
 
 		// This is a valid peer. We connect it on our side
-		AddToPeerTable(peer)
+		peer = AddToPeerTable(peer)
 		peer.InConnection = true
 		peer.Connected = true
 

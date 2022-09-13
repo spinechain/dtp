@@ -185,32 +185,43 @@ func SavePeerTable() error {
 	return nil
 }
 
-func AddToPeerTable(peer *Peer) {
+func AddToPeerTable(peer *Peer) *Peer {
 
 	// It is possible that the same peer reconnected, but we have the same
 	// peer ID in our table already with an old IP. Let's first check that
 	for i, epeer := range Peers {
 		if epeer.ID != "" && epeer.ID == peer.ID {
+			// TODO: We REALLY have to look at the implications of what is being done
+			// here. It most likely opens up a vulnerability here.
 
-			// update the peer if the address has changed
 			// TODO: This is a potential bug - anyone can claim the ID of another peer
 			//if epeer.Address != peer.Address || epeer.Port != peer.Port {
 			//	Peers[i] = peer
 			// }
-			// Doing this does not work. The port to connect vs the port to hold a conn are
-			// different. We need to provide a separate message for updating address and port
+
 			peer.ConnectPort = epeer.ConnectPort
+
+			if epeer.InConnection {
+				peer.InConnection = true
+			}
+
+			if epeer.OutConnection {
+				peer.OutConnection = true
+			}
+
 			Peers[i] = peer
-			return
+			return Peers[i]
 		}
 
 		if epeer.ID == "" && epeer.Address == peer.Address && epeer.ConnectPort == peer.ConnectPort {
 			epeer.ID = peer.ID
-			return
+			return epeer
 		}
 	}
 
 	Peers = append(Peers, peer)
+
+	return peer
 }
 
 func FindPeer(peerID string) *Peer {
