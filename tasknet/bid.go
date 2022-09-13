@@ -239,7 +239,7 @@ func SendTaskAcceptance(task *Task, bid *TaskBid) {
 
 func TaskSubmissionReceived(tt *TaskSubmission) {
 
-	if tt.ID != NetworkSettings.MyPeerID {
+	if tt.TaskOwnerID != NetworkSettings.MyPeerID {
 		util.PrintYellow("Task submission for another client received.")
 		// TODO: Route this on
 		return
