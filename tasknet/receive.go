@@ -149,6 +149,7 @@ func ReceiveTaskAccept(packet *SpinePacket) {
 	t.TaskID = packet.Body.Items["task-accept.TaskID"]
 	t.Created = created
 	t.Fee = fee
+	t.BidderID = packet.Body.Items["task-accept.BidderID"]
 	t.TaskOwnerID = packet.Body.Items["task-accept.TaskOwnerID"]
 	t.ArrivalRoute = packet.PastRoute.Nodes
 

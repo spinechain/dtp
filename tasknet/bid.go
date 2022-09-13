@@ -207,14 +207,34 @@ func SelectWinningBids(task *Task) error {
 			break
 		}
 
-		for _, peer := range Peers {
-			peer.AcceptBid(task, &bid)
-		}
+		SendTaskAcceptance(task, &bid)
 
 		i++
 	}
 
 	return nil
+}
+
+func SendTaskAcceptance(task *Task, bid *TaskBid) {
+	// Get the target client ID
+	targetID := bid.BidderID
+
+	// If we are connected directly to the target client, then send it directly
+	// without sending to any other clients
+	foundTarget := false
+	for _, peer := range Peers {
+		if peer.ID == targetID {
+			peer.AcceptBid(task, bid)
+			foundTarget = true
+			break
+		}
+	}
+
+	if !foundTarget {
+		for _, peer := range Peers {
+			peer.AcceptBid(task, bid)
+		}
+	}
 }
 
 func TaskSubmissionReceived(tt *TaskSubmission) {
@@ -251,7 +271,7 @@ func TaskSubmissionReceived(tt *TaskSubmission) {
 // those to execute the task
 func TaskAcceptanceReceived(tt *TaskAccept) {
 
-	if tt.ID != NetworkSettings.MyPeerID {
+	if tt.BidderID != NetworkSettings.MyPeerID {
 		util.PrintYellow("Task acceptance for another client received.")
 		// TODO: Route this on
 		return

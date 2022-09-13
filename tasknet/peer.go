@@ -374,6 +374,7 @@ func (peer *Peer) AcceptBid(task *Task, taskbid *TaskBid) error {
 
 	var t TaskAccept
 	t.BidderID = NetworkSettings.MyPeerID
+	t.TaskOwnerID = task.TaskOwnerID
 	t.Created = time.Now()
 	t.Fee = 0
 	t.ID = shortuuid.New()
