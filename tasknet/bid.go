@@ -218,6 +218,13 @@ func SelectWinningBids(task *Task) error {
 }
 
 func TaskSubmissionReceived(tt *TaskSubmission) {
+
+	if tt.ID != NetworkSettings.MyPeerID {
+		util.PrintYellow("Task submission for another client received.")
+		// TODO: Route this on
+		return
+	}
+
 	util.PrintPurple("Received task submission with value: " + string(tt.Submission))
 
 	/*
@@ -243,6 +250,12 @@ func TaskSubmissionReceived(tt *TaskSubmission) {
 // This means that we bid for a task and we have been accepted as one of
 // those to execute the task
 func TaskAcceptanceReceived(tt *TaskAccept) {
+
+	if tt.ID != NetworkSettings.MyPeerID {
+		util.PrintYellow("Task acceptance for another client received.")
+		// TODO: Route this on
+		return
+	}
 
 	util.PrintYellow("Received new task acceptance")
 
