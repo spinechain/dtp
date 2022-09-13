@@ -157,7 +157,7 @@ func ReceiveTaskAccept(packet *SpinePacket) {
 }
 
 func ReceiveTaskBid(packet *SpinePacket) {
-	util.PrintPurple("Received new task bid: " + packet.Body.Items["task-bid.TaskOwnerID"])
+	// util.PrintPurple("Received new task bid: " + packet.Body.Items["task-bid.TaskOwnerID"])
 
 	// When we receive a bid, it may be for us, or it may be for another peer. If
 	// it's for us, we can process it. Otherwise we look for one of the peers that
