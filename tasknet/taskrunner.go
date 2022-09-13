@@ -125,11 +125,20 @@ func BidForTask(task *Task) {
 
 	AddBid(taskDb, task_bid, true)
 
+	foundPeer := false
 	for _, peer := range Peers {
-		peer.BidForTask(task, task_bid)
-		break
+		if peer.ID == task.TaskOwnerID {
+			peer.BidForTask(task, task_bid)
+			foundPeer = true
+			break
+		}
 	}
 
+	if !foundPeer {
+		for _, peer := range Peers {
+			peer.BidForTask(task, task_bid)
+		}
+	}
 }
 
 func SendNewTaskToPeers(myTasks []*Task) {
