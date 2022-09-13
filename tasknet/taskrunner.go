@@ -112,7 +112,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 	} else {
 		// This is a bid for another peer that is not me. We route
 		// it to the best connection we have
-
+		util.PrintPurple("Task bid for another client")
 		RoutePacketOn()
 	}
 }
