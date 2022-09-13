@@ -20,7 +20,8 @@ type Peer struct {
 	reader              *bufio.Reader
 	ID                  string
 	Address             string
-	Port                int
+	ConnectPort         int // to connect to peer
+	ActivePort          int // to maintain connections with this peer
 	Connected           bool
 	ConnectSuccessCount int
 	ConnectFailCount    int
@@ -29,8 +30,9 @@ type Peer struct {
 	IsMetaTracker       bool     // indicates if I should publish my peer list here
 	PeerList            []string // a list of all the peers this peer is connected to. Not guaranteed to be there
 	SiblingCount        uint64   // number of people it is connected to
-	WeConnected         bool     // true if we built connection, false if it connected to us
-	FirstCommand        string   // if we connect to this peer for a specific reason, we can specify it here. E.g "peers"
+	OutConnection       bool     // true if we built connection, false if it connected to us
+	InConnection        bool
+	FirstCommand        string // if we connect to this peer for a specific reason, we can specify it here. E.g "peers"
 
 }
 
@@ -48,7 +50,7 @@ func CreatePeer(c net.Conn) *Peer {
 
 	var p Peer
 	p.Address = saddrl[0]
-	p.Port, _ = strconv.Atoi(saddrl[1])
+	p.ActivePort, _ = strconv.Atoi(saddrl[1])
 
 	p.conn = c
 
@@ -58,7 +60,7 @@ func CreatePeer(c net.Conn) *Peer {
 func CreatePeerFromIPAndPort(ip string, port int) *Peer {
 	var peer Peer
 	peer.Address = ip
-	peer.Port = port
+	peer.ConnectPort = port
 
 	return &peer
 }
@@ -105,7 +107,7 @@ func LoadPeerTable() error {
 		var peer Peer
 
 		err = rows.Scan(&peer.ID, &peer.Address,
-			&peer.Port, &peer.ConnectSuccessCount,
+			&peer.ConnectPort, &peer.ConnectSuccessCount,
 			&peer.ConnectFailCount,
 			&peer.LastConnected)
 		if err == nil {
@@ -174,7 +176,7 @@ func SavePeerTable() error {
 			return err
 		}
 
-		_, err = stmt.Exec(peer.ID, peer.Address, peer.Port, peer.ConnectSuccessCount,
+		_, err = stmt.Exec(peer.ID, peer.Address, peer.ConnectPort, peer.ConnectSuccessCount,
 			peer.ConnectFailCount, peer.LastConnected)
 		if err != nil {
 		}
@@ -187,7 +189,7 @@ func AddToPeerTable(peer *Peer) {
 
 	// It is possible that the same peer reconnected, but we have the same
 	// peer ID in our table already with an old IP. Let's first check that
-	for _, epeer := range Peers {
+	for i, epeer := range Peers {
 		if epeer.ID != "" && epeer.ID == peer.ID {
 
 			// update the peer if the address has changed
@@ -197,6 +199,13 @@ func AddToPeerTable(peer *Peer) {
 			// }
 			// Doing this does not work. The port to connect vs the port to hold a conn are
 			// different. We need to provide a separate message for updating address and port
+			peer.ConnectPort = epeer.ConnectPort
+			Peers[i] = peer
+			return
+		}
+
+		if epeer.ID == "" && epeer.Address == peer.Address && epeer.ConnectPort == peer.ConnectPort {
+			epeer.ID = peer.ID
 			return
 		}
 	}
@@ -247,11 +256,11 @@ func CountPeers() (int, int) {
 	WeConnectedCount := 0
 	TheyConnectedCount := 0
 	for _, peer := range Peers {
-		if peer.WeConnected && peer.Connected {
+		if peer.OutConnection && peer.IsConnected() {
 			WeConnectedCount = WeConnectedCount + 1
 		}
 
-		if !peer.WeConnected && peer.Connected {
+		if peer.InConnection && peer.IsConnected() {
 			TheyConnectedCount = TheyConnectedCount + 1
 		}
 	}
@@ -305,7 +314,7 @@ func (peer *Peer) Read(reader *bufio.Reader) (*SpinePacket, error) {
 }
 
 func (p *Peer) GetFullAddress() string {
-	return p.Address + ":" + fmt.Sprint(p.Port)
+	return p.Address + ":" + fmt.Sprint(p.ConnectPort)
 }
 
 func (peer *Peer) SetBad() {

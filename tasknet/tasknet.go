@@ -59,7 +59,7 @@ func Connect() {
 	go ProcessTasks()
 
 	// connect to any known peers
-	go connectToPeers()
+	go ConnectToPeers()
 }
 
 func Disconnect() {
@@ -84,7 +84,7 @@ func RoutePacketOn() {
 
 }
 
-func connectToPeers() {
+func ConnectToPeers() {
 
 	time.Sleep(2 * time.Second)
 
@@ -99,17 +99,19 @@ func connectToPeers() {
 	// attempt to build connections to each peer
 	for _, peer := range Peers {
 
-		if peer.Connected {
+		if peer.IsConnected() {
 			continue
 		}
 
 		// connect to a single peer
 		c, err := net.Dial("tcp", peer.GetFullAddress())
 		if err != nil {
-			util.PrintPurple(err.Error())
+			util.PrintPurple("Could not connected to peer: " + peer.ID + " / " + err.Error())
+			peer.Connected = false
 			continue
 		}
 
+		peer.Connected = true
 		peer.conn = c
 		go handlePeerConnection(peer, true)
 
@@ -118,7 +120,12 @@ func connectToPeers() {
 }
 
 func StatusBarUpdate(str string, section int) {
-	fmt.Println(str)
+
+	if section == 0 {
+		util.PrintYellow(str)
+	} else {
+		util.PrintPurple(str)
+	}
 
 	glib.TimeoutAdd(10, func() bool {
 
@@ -170,11 +177,13 @@ func listenForPeers() {
 		}
 
 		peer := CreatePeer(c)
+		peer.Connected = true
 
 		StatusBarUpdate("🔄 New connection from "+peer.Address, 0)
 		go handlePeerConnection(peer, false)
 
 		if requestDisconnect {
+			peer.Connected = false
 			break
 		}
 	}
@@ -236,7 +245,7 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 			return
 		}
 
-		peer.WeConnected = true
+		peer.OutConnection = true
 		peer.Connected = true
 
 		UpdatePeerCount()
@@ -260,7 +269,7 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 
 		// This is a valid peer. We connect it on our side
 		AddToPeerTable(peer)
-		peer.WeConnected = false
+		peer.InConnection = true
 		peer.Connected = true
 
 		UpdatePeerCount()
@@ -303,6 +312,8 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 }
 
 func UpdatePeerCount() {
+	util.PrintGreen("Updating peer count")
+
 	WeConnectedCount, ConnectedToUsCount := CountPeers()
 
 	if ConnectedToUsCount == 0 {

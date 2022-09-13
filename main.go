@@ -100,7 +100,7 @@ func Start() {
 	// Add this node as a peer. Will not be needed in future. Good for testing
 	var peer tasknet.Peer
 	peer.Address = AppSettings.ListenAddress
-	peer.Port = int(AppSettings.ServerPort)
+	peer.ConnectPort = int(AppSettings.ServerPort)
 	peer.ID = AppSettings.ClientID
 	tasknet.AddToPeerTable(&peer)
 

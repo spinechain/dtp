@@ -148,7 +148,7 @@ func GetMePeer() *Peer {
 	var mepeer Peer
 	mepeer.ID = NetworkSettings.MyPeerID
 	mepeer.Address = NetworkSettings.ServerHost
-	mepeer.Port = int(NetworkSettings.ServerPort)
+	mepeer.ConnectPort = int(NetworkSettings.ServerPort)
 	return &mepeer
 }
 
