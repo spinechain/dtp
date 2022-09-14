@@ -178,6 +178,20 @@ func listenForPeers() {
 	listeningForPeers = false
 }
 
+func PeerIDToDescription(peerID string) string {
+
+	// Loop over all peers
+	for _, peer := range Peers {
+		if peer.ID == peerID {
+			// return IP and Port
+
+			return peer.ID + " (" + peer.Address + ":" + fmt.Sprint(peer.ConnectPort) + ")"
+		}
+	}
+
+	return "Unknown Peer: " + peerID
+}
+
 func MakeRoute(peer *Peer) []*Peer {
 
 	route := make([]*Peer, 0)

@@ -104,7 +104,7 @@ func ProcessAvailableTasks() {
 // period expires is when we check for all bids and select the best
 func NewTaskBidArrived(tb *TaskBid) {
 
-	util.PrintPurple("New Task Bid Arrived for Task " + tb.TaskID + " from " + tb.BidderID)
+	util.PrintPurple("New Task Bid Arrived for Task " + tb.TaskID + " from " + PeerIDToDescription(tb.BidderID))
 
 	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
 		// This is a bid for a task of mine

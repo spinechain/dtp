@@ -17,7 +17,7 @@ func SendTaskToNetwork(text string) {
 
 func SendTaskAcceptance(task *Task, bid *TaskBid) {
 
-	util.PrintBlue("Sending Task Acceptance for Task: " + task.ID + " (" + task.Command + ") to " + bid.BidderID)
+	util.PrintBlue("Sending Task Acceptance for Task: " + task.ID + " (" + task.Command + ") to " + PeerIDToDescription(bid.BidderID))
 
 	// Get the target client ID
 	targetID := bid.BidderID
