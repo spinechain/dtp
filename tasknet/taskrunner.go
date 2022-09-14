@@ -119,6 +119,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 
 func BidForTask(task *Task) {
 
+	util.PrintBlue("Bidding for Task: " + task.ID + " (" + task.Command + ")")
 	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusSentBid, task.LocalWorkProviderStatus)
 
 	task_bid := CreateTaskBid(task)
