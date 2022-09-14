@@ -97,6 +97,8 @@ func Start() {
 
 	tasknet.LoadPeerTable()
 
+	UpdateInfoStatusBar()
+
 	// Add this node as a peer. Will not be needed in future. Good for testing
 	// To add local peer, put it in the default_peers.txt file
 	/*

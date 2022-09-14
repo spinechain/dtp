@@ -57,6 +57,8 @@ func WaitForBidExpiry(task *Task) {
 	task.GlobalStatus = StatusBiddingComplete
 	OpenTaskPool.UpdateTaskStatus(task, StatusBiddingComplete, task.LocalWorkerStatus, StatusBiddingPeriodExpired)
 	taskForProcessingAvailable <- 1
+
+	util.PrintYellow("Bid timeout for task " + task.ID + " expired")
 }
 
 func CreateTaskBid(task *Task) *TaskBid {

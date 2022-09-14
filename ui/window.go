@@ -79,9 +79,17 @@ func (window *Window) AddStatus(status *Status, pos uint) {
 		window.mainBox.PackStart(window.statusBox, false, true, 0)
 	}
 
-	if pos == 0 {
+	if pos == 3 || pos == 0 {
 		window.statusBox.PackEnd(status.StatusBar, false, false, 0)
 	} else {
 		window.statusBox.PackStart(status.StatusBar, false, false, 0)
 	}
+
+	/*
+		if pos == 0 {
+			window.statusBox.PackEnd(status.StatusBar, false, false, 0)
+		} else {
+			window.statusBox.PackStart(status.StatusBar, false, false, 0)
+		}
+	*/
 }

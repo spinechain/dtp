@@ -13,6 +13,7 @@ var treeViewSidebar *Treeview
 // Status bar at the bottom
 var statusBar1 *Status
 var statusBar2 *Status
+var statusBar3 *Status
 
 // The panel
 var CommandPanel *PanelCommand
@@ -39,8 +40,10 @@ func Create() {
 	// Create the status bars at the bottom and add to the window
 	statusBar1 = new(Status)
 	statusBar2 = new(Status)
+	statusBar3 = new(Status)
 
 	mainWindow.AddStatus(statusBar1, 0)
+	mainWindow.AddStatus(statusBar3, 2)
 	mainWindow.AddStatus(statusBar2, 1)
 
 	// Create the panels on the right that are selected when a treeview item is clicked
@@ -81,8 +84,10 @@ func UpdateStatusBar(s string, section int) {
 
 		if section == 0 {
 			util.PrintPurple(s)
-		} else {
+		} else if section == 1 {
 			util.PrintYellow(s)
+		} else if section == 2 {
+			util.PrintBlue(s)
 		}
 
 		return
@@ -90,8 +95,10 @@ func UpdateStatusBar(s string, section int) {
 
 	if section == 0 {
 		statusBar1.SetText(s)
-	} else {
+	} else if section == 1 {
 		statusBar2.SetText(s)
+	} else if section == 2 {
+		statusBar3.SetText(s)
 	}
 
 }

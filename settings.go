@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	tasknet "spinedtp/tasknet"
+	"spinedtp/ui"
 
 	"github.com/lithammer/shortuuid/v3"
 )
@@ -91,4 +92,10 @@ func SetNetworkSettings() {
 
 	tasknet.NetworkCallbacks.OnTaskReceived = nil // s.OnNewTaskReceived
 	tasknet.NetworkCallbacks.OnTaskApproved = nil //s.OnNetworkTaskApproval
+
+	UpdateInfoStatusBar()
+}
+
+func UpdateInfoStatusBar() {
+	ui.UpdateStatusBar("🤖 "+AppSettings.ClientID, 2)
 }
