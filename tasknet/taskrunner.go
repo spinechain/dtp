@@ -197,7 +197,7 @@ func ProcessAcceptedTasks() {
 
 			data := []byte("This would be my submission")
 
-			SendTaskResult(task, &data)
+			SendTaskSubmission(task, &data)
 
 		}
 
@@ -207,75 +207,6 @@ func ProcessAcceptedTasks() {
 		}
 	}
 
-}
-
-// This function will need to be improved a lot. This is because the submissions can be quite large.
-// Sending the result through all peers and potentially over the entire network is not going to be good
-// Solutions:
-//  1. The acceptance packet should contain all peers that the task-giver is connected to.
-//  2. The acceptance packet naturally contains the route over which it came
-//  3. The worker sends the result to the route it arrived from. It also provides the connection list
-//     The next peer checks if it can reach the task giver. If not, it gives up and informs worker.
-//  4. In this situation, the worker sends to all the connected peers. If no peer has any of the connected
-//     ones connected to it, then they give up. This way we need maximum of two hops between worker and
-//     the task giver. This is better for network fairness, so everyone has a chance to get jobs.
-//  5. If the above method still congests the network, we will use 'judges' who will provide IP routes. They
-//     can also do the transfer for a fee. Generally, there should be a fee for those transferring results.
-func SendTaskResult(task *Task, submissionData *[]byte) {
-
-	// Get the target client ID
-	targetID := task.TaskOwnerID
-
-	// If we are connected directly to the target client, then send it directly
-	// without sending to any other clients
-	foundTarget := false
-	for _, peer := range Peers {
-		if peer.ID == targetID {
-			task.Result = *submissionData
-			peer.SubmitTaskResult(task)
-			foundTarget = true
-			break
-		}
-	}
-
-	// Otherwise send to all connected clients
-	if !foundTarget {
-		for _, peer := range Peers {
-			task.Result = *submissionData
-			peer.SubmitTaskResult(task)
-		}
-	}
-
-}
-
-// The input in here does not know strictly about who triggered it. So it just needs
-// to search for what was requested so it can respond
-func EngineHasCompletedTask(taskType string, taskCommand string, taskData string) {
-
-	/*
-		// var t network.TaskSubmission
-		// network.SubmitTaskResult(&t)
-		if taskType == "download" {
-			for _, task := range taskPool.networkTasks {
-				if task.Status == AcceptedForWork {
-					if task.Command == taskType+" "+taskCommand {
-						// At this point, we have completed a task here internally. We are to
-						// propagate it back to the person who requested this task.
-
-						util.PrintPurple("Changing task status to WorkComplete")
-
-						// Set the task result in the task structure here
-						task.Result = []byte(taskData)
-						task.Status = WorkComplete
-
-						// Trigger the thread to return the result to network
-						taskForProcessingAvailable <- 1
-
-					}
-				}
-			}
-		}
-	*/
 }
 
 func ShutDownTaskRunner() {

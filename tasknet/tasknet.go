@@ -137,19 +137,6 @@ func StatusBarUpdate(str string, section int) {
 	})
 }
 
-// This will create a new task in our local task pool.
-// Immediately after, it will propagate open tasks in
-// our task pool into the next nodes. It will favour
-// the latest task we just droppped of course, but it will
-// also handle other open tasks it may have received
-// from other nodes.
-func SendTaskToNetwork(text string) {
-
-	task := CreateNewTask(text)
-	OpenTaskPool.AddTask(task)
-	CheckForNewTasks()
-}
-
 // This function starts this client listening on this port for other clients.
 func listenForPeers() {
 
@@ -190,23 +177,6 @@ func listenForPeers() {
 
 	listeningForPeers = false
 }
-
-/*
-func ConnectAndRequestPeers(tgt_ip string, tgt_port int) {
-
-	print("Requesting peers from " + tgt_ip)
-
-	peer := AddPeerWithIPAndPort(tgt_ip, tgt_port)
-	// add this as a new peer
-	// connect to it
-	// request new peers
-
-	peer.FirstCommand = "peers" // this will make it request peers once it connects
-
-	connectToPeers()
-
-}
-*/
 
 func MakeRoute(peer *Peer) []*Peer {
 

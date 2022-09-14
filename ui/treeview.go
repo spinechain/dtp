@@ -167,24 +167,24 @@ func (tv *Treeview) TreeSelectionChangedCB(selection *gtk.TreeSelection) {
 
 	if ok {
 
-		tpath, err := model.(*gtk.TreeModel).GetPath(iter)
+		_, err := model.(*gtk.TreeModel).GetPath(iter)
 		if err != nil {
-			log.Printf("treeSelectionChangedCB: Could not get path from model: %s\n", err)
+			// log.Printf("treeSelectionChangedCB: Could not get path from model: %s\n", err)
 			return
 		}
-		log.Printf("treeSelectionChangedCB: selected path: %s\n", tpath)
+		// log.Printf("treeSelectionChangedCB: selected path: %s\n", tpath)
 
 		val, err := tv.treeStore.GetValue(iter, COLUMN_TYPE)
 
 		s, _ := val.GetString()
-		log.Printf("treeSelectionChangedCB: selected path: %s\n", s)
+		// log.Printf("treeSelectionChangedCB: selected path: %s\n", s)
 
 		items := strings.Split(s, "/")
 		if len(items) == 3 {
 			type_name := items[0]
 			center_name := items[1]
 			action_name := items[2]
-			log.Printf("Type=%s, Center=%s, Action=%s\n", type_name, center_name, action_name)
+			// log.Printf("Type=%s, Center=%s, Action=%s\n", type_name, center_name, action_name)
 
 			OnTreeviewItemSelected(type_name, center_name, action_name)
 		} else if len(items) == 2 {
