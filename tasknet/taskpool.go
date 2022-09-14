@@ -119,6 +119,7 @@ func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus
 
 	task.LocalWorkerStatus = newLocalWorkerStatus
 	task.LocalWorkProviderStatus = newLocalWorkProviderStatus
+	task.GlobalStatus = newGlobalStatus
 
 	// update
 	stmt, err := taskDb.Prepare("update tasks set local_worker_status=?, local_work_provider_status=?, global_status=? where tid=?")
