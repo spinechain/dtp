@@ -1,7 +1,9 @@
 package tasknet
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"spinedtp/util"
 )
 
@@ -197,9 +199,38 @@ func ProcessAcceptedTasks() {
 				continue
 			}
 
-			data := []byte("This would be my submission")
+			sendTestBin := true
 
-			SendTaskSubmission(task, &data)
+			var bin []byte
+			if sendTestBin {
+				fileToBeUploaded := "test.jpg"
+				file, err := os.Open(fileToBeUploaded)
+				if err != nil {
+					util.PrintRed("🐛 Could not open file to be uploaded: " + fileToBeUploaded)
+					continue
+				}
+
+				defer file.Close()
+
+				fileInfo, _ := file.Stat()
+				var size int64 = fileInfo.Size()
+				bin = make([]byte, size)
+
+				// read file into bytes
+				buffer := bufio.NewReader(file)
+				_, err = buffer.Read(bin)
+				if err != nil {
+					util.PrintRed("🐛 Could not read file to be uploaded: " + fileToBeUploaded)
+					continue
+				}
+			} else {
+
+				bin = []byte("This would be my submission")
+			}
+
+			//
+
+			SendTaskSubmission(task, &bin)
 
 		}
 
