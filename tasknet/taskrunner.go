@@ -61,25 +61,13 @@ func ProcessAvailableTasks() {
 
 		switch task.GlobalStatus {
 		case StatusBiddingComplete:
+
 			util.PrintPurple("Found a task with bidding period complete")
+
 			SelectWinningBids(task)
-			//task.GlobalStatus = StatusAcceptedWorkers
-			// task.LocalStatus = StatusWaitingForExecution
+
 			OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusWaitingForExecution)
 
-			/*
-				case WorkComplete:
-					util.PrintYellow("Found a completed task. Submitting: " + task.Command)
-					for _, routePeer := range task.ArrivalRoute {
-
-						peer := FindPeer(routePeer.ID)
-
-						util.PrintYellow("Submitting task to " + peer.ID)
-						peer.SubmitTaskResult(task)
-
-						break
-					}
-			*/
 		}
 
 		switch task.LocalWorkerStatus {

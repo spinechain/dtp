@@ -52,6 +52,10 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	command.resultGrid.SetColumnHomogeneous(true)
 	command.resultGrid.SetRowHomogeneous(true)
 
+	// Add cell padding
+	command.resultGrid.SetRowSpacing(20)
+	command.resultGrid.SetColumnSpacing(20)
+
 	command.commandBox.PackStart(command.resultGrid, false, false, padding)
 
 	// init the images
