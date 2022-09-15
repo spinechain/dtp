@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"spinedtp/tasktypes"
 	"spinedtp/util"
 )
 
@@ -207,6 +208,10 @@ func ExecuteTask(task *Task) {
 
 	var bin []byte
 	if sendTestBin {
+
+		// run latent diffusion
+		tasktypes.RunLatentDiffusion(tasktypes.TaskSettings.LD_Script_Path, task.Command)
+
 		fileToBeUploaded := "test.jpg"
 		file, err := os.Open(fileToBeUploaded)
 		if err != nil {

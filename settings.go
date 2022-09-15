@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	tasknet "spinedtp/tasknet"
+	"spinedtp/tasktypes"
 	"spinedtp/ui"
 
 	"github.com/lithammer/shortuuid/v3"
@@ -23,6 +24,7 @@ type SpineSettings struct {
 var AppSettings SpineSettings
 
 func LoadDefaultSettings() {
+	tasktypes.TaskSettings.LD_Script_Path = "./tasktypes/latent_diffusion.sh"
 	AppSettings.ServerPort = 9100
 	AppSettings.ListenAddress = "127.0.0.1"
 	AppSettings.ClientID = shortuuid.New()
@@ -40,6 +42,7 @@ func LoadDefaultSettings() {
 			log.Fatal(err)
 		}
 	}
+
 }
 
 func LoadSettings() {
