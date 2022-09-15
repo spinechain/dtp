@@ -24,7 +24,7 @@ type SpineSettings struct {
 var AppSettings SpineSettings
 
 func LoadDefaultSettings() {
-	tasktypes.TaskSettings.LD_Script_Path = "./tasktypes/latent_diffusion.sh"
+	tasktypes.TaskSettings.LD_Script_Path = "./tasktypes/latent_diffusion.bat"
 	AppSettings.ServerPort = 9100
 	AppSettings.ListenAddress = "127.0.0.1"
 	AppSettings.ClientID = shortuuid.New()
