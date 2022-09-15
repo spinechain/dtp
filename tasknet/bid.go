@@ -252,12 +252,13 @@ func TaskSubmissionReceived(tt *TaskSubmission) {
 func TaskAcceptanceReceived(tt *TaskAccept) {
 
 	if tt.BidderID != NetworkSettings.MyPeerID {
-		util.PrintYellow("Task acceptance for another client received.")
+		util.PrintYellow("Task acceptance for another client received: " + PeerIDToDescription(tt.BidderID))
+
 		// TODO: Route this on
 		return
 	}
 
-	util.PrintYellow("Received new task acceptance")
+	util.PrintYellow("Received new task acceptance from: " + PeerIDToDescription(tt.TaskOwnerID) + " for task: " + tt.TaskID)
 
 	// We need to find the task in our taskpool. If it's not there, we should
 	// not do it
