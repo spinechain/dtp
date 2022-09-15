@@ -1,6 +1,12 @@
 package ui
 
-import "github.com/gotk3/gotk3/gtk"
+import (
+	"io/ioutil"
+	util "spinedtp/util"
+
+	"github.com/gotk3/gotk3/gdk"
+	"github.com/gotk3/gotk3/gtk"
+)
 
 type PanelCommand struct {
 	cmdLabel         *gtk.Label
@@ -8,6 +14,8 @@ type PanelCommand struct {
 	btn              *gtk.Button
 	historyLabel     *gtk.Label
 	commandBox       *gtk.Box
+	resultGrid       *gtk.Grid
+	images           []gtk.Image
 }
 
 func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
@@ -33,6 +41,26 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	command.commandBox.SetMarginEnd(20)
 
 	command.commandTextField.SetText("draw a picture of a happy spaceship")
+
+	// add the grid
+	command.resultGrid, err = gtk.GridNew()
+	if err != nil {
+		util.PrintRed(err.Error())
+		return nil, err
+	}
+
+	command.resultGrid.SetColumnHomogeneous(true)
+	command.resultGrid.SetRowHomogeneous(true)
+
+	// Add cell padding
+	command.resultGrid.SetRowSpacing(20)
+	command.resultGrid.SetColumnSpacing(20)
+
+	command.commandBox.PackStart(command.resultGrid, false, false, padding)
+
+	// init the images
+	// command.images = make([]*gtk.Image, 1)
+
 	return command.commandBox, err
 }
 
@@ -61,4 +89,50 @@ func (command *PanelCommand) Hide() {
 	command.btn.Hide()
 	command.historyLabel.Hide()
 	command.commandBox.Hide()
+}
+
+func (command *PanelCommand) AddResult(task string, key string, data []byte) {
+
+	// Write the tt.Submission to disk
+	err := ioutil.WriteFile("task_submissio.jpeg", data, 0644)
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	// load the image to pixbuf
+	pixbuf, err := gdk.PixbufNewFromFile("task_submissio.jpeg")
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	img, err := gtk.ImageNewFromPixbuf(pixbuf)
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	// append image to the list, limit to 6 items
+	command.images = append(command.images, *img)
+	if len(command.images) > 6 {
+		command.images = command.images[1:]
+	}
+
+	// Set each image to a grid cell, limit is 6x6
+	for i, img2 := range command.images {
+		command.resultGrid.Attach(&img2, i%3, i/3, 1, 1)
+	}
+
+	//for i, img2 := range command.images {
+	//	command.resultGrid.Attach(img2, i, 0, 1, 1)
+	//}
+
+	// add the image to the grid
+	//command.resultGrid.Attach(command.images[0], 0, 0, 1, 1)
+
+	// add the image to the panel
+	//command.commandBox.PackStart(command.images[0], false, false, 5)
+	command.commandBox.ShowAll()
+
 }

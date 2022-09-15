@@ -20,3 +20,5 @@ go.sum
 peers.txt
 
 .vscode/extensions.json
+
+task_submission*

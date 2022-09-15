@@ -3,7 +3,6 @@ package tasknet
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -47,7 +46,7 @@ func (t *Taskpool) AddTask(task *Task) error {
 		return err
 	}
 
-	res, err := stmt.Exec(task.ID, task.Command, task.Created, task.Fee,
+	_, err = stmt.Exec(task.ID, task.Command, task.Created, task.Fee,
 		task.Reward, task.TaskOwnerID, task.Index,
 		task.FullyPropagated, task.LocalWorkerStatus,
 		task.LocalWorkProviderStatus, task.GlobalStatus,
@@ -56,13 +55,6 @@ func (t *Taskpool) AddTask(task *Task) error {
 	if err != nil {
 		return err
 	}
-
-	id, err := res.LastInsertId()
-	if err != nil {
-		return err
-	}
-
-	fmt.Println(id)
 
 	if t.OnTaskAdded != nil {
 		t.OnTaskAdded(task.ID, task.Command)

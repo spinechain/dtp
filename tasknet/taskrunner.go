@@ -1,7 +1,9 @@
 package tasknet
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"spinedtp/util"
 )
 
@@ -59,25 +61,13 @@ func ProcessAvailableTasks() {
 
 		switch task.GlobalStatus {
 		case StatusBiddingComplete:
+
 			util.PrintPurple("Found a task with bidding period complete")
+
 			SelectWinningBids(task)
-			//task.GlobalStatus = StatusAcceptedWorkers
-			// task.LocalStatus = StatusWaitingForExecution
+
 			OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusWaitingForExecution)
 
-			/*
-				case WorkComplete:
-					util.PrintYellow("Found a completed task. Submitting: " + task.Command)
-					for _, routePeer := range task.ArrivalRoute {
-
-						peer := FindPeer(routePeer.ID)
-
-						util.PrintYellow("Submitting task to " + peer.ID)
-						peer.SubmitTaskResult(task)
-
-						break
-					}
-			*/
 		}
 
 		switch task.LocalWorkerStatus {
@@ -197,9 +187,10 @@ func ProcessAcceptedTasks() {
 				continue
 			}
 
-			data := []byte("This would be my submission")
+			// Change status so we know we are executing this task. If there a failure it does not recover
+			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusExecuting, task.LocalWorkProviderStatus)
 
-			SendTaskSubmission(task, &data)
+			go ExecuteTask(task)
 
 		}
 
@@ -209,6 +200,39 @@ func ProcessAcceptedTasks() {
 		}
 	}
 
+}
+
+func ExecuteTask(task *Task) {
+	sendTestBin := true
+
+	var bin []byte
+	if sendTestBin {
+		fileToBeUploaded := "test.jpg"
+		file, err := os.Open(fileToBeUploaded)
+		if err != nil {
+			util.PrintRed("🐛 Could not open file to be uploaded: " + fileToBeUploaded)
+			return
+		}
+
+		defer file.Close()
+
+		fileInfo, _ := file.Stat()
+		var size int64 = fileInfo.Size()
+		bin = make([]byte, size)
+
+		// read file into bytes
+		buffer := bufio.NewReader(file)
+		_, err = buffer.Read(bin)
+		if err != nil {
+			util.PrintRed("🐛 Could not read file to be uploaded: " + fileToBeUploaded)
+			return
+		}
+	} else {
+
+		bin = []byte("This would be my submission")
+	}
+
+	SendTaskSubmission(task, &bin)
 }
 
 func ShutDownTaskRunner() {

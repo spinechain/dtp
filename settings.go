@@ -92,6 +92,7 @@ func SetNetworkSettings() {
 
 	tasknet.NetworkCallbacks.OnTaskReceived = nil // s.OnNewTaskReceived
 	tasknet.NetworkCallbacks.OnTaskApproved = nil //s.OnNetworkTaskApproval
+	tasknet.NetworkCallbacks.OnTaskResult = Event_TaskResultReceived
 
 	UpdateInfoStatusBar()
 }

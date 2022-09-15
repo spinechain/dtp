@@ -101,13 +101,13 @@ func Start() {
 
 	// Add this node as a peer. Will not be needed in future. Good for testing
 	// To add local peer, put it in the default_peers.txt file
-	/*
-		var peer tasknet.Peer
-		peer.Address = AppSettings.ListenAddress
-		peer.ConnectPort = int(AppSettings.ServerPort)
-		peer.ID = AppSettings.ClientID
-		tasknet.AddToPeerTable(&peer)
-	*/
+
+	var peer tasknet.Peer
+	peer.Address = AppSettings.ListenAddress
+	peer.ConnectPort = int(AppSettings.ServerPort)
+	peer.ID = AppSettings.ClientID
+	tasknet.AddToPeerTable(&peer)
+
 }
 
 // Return the info needed to make me a taskworker

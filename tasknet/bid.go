@@ -1,8 +1,10 @@
 package tasknet
 
 import (
+	"bytes"
 	"database/sql"
 	"errors"
+	"fmt"
 	"spinedtp/util"
 	"strconv"
 	"time"
@@ -225,26 +227,13 @@ func TaskSubmissionReceived(tt *TaskSubmission) {
 		return
 	}
 
-	util.PrintPurple("Received task submission with value: " + string(tt.Submission))
+	// Convert byte to hex
+	peek_val := bytes.NewBuffer(tt.Submission[:20]).String()
 
-	/*
-		for _, task := range taskPool.myTasks {
-			if task.ID == tt.TaskID && task.Status == BidsSelected {
+	util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(tt.Submission)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
 
-				// Once we find it, we move it to our pool for tasks we are working on
-				task.Status = Completed
-				taskPool.completedTasks = append(taskPool.completedTasks, task)
+	NetworkCallbacks.OnTaskResult(tt.TaskID, "image", tt.Submission)
 
-				taskFile := filepath.Join(networkSettings.DataFolder, task.ID)
-
-				err := os.WriteFile(taskFile, tt.Submission, 0644)
-				if err != nil {
-					fmt.Println()
-				}
-				break
-			}
-		}
-	*/
 }
 
 // This means that we bid for a task and we have been accepted as one of

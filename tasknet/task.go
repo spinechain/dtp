@@ -47,6 +47,7 @@ const (
 	StatusNotGoingToBid
 	StatusSubmittedResults
 	StatusApprovedForMe
+	StatusExecuting
 	StatusNotSelectedNoPay
 	StatusSuccessfullAndPaid
 )
