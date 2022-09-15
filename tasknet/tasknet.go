@@ -28,10 +28,12 @@ type NetSettings struct {
 
 type TaskReceiveFn func(string)
 type TaskApprovedFn func(string)
+type TaskResultFn func(string, string, []byte)
 
 type NetCallbacks struct {
 	OnTaskReceived TaskReceiveFn
 	OnTaskApproved TaskApprovedFn
+	OnTaskResult   TaskResultFn
 }
 
 // For storing everything we need to participate in the Spine network

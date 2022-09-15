@@ -1,6 +1,11 @@
 package ui
 
-import "github.com/gotk3/gotk3/gtk"
+import (
+	"io/ioutil"
+	util "spinedtp/util"
+
+	"github.com/gotk3/gotk3/gtk"
+)
 
 type PanelCommand struct {
 	cmdLabel         *gtk.Label
@@ -8,6 +13,7 @@ type PanelCommand struct {
 	btn              *gtk.Button
 	historyLabel     *gtk.Label
 	commandBox       *gtk.Box
+	images           []*gtk.Image
 }
 
 func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
@@ -33,6 +39,10 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	command.commandBox.SetMarginEnd(20)
 
 	command.commandTextField.SetText("draw a picture of a happy spaceship")
+
+	// init the images
+	command.images = make([]*gtk.Image, 1)
+
 	return command.commandBox, err
 }
 
@@ -61,4 +71,25 @@ func (command *PanelCommand) Hide() {
 	command.btn.Hide()
 	command.historyLabel.Hide()
 	command.commandBox.Hide()
+}
+
+func (command *PanelCommand) AddResult(task string, key string, data []byte) {
+
+	// Write the tt.Submission to disk
+	err := ioutil.WriteFile("task_submissio.jpeg", data, 0644)
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	command.images[0], err = gtk.ImageNewFromFile("task_submissio.jpeg")
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	// add the image to the panel
+	command.commandBox.PackStart(command.images[0], false, false, 5)
+	command.commandBox.ShowAll()
+
 }

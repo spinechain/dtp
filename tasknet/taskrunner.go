@@ -199,38 +199,10 @@ func ProcessAcceptedTasks() {
 				continue
 			}
 
-			sendTestBin := true
+			// Change status so we know we are executing this task. If there a failure it does not recover
+			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusExecuting, task.LocalWorkProviderStatus)
 
-			var bin []byte
-			if sendTestBin {
-				fileToBeUploaded := "test.jpg"
-				file, err := os.Open(fileToBeUploaded)
-				if err != nil {
-					util.PrintRed("🐛 Could not open file to be uploaded: " + fileToBeUploaded)
-					continue
-				}
-
-				defer file.Close()
-
-				fileInfo, _ := file.Stat()
-				var size int64 = fileInfo.Size()
-				bin = make([]byte, size)
-
-				// read file into bytes
-				buffer := bufio.NewReader(file)
-				_, err = buffer.Read(bin)
-				if err != nil {
-					util.PrintRed("🐛 Could not read file to be uploaded: " + fileToBeUploaded)
-					continue
-				}
-			} else {
-
-				bin = []byte("This would be my submission")
-			}
-
-			//
-
-			SendTaskSubmission(task, &bin)
+			go ExecuteTask(task)
 
 		}
 
@@ -240,6 +212,39 @@ func ProcessAcceptedTasks() {
 		}
 	}
 
+}
+
+func ExecuteTask(task *Task) {
+	sendTestBin := true
+
+	var bin []byte
+	if sendTestBin {
+		fileToBeUploaded := "test.jpg"
+		file, err := os.Open(fileToBeUploaded)
+		if err != nil {
+			util.PrintRed("🐛 Could not open file to be uploaded: " + fileToBeUploaded)
+			return
+		}
+
+		defer file.Close()
+
+		fileInfo, _ := file.Stat()
+		var size int64 = fileInfo.Size()
+		bin = make([]byte, size)
+
+		// read file into bytes
+		buffer := bufio.NewReader(file)
+		_, err = buffer.Read(bin)
+		if err != nil {
+			util.PrintRed("🐛 Could not read file to be uploaded: " + fileToBeUploaded)
+			return
+		}
+	} else {
+
+		bin = []byte("This would be my submission")
+	}
+
+	SendTaskSubmission(task, &bin)
 }
 
 func ShutDownTaskRunner() {

@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"spinedtp/util"
 	"strconv"
 	"time"
@@ -233,12 +232,7 @@ func TaskSubmissionReceived(tt *TaskSubmission) {
 
 	util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(tt.Submission)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
 
-	// Write the tt.Submission to disk
-	err := ioutil.WriteFile("task_submission_"+tt.TaskID+".jpeg", tt.Submission, 0644)
-	if err != nil {
-		util.PrintRed(err.Error())
-		return
-	}
+	NetworkCallbacks.OnTaskResult(tt.TaskID, "image", tt.Submission)
 
 }
 
