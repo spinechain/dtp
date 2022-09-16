@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Welcome
-echo "Welcome to the Latent Diffusion tasktype!"
+echo "Linux: Welcome to the Latent Diffusion tasktype!"
 
 # Get the first script parameter
 THE_PROMPT=$1
@@ -16,7 +16,5 @@ cd $LD_PATH
 source activate ldm
 
 # Run latent diffusion and get return value
-python scripts/txt2img.py --prompt "$THE_PROMPT" --plms --ckpt sd-v1-4.ckpt --skip_grid --n_samples 1 --outdir $OUTPUT_DIR
-
-# Return the out of the script
-echo $RESULT
+result=$(python scripts/txt2img.py --prompt "$THE_PROMPT" --plms --ckpt sd-v1-4.ckpt --skip_grid --n_samples 1 --outdir $OUTPUT_DIR)
+echo $result

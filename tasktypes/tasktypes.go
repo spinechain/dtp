@@ -36,6 +36,21 @@ func CopySripts(DataFolder string) error {
 		}
 	}
 
+	// delete existing scripts
+	if _, err := os.Stat(ld_bat_file); !os.IsNotExist(err) {
+		err := os.Remove(ld_bat_file)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	if _, err := os.Stat(ld_sh_file); !os.IsNotExist(err) {
+		err := os.Remove(ld_sh_file)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	var err error
 	// check if the files exist
 	if _, err := os.Stat(ld_bat_file); os.IsNotExist(err) {
@@ -93,7 +108,7 @@ func RunLatentDiffusion(dataFolder string, taskType string, prompt string) error
 		cmd = exec.Command("cmd.exe", "/C", filepath.Join(dataFolder, "scripts", shellScriptName))
 	} else {
 		// run the shell script
-		cmd = exec.Command("sh", filepath.Join(dataFolder, "scripts", shellScriptName))
+		cmd = exec.Command("bash", filepath.Join(dataFolder, "scripts", shellScriptName))
 	}
 
 	result, err := cmd.Output()
@@ -108,6 +123,10 @@ func RunLatentDiffusion(dataFolder string, taskType string, prompt string) error
 	// search for text in result
 	if strings.Contains(resultString, "not a valid Win32") {
 		util.PrintRed("The latent diffusion script is not a valid Win32 application")
+	}
+
+	if strings.Contains(resultString, "Enjoy.") {
+		util.PrintBlue("Latent diffusion completed successfully")
 	}
 
 	return nil
