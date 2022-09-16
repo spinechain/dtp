@@ -20,7 +20,7 @@ type NetSettings struct {
 	ServerHost          string
 	MyPeerID            string
 	MaximumPeers        uint
-	BidTimeoutSeconds   time.Duration
+	BidTimeout          time.Duration
 	AcceptedBidsPerTask int
 	OnStatusUpdate      StatusUpdateFn
 	DataFolder          string

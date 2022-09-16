@@ -27,15 +27,18 @@ var isRunning bool = false
 // Struture for tasks to be executed
 type TaskToExecute struct {
 	TaskType    string
+	TaskID      string
 	DataFolder  string
 	Prompt      string
 	Complete    bool
 	ResultFile  string
 	ResultError error
+	Sent        bool
 }
 
 // List with tasks to execute
-var tasksToExecute []TaskToExecute
+var TasksToExecute []TaskToExecute
+var TaskForSubmissionAvailable chan int
 
 func CopySripts(DataFolder string) error {
 	// copy the emebeded scripts to the data folder
@@ -90,15 +93,15 @@ func CopySripts(DataFolder string) error {
 	return err
 }
 
-func AddToLatentDiffusionQueue(dataFolder string, taskType string, prompt string) error {
-	util.PrintYellow("Adding to latent diffusion queue: " + taskType)
+func AddToTaskExecutionQueue(dataFolder string, taskType string, taskID string, prompt string) error {
+	util.PrintYellow("Adding to execution queue: " + taskType)
 
 	// add to the queue
-	tasksToExecute = append(tasksToExecute, TaskToExecute{TaskType: taskType, DataFolder: dataFolder, Prompt: prompt})
+	TasksToExecute = append(TasksToExecute, TaskToExecute{TaskType: taskType, DataFolder: dataFolder, Prompt: prompt, TaskID: taskID, Complete: false})
 
 	// add to queue
 	if !isRunning {
-		go RunLatentDiffusion()
+		go RunTaskExecutionProcess()
 	} else {
 		util.PrintYellow("Latent diffusion is already running")
 	}
@@ -110,27 +113,27 @@ func CompleteTask(task *TaskToExecute, resultFile string, resultError string) {
 	task.Complete = true
 	task.ResultFile = resultFile
 	task.ResultError = errors.New(resultError)
+
+	TaskForSubmissionAvailable <- 1
 }
 
 // Get next open task
 func GetNextTask() *TaskToExecute {
-	for i, task := range tasksToExecute {
+	for i, task := range TasksToExecute {
 		if !task.Complete {
-			return &tasksToExecute[i]
+			return &TasksToExecute[i]
 		}
 	}
 
 	return nil
 }
 
-func RunLatentDiffusion() error {
+func RunTaskExecutionProcess() error {
 
 	isRunning = true
 	defer func() { isRunning = false }()
 
-	util.PrintYellow("Starting latent diffusion")
-
-	// TODO: find the next open task
+	util.PrintYellow("Starting task execution process")
 
 	// big loop
 	for te := GetNextTask(); te != nil; te = GetNextTask() {
@@ -163,7 +166,7 @@ func RunLatentDiffusion() error {
 		}
 
 		if shellScriptName == "" {
-			CompleteTask(&tasksToExecute[0], "", "task type not supported")
+			CompleteTask(&TasksToExecute[0], "", "task type not supported")
 			continue
 		}
 
@@ -181,7 +184,7 @@ func RunLatentDiffusion() error {
 		result, err := cmd.Output()
 		if err != nil {
 			// Complete task
-			CompleteTask(&tasksToExecute[0], "", err.Error())
+			CompleteTask(&TasksToExecute[0], "", err.Error())
 			continue
 		}
 
@@ -199,13 +202,15 @@ func RunLatentDiffusion() error {
 			resultFile, err := FigureOutResultFile(outputDir, startTime)
 			if err != nil {
 				// Complete task
-				CompleteTask(&tasksToExecute[0], "", err.Error())
+				CompleteTask(&TasksToExecute[0], "", err.Error())
 				continue
 			}
 
 			// Complete task
-			CompleteTask(&tasksToExecute[0], resultFile, "")
+			CompleteTask(&TasksToExecute[0], resultFile, "")
 		}
+
+		CompleteTask(&TasksToExecute[0], "", "Unknown task type")
 	}
 
 	return nil

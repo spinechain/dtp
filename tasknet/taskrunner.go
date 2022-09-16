@@ -12,16 +12,22 @@ import (
 
 var taskForProcessingAvailable chan int
 var taskForExecutionAvailable chan int
+var TaskForSubmissionAvailable chan int
 var shutDownTaskThread bool = false
+var shutDownSubmissionThread bool = false
 
 var OpenTaskPool *Taskpool
 var ProcessingThreadRunning bool = false
+var SubmissionThreadRunning bool = false
+
+var TasksToExecute *[]tasktypes.TaskToExecute
 
 // This thread waits for new tasks to come into the network
 func ProcessTasks() {
 
 	// Start the thread that will do the actual work (execution of each task)
 	go ProcessAcceptedTasks()
+	go ProcessCompletedTasks()
 
 	for {
 
@@ -35,6 +41,54 @@ func ProcessTasks() {
 		}
 	}
 
+}
+
+func ProcessCompletedTasks() {
+
+	for {
+
+		SubmissionThreadRunning = true
+		<-TaskForSubmissionAvailable
+
+		// Loop through all completes in TasksToExecute
+		for _, task_exec := range *TasksToExecute {
+			// Check if the task is complete
+			if task_exec.Complete && !task_exec.Sent && task_exec.ResultError == nil {
+
+				task_exec.Sent = true
+
+				file, err := os.Open(task_exec.ResultFile)
+				if err != nil {
+					util.PrintRed("🐛 Could not open file to be uploaded: " + task_exec.ResultFile)
+					continue
+				}
+
+				defer file.Close()
+
+				fileInfo, _ := file.Stat()
+				var size int64 = fileInfo.Size()
+				bin := make([]byte, size)
+
+				// read file into bytes
+				buffer := bufio.NewReader(file)
+				_, err = buffer.Read(bin)
+				if err != nil {
+					util.PrintRed("🐛 Could not read file to be uploaded: " + task_exec.ResultFile)
+					return
+				}
+
+				task := OpenTaskPool.GetTask(task_exec.TaskID)
+
+				// Submit the task to the network
+				SendTaskSubmission(task, &bin)
+			}
+		}
+
+		if shutDownSubmissionThread {
+			fmt.Println("Task processing Thread Shutdown")
+			return
+		}
+	}
 }
 
 // This function is called to make the task processor check for new tasks
@@ -191,7 +245,7 @@ func ProcessAcceptedTasks() {
 			// Change status so we know we are executing this task. If there a failure it does not recover
 			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusExecuting, task.LocalWorkProviderStatus)
 
-			go ExecuteTask(task)
+			tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "ld", task.ID, task.Command)
 
 		}
 
@@ -203,45 +257,10 @@ func ProcessAcceptedTasks() {
 
 }
 
-func ExecuteTask(task *Task) {
-	sendTestBin := true
-
-	var bin []byte
-	if sendTestBin {
-
-		// run latent diffusion
-		tasktypes.AddToLatentDiffusionQueue(NetworkSettings.DataFolder, "ld", task.Command)
-
-		fileToBeUploaded := "test.jpg"
-		file, err := os.Open(fileToBeUploaded)
-		if err != nil {
-			util.PrintRed("🐛 Could not open file to be uploaded: " + fileToBeUploaded)
-			return
-		}
-
-		defer file.Close()
-
-		fileInfo, _ := file.Stat()
-		var size int64 = fileInfo.Size()
-		bin = make([]byte, size)
-
-		// read file into bytes
-		buffer := bufio.NewReader(file)
-		_, err = buffer.Read(bin)
-		if err != nil {
-			util.PrintRed("🐛 Could not read file to be uploaded: " + fileToBeUploaded)
-			return
-		}
-	} else {
-
-		bin = []byte("This would be my submission")
-	}
-
-	SendTaskSubmission(task, &bin)
-}
-
 func ShutDownTaskRunner() {
 
 	shutDownTaskThread = true
+	shutDownSubmissionThread = true
 	taskForProcessingAvailable <- 1
+	TaskForSubmissionAvailable <- 1
 }

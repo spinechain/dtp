@@ -43,6 +43,8 @@ func LoadDefaultSettings() {
 	}
 
 	tasktypes.CopySripts(AppSettings.DataFolder)
+	tasknet.TasksToExecute = &tasktypes.TasksToExecute
+	tasktypes.TaskForSubmissionAvailable = tasknet.TaskForSubmissionAvailable
 }
 
 func LoadSettings() {
@@ -89,7 +91,7 @@ func SetNetworkSettings() {
 	tasknet.NetworkSettings.MyPeerID = AppSettings.ClientID
 	tasknet.NetworkSettings.ServerPort = AppSettings.ServerPort
 	tasknet.NetworkSettings.OnStatusUpdate = Event_StatusUpdate
-	tasknet.NetworkSettings.BidTimeoutSeconds = 5
+	tasknet.NetworkSettings.BidTimeout = 5
 	tasknet.NetworkSettings.AcceptedBidsPerTask = 3
 	tasknet.NetworkSettings.DataFolder = AppSettings.DataFolder
 

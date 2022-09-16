@@ -54,7 +54,7 @@ func (bid *TaskBid) UpdateBid(b *TaskBid) error {
 // Waits till the expiry of the bid timeout for a particular task
 func WaitForBidExpiry(task *Task) {
 
-	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeoutSeconds * time.Second)
+	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeout * time.Second)
 	<-task.BidTimeoutTimer.C
 	task.GlobalStatus = StatusBiddingComplete
 	OpenTaskPool.UpdateTaskStatus(task, StatusBiddingComplete, task.LocalWorkerStatus, StatusBiddingPeriodExpired)
