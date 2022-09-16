@@ -210,7 +210,7 @@ func ExecuteTask(task *Task) {
 	if sendTestBin {
 
 		// run latent diffusion
-		tasktypes.RunLatentDiffusion(NetworkSettings.DataFolder, tasktypes.TaskSettings.LD_Script_Path, task.Command)
+		tasktypes.RunLatentDiffusion(NetworkSettings.DataFolder, "ld", task.Command)
 
 		fileToBeUploaded := "test.jpg"
 		file, err := os.Open(fileToBeUploaded)

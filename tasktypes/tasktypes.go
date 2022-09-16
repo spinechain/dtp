@@ -1,22 +1,19 @@
 package tasktypes
 
 import (
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"spinedtp/util"
 	"strings"
 
 	_ "embed"
 )
-
-type TaskTypeSetting struct {
-	LD_Script_Path string
-}
-
-var TaskSettings TaskTypeSetting
 
 //go:embed latent_diffusion.bat
 var ld_bat string
@@ -62,9 +59,33 @@ func CopySripts(DataFolder string) error {
 	return err
 }
 
-func RunLatentDiffusion(dataFolder string, shellScriptName string, prompt string) error {
-	// Print
-	util.PrintYellow("Running latent diffusion: " + shellScriptName)
+func RunLatentDiffusion(dataFolder string, taskType string, prompt string) error {
+
+	var shellScriptName string
+	util.PrintYellow("Running latent diffusion: " + taskType)
+
+	os := runtime.GOOS
+	switch os {
+	case "windows":
+		if taskType == "ld" {
+			// check if linux or windows
+			shellScriptName = "latent_diffusion.bat"
+		}
+	case "darwin":
+		util.PrintRed("LD is not supported on mac")
+	case "linux":
+		if taskType == "ld" {
+			// check if linux or windows
+			shellScriptName = "latent_diffusion.sh"
+		}
+	default:
+		fmt.Printf("%s.\n", os)
+	}
+
+	if shellScriptName == "" {
+		util.PrintRed("Task type not supported: " + taskType)
+		return errors.New("not supported")
+	}
 
 	var cmd *exec.Cmd
 	if filepath.Ext(shellScriptName) == ".bat" {

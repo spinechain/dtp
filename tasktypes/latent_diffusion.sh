@@ -16,7 +16,7 @@ cd $LD_PATH
 source activate ldm
 
 # Run latent diffusion and get return value
-RESULT = $(python scripts/txt2img.py --prompt "$THE_PROMPT" --plms --ckpt sd-v1-4.ckpt --skip_grid --n_samples 1 --outdir $OUTPUT_DIR)
+python scripts/txt2img.py --prompt "$THE_PROMPT" --plms --ckpt sd-v1-4.ckpt --skip_grid --n_samples 1 --outdir $OUTPUT_DIR
 
 # Return the out of the script
 echo $RESULT
