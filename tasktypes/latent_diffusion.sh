@@ -7,7 +7,7 @@ echo "Linux: Welcome to the Latent Diffusion tasktype!"
 THE_PROMPT=$1
 
 LD_PATH="/home/mark/stable-diffusion"
-OUTPUT_DIR="/home/mark/spinechain.dtp/tasktypes/output"
+OUTPUT_DIR=$2
 
 # Go to latent diffusion directory
 cd $LD_PATH
