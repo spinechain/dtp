@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	tasknet "spinedtp/tasknet"
+	"spinedtp/tasktypes"
 	"spinedtp/taskworkers"
 	"spinedtp/ui"
 	"time"
@@ -21,6 +22,7 @@ var default_peers string
 var tasksAvailable tasknet.Taskpool
 var tasksCompleted tasknet.Taskpool
 var taskWorkers taskworkers.TaskWorkers
+var TaskForSubmissionAvailable chan int
 
 func main() {
 	fmt.Println("Starting SpineChain DTP")
@@ -28,6 +30,11 @@ func main() {
 	LoadSettings()
 
 	tasknet.OpenTaskPool = &tasksAvailable
+
+	// Create shared channel for task execution to talk to the network
+	TaskForSubmissionAvailable = make(chan int)
+	tasknet.TaskForSubmissionAvailable = TaskForSubmissionAvailable
+	tasktypes.TaskForSubmissionAvailable = TaskForSubmissionAvailable
 
 	SetNetworkSettings()
 

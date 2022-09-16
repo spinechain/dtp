@@ -109,10 +109,10 @@ func AddToTaskExecutionQueue(dataFolder string, taskType string, taskID string, 
 	return nil
 }
 
-func CompleteTask(task *TaskToExecute, resultFile string, resultError string) {
+func CompleteTask(task *TaskToExecute, resultFile string, resultError error) {
 	task.Complete = true
 	task.ResultFile = resultFile
-	task.ResultError = errors.New(resultError)
+	task.ResultError = resultError
 
 	TaskForSubmissionAvailable <- 1
 }
@@ -166,7 +166,7 @@ func RunTaskExecutionProcess() error {
 		}
 
 		if shellScriptName == "" {
-			CompleteTask(&TasksToExecute[0], "", "task type not supported")
+			CompleteTask(&TasksToExecute[0], "", errors.New("task type not supported"))
 			continue
 		}
 
@@ -184,7 +184,7 @@ func RunTaskExecutionProcess() error {
 		result, err := cmd.Output()
 		if err != nil {
 			// Complete task
-			CompleteTask(&TasksToExecute[0], "", err.Error())
+			CompleteTask(&TasksToExecute[0], "", err)
 			continue
 		}
 
@@ -202,15 +202,16 @@ func RunTaskExecutionProcess() error {
 			resultFile, err := FigureOutResultFile(outputDir, startTime)
 			if err != nil {
 				// Complete task
-				CompleteTask(&TasksToExecute[0], "", err.Error())
+				CompleteTask(&TasksToExecute[0], "", err)
 				continue
 			}
 
 			// Complete task
-			CompleteTask(&TasksToExecute[0], resultFile, "")
+			CompleteTask(&TasksToExecute[0], resultFile, nil)
 		}
 
-		CompleteTask(&TasksToExecute[0], "", "Unknown task type")
+		// TODO: this should be an error, if we don't know the command
+		CompleteTask(&TasksToExecute[0], "", nil)
 	}
 
 	return nil

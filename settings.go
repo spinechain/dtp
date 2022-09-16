@@ -44,7 +44,6 @@ func LoadDefaultSettings() {
 
 	tasktypes.CopySripts(AppSettings.DataFolder)
 	tasknet.TasksToExecute = &tasktypes.TasksToExecute
-	tasktypes.TaskForSubmissionAvailable = tasknet.TaskForSubmissionAvailable
 }
 
 func LoadSettings() {
