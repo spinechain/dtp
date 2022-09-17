@@ -57,9 +57,16 @@ func ProcessCompletedTasks() {
 
 				task_exec.Sent = true
 
-				file, err := os.Open(task_exec.ResultFile)
+				var resultFile string
+				if len(task_exec.ResultFiles) > 0 {
+					resultFile = task_exec.ResultFiles[0]
+				} else {
+					continue
+				}
+
+				file, err := os.Open(resultFile)
 				if err != nil {
-					util.PrintRed("🐛 Could not open file to be uploaded: " + task_exec.ResultFile)
+					util.PrintRed("🐛 Could not open file to be uploaded: " + resultFile)
 					continue
 				}
 
@@ -73,7 +80,7 @@ func ProcessCompletedTasks() {
 				buffer := bufio.NewReader(file)
 				_, err = buffer.Read(bin)
 				if err != nil {
-					util.PrintRed("🐛 Could not read file to be uploaded: " + task_exec.ResultFile)
+					util.PrintRed("🐛 Could not read file to be uploaded: " + resultFile)
 					return
 				}
 

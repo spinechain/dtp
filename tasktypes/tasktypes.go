@@ -29,20 +29,22 @@ type TaskToExecute struct {
 	DataFolder  string
 	Prompt      string
 	Complete    bool
-	ResultFile  string
+	ResultFiles []string
 	ResultError error
 	Sent        bool
 }
 
 type TaskType struct {
-	name                string
-	script_folder       string
-	exec_folder         string
-	windows_script_name string
-	linux_script_name   string
-	mac_script_name     string
-	script_path         string
-	full_script         string
+	name              string
+	scriptFolder      string
+	execFolder        string
+	windowsScriptName string
+	linuxScriptName   string
+	macScriptName     string
+	scriptPath        string
+	fullScript        string
+	outputExtension   string
+	outputSubpath     string
 }
 
 var TaskTypes []TaskType
@@ -57,11 +59,13 @@ func Init(DataFolder string) error {
 	// Create stable diffusion task type
 	var sd TaskType
 	sd.name = "sd"
-	sd.exec_folder = "/home/mark/stable-diffusion"
-	sd.script_folder = filepath.Join(DataFolder, "scripts")
-	sd.windows_script_name = "stable_diffusion.bat"
-	sd.linux_script_name = "stable_diffusion.sh"
-	sd.mac_script_name = "stable_diffusion.sh"
+	sd.execFolder = "/home/mark/stable-diffusion"
+	sd.scriptFolder = filepath.Join(DataFolder, "scripts")
+	sd.windowsScriptName = "stable_diffusion.bat"
+	sd.linuxScriptName = "stable_diffusion.sh"
+	sd.macScriptName = "stable_diffusion.sh"
+	sd.outputSubpath = "samples"
+	sd.outputExtension = ".png"
 	TaskTypes = append(TaskTypes, sd)
 
 	// Loop over all task types
@@ -70,13 +74,13 @@ func Init(DataFolder string) error {
 		ops := runtime.GOOS
 		switch ops {
 		case "windows":
-			taskType.script_path = filepath.Join(taskType.script_folder, taskType.windows_script_name)
-			taskType.full_script = ld_bat
+			taskType.scriptPath = filepath.Join(taskType.scriptFolder, taskType.windowsScriptName)
+			taskType.fullScript = ld_bat
 		case "darwin":
-			taskType.script_path = filepath.Join(taskType.script_folder, taskType.mac_script_name)
+			taskType.scriptPath = filepath.Join(taskType.scriptFolder, taskType.macScriptName)
 		case "linux":
-			taskType.script_path = filepath.Join(taskType.script_folder, taskType.linux_script_name)
-			taskType.full_script = ld_sh
+			taskType.scriptPath = filepath.Join(taskType.scriptFolder, taskType.linuxScriptName)
+			taskType.fullScript = ld_sh
 		default:
 			continue
 		}
@@ -84,25 +88,25 @@ func Init(DataFolder string) error {
 		TaskTypes[i] = taskType
 
 		// create the scripts folder if it does not exist
-		if _, err := os.Stat(taskType.script_folder); os.IsNotExist(err) {
-			err := os.Mkdir(taskType.script_folder, 0755)
+		if _, err := os.Stat(taskType.scriptFolder); os.IsNotExist(err) {
+			err := os.Mkdir(taskType.scriptFolder, 0755)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
 		// delete existing scripts
-		if _, err := os.Stat(taskType.script_path); !os.IsNotExist(err) {
-			err := os.Remove(taskType.script_path)
+		if _, err := os.Stat(taskType.scriptPath); !os.IsNotExist(err) {
+			err := os.Remove(taskType.scriptPath)
 			if err != nil {
 				log.Fatal(err)
 			}
 		}
 
 		// check if the files exist
-		if _, err := os.Stat(taskType.script_path); os.IsNotExist(err) {
+		if _, err := os.Stat(taskType.scriptPath); os.IsNotExist(err) {
 			// file does not exist
-			err := ioutil.WriteFile(taskType.script_path, []byte(taskType.full_script), 0644)
+			err := ioutil.WriteFile(taskType.scriptPath, []byte(taskType.fullScript), 0644)
 			if err != nil {
 				log.Fatal(err)
 				return err
@@ -129,13 +133,13 @@ func AddToTaskExecutionQueue(dataFolder string, taskType string, taskID string, 
 	return nil
 }
 
-func CompleteTask(task *TaskToExecute, resultFile string, resultError error) {
+func CompleteTask(task *TaskToExecute, resultFiles []string, resultError error) {
 
 	// print
 	util.PrintYellow("Task complete: " + task.TaskType)
 
 	task.Complete = true
-	task.ResultFile = resultFile
+	task.ResultFiles = resultFiles
 	task.ResultError = resultError
 
 	TaskForSubmissionAvailable <- 1
@@ -179,40 +183,32 @@ func RunTaskExecutionProcess() error {
 		}
 
 		if taskType == nil {
-			CompleteTask(&TasksToExecute[0], "", errors.New("task type not supported"))
+			CompleteTask(&TasksToExecute[0], nil, errors.New("task type not supported"))
 			continue
 		}
 
 		var cmd *exec.Cmd
-		if filepath.Ext(taskType.script_path) == ".bat" {
+		if filepath.Ext(taskType.scriptPath) == ".bat" {
 			// run the batch file
-			cmd = exec.Command("cmd.exe", "/C", taskType.script_path, taskType.exec_folder, te.Prompt, outputDir)
+			cmd = exec.Command("cmd.exe", "/C", taskType.scriptPath, taskType.execFolder, te.Prompt, outputDir)
 		} else {
 			// run the shell script
-			cmd = exec.Command("bash", taskType.script_path, taskType.exec_folder, te.Prompt, outputDir)
+			cmd = exec.Command("bash", taskType.scriptPath, taskType.execFolder, te.Prompt, outputDir)
 		}
 
-		// stdout
-		// stdout, err := cmd.StdoutPipe()
-
 		startTime := time.Now()
-
 		util.PrintGreen("Running task: " + te.TaskType + " at time " + startTime.Format("2006-01-02 15:04:05"))
-		// err = cmd.Start()
+
 		data, err := cmd.CombinedOutput()
 		if err != nil {
 			// Complete task
-			CompleteTask(&TasksToExecute[0], "", err)
+			CompleteTask(&TasksToExecute[0], nil, err)
 			continue
 		}
 
-		// read all
-		// stdoutBytes, err := ioutil.ReadAll(stdout)
-
-		// err = cmd.Wait()
 		if err != nil {
 			// Complete task
-			CompleteTask(&TasksToExecute[0], "", err)
+			CompleteTask(&TasksToExecute[0], nil, err)
 			continue
 		}
 
@@ -221,26 +217,14 @@ func RunTaskExecutionProcess() error {
 		// print the output
 		util.PrintGreen(string(data))
 
-		// result to string
-		// resultString := string(result)
-		//fmt.Println(resultString)
+		resultFiles := FigureOutResultFile(filepath.Join(outputDir, taskType.outputSubpath), taskType.outputExtension, startTime)
 
-		//if strings.Contains(resultString, "Enjoy.") {
-		//	util.PrintBlue("Latent diffusion completed successfully")
-
-		//resultFile, err := FigureOutResultFile(outputDir, startTime)
-		//	if err != nil {
-		//		// Complete task
-		//		CompleteTask(&TasksToExecute[0], "", err)
-		//		continue
-		//	}
+		if resultFiles == nil || len(resultFiles) == 0 {
+			err = errors.New("no result files found")
+		}
 
 		// Complete task
-		//CompleteTask(&TasksToExecute[0], resultFile, nil)
-		// }
-
-		// TODO: this should be an error, if we don't know the command
-		CompleteTask(&TasksToExecute[0], "", nil)
+		CompleteTask(&TasksToExecute[0], resultFiles, err)
 	}
 
 	return nil
@@ -248,7 +232,7 @@ func RunTaskExecutionProcess() error {
 
 // This will tell us what the result file is. If there is more than one potential result file,
 // it will fail.
-func FigureOutResultFile(filesFolder string, execStartTime time.Time) (string, error) {
+func FigureOutResultFile(filesFolder string, ext string, execStartTime time.Time) []string {
 
 	// find the result file
 	files, err := ioutil.ReadDir(filesFolder)
@@ -256,14 +240,17 @@ func FigureOutResultFile(filesFolder string, execStartTime time.Time) (string, e
 		log.Fatal(err)
 	}
 
+	var resultFiles []string
+
 	// find the result file
 	for _, f := range files {
-		if f.ModTime().After(execStartTime) {
-			// this is the result file
-			util.PrintBlue("Result file: " + f.Name())
-			return f.Name(), nil
+
+		// check if the file is the right extension
+		if filepath.Ext(f.Name()) == ext && f.ModTime().After(execStartTime) {
+			// add to the list
+			resultFiles = append(resultFiles, filepath.Join(filesFolder, f.Name()))
 		}
 	}
 
-	return "", errors.New("no result file found")
+	return resultFiles
 }
