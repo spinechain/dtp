@@ -173,33 +173,57 @@ func RunTaskExecutionProcess() error {
 		var cmd *exec.Cmd
 		if filepath.Ext(shellScriptName) == ".bat" {
 			// run the batch file
-			cmd = exec.Command("cmd.exe", "/C", filepath.Join(te.DataFolder, "scripts", shellScriptName), outputDir)
+			cmd = exec.Command("cmd.exe", "/C", filepath.Join(te.DataFolder, "scripts", shellScriptName), te.Prompt, outputDir)
 		} else {
 			// run the shell script
-			cmd = exec.Command("bash", filepath.Join(te.DataFolder, "scripts", shellScriptName), outputDir)
+			cmd = exec.Command("bash", filepath.Join(te.DataFolder, "scripts", shellScriptName), te.Prompt, outputDir)
 		}
 
-		startTime := time.Now()
+		stdout, err := cmd.StdoutPipe()
 
-		result, err := cmd.Output()
+		if err := cmd.Start(); err != nil {
+			log.Fatal(err)
+		}
+
+		data, err := ioutil.ReadAll(stdout)
+
 		if err != nil {
-			// Complete task
-			CompleteTask(&TasksToExecute[0], "", err)
-			continue
+			log.Fatal(err)
 		}
 
+		if err := cmd.Wait(); err != nil {
+			log.Fatal(err)
+		}
+
+		fmt.Printf("%s\n", string(data))
+
+		/*
+			startTime := time.Now()
+
+			util.PrintGreen("Running task: " + te.TaskType + " at time " + startTime.Format("2006-01-02 15:04:05"))
+			result, err := cmd.CombinedOutput()
+			if err != nil {
+				// Complete task
+				CompleteTask(&TasksToExecute[0], "", err)
+				continue
+			}
+
+			util.PrintGreen("Task complete: " + te.TaskType + " duration " + time.Since(startTime).String())
+		*/
 		// result to string
-		resultString := string(result)
+		resultString := string(data)
 
 		// search for text in result
 		if strings.Contains(resultString, "not a valid Win32") {
 			util.PrintRed("The latent diffusion script is not a valid Win32 application")
 		}
 
+		fmt.Println(resultString)
+
 		if strings.Contains(resultString, "Enjoy.") {
 			util.PrintBlue("Latent diffusion completed successfully")
 
-			resultFile, err := FigureOutResultFile(outputDir, startTime)
+			//resultFile, err := FigureOutResultFile(outputDir, startTime)
 			if err != nil {
 				// Complete task
 				CompleteTask(&TasksToExecute[0], "", err)
@@ -207,7 +231,7 @@ func RunTaskExecutionProcess() error {
 			}
 
 			// Complete task
-			CompleteTask(&TasksToExecute[0], resultFile, nil)
+			//CompleteTask(&TasksToExecute[0], resultFile, nil)
 		}
 
 		// TODO: this should be an error, if we don't know the command
