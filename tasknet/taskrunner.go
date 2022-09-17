@@ -245,7 +245,7 @@ func ProcessAcceptedTasks() {
 			// Change status so we know we are executing this task. If there a failure it does not recover
 			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusExecuting, task.LocalWorkProviderStatus)
 
-			tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "ld", task.ID, task.Command)
+			tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "sd", task.ID, task.Command)
 
 		}
 

@@ -42,7 +42,7 @@ func LoadDefaultSettings() {
 		}
 	}
 
-	tasktypes.CopySripts(AppSettings.DataFolder)
+	tasktypes.Init(AppSettings.DataFolder)
 	tasknet.TasksToExecute = &tasktypes.TasksToExecute
 }
 
