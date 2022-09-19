@@ -52,6 +52,11 @@ const (
 	StatusSuccessfullAndPaid
 )
 
+type TaskResult struct {
+	Data     []byte
+	MimeType string
+}
+
 type Task struct {
 	ID                      string    // The globally unique ID of this task
 	Command                 string    // The actual request
@@ -69,7 +74,7 @@ type Task struct {
 	BidTimeoutTimer         *time.Timer
 	BidEndTime              time.Time
 	ArrivalRoute            []*Peer
-	Result                  []byte
+	Result                  []TaskResult
 	TaskHash                string // to prevent changes
 }
 

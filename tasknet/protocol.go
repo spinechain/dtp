@@ -49,16 +49,18 @@ type SpinePacket struct {
 }
 
 type TaskBid struct {
-	ID           string
-	Created      time.Time
-	Fee          float64
-	BidValue     float64
-	TaskID       string
-	TaskOwnerID  string
-	BidderID     string
-	Geo          string
-	ArrivalRoute []*Peer
-	Selected     int
+	ID            string
+	Created       time.Time
+	Fee           float64
+	BidValue      float64
+	Reputation    float64 // will be verified by the task owner
+	TaskID        string
+	TaskOwnerID   string
+	BidderID      string
+	EstimatedTime int
+	Geo           string
+	ArrivalRoute  []*Peer
+	Selected      int
 
 	// this must never be propagated or read from the network
 	// Even though it can be infered from bidderID, bidderID is propagated
@@ -78,6 +80,11 @@ type TaskAccept struct {
 	ArrivalRoute []*Peer
 }
 
+type TaskSubmissionMedia struct {
+	mimeType string
+	data     []byte
+}
+
 type TaskSubmission struct {
 	ID           string
 	Created      time.Time
@@ -85,7 +92,8 @@ type TaskSubmission struct {
 	TaskID       string
 	TaskOwnerID  string
 	BidderID     string
-	Submission   []byte
+	WalletID     string
+	Submissions  []TaskSubmissionMedia
 	Geo          string
 	ArrivalRoute []*Peer
 }
@@ -248,10 +256,19 @@ func ConstructTaskSubmissionPacket(taskSubmit *TaskSubmission, returnRoute []*Pe
 	packet.Body.Items["task-submission.Fee"] = fmt.Sprintf("%f", taskSubmit.Fee)
 	packet.Body.Items["task-submission.TaskOwnerID"] = taskSubmit.TaskOwnerID
 	packet.Body.Items["task-submission.BidderID"] = taskSubmit.BidderID
-	packet.Body.Items["task-submission.Submission"] = string(taskSubmit.Submission)
 	packet.Body.Items["task-submission.TaskID"] = taskSubmit.TaskID
 	packet.Body.Items["task-submission.Geo"] = taskSubmit.Geo
 	packet.Body.Items["task-submission.Hash"] = "NOHASHYET"
+
+	packet.Body.Items["task-submission.ResultCount"] = strconv.Itoa(len(taskSubmit.Submissions))
+
+	// Loop through all submissions
+	for i, sub := range taskSubmit.Submissions {
+
+		mimeType := sub.mimeType
+		packet.Body.Items["task-submission.Submission-"+strconv.Itoa(i)] = string(sub.data)
+		packet.Body.Items["task-submission.SubmissionType-"+strconv.Itoa(i)] = mimeType
+	}
 
 	return packet, nil
 }
