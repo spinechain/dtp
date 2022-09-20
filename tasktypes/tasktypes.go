@@ -15,11 +15,14 @@ import (
 	_ "embed"
 )
 
-//go:embed stable_diffusion.bat
-var ld_bat string
+//go:embed ping.bat
+var ping_bat string
+
+//go:embed ping.sh
+var ping_sh string
 
 //go:embed stable_diffusion.sh
-var ld_sh string
+var sd_sh string
 
 var isRunning bool = false
 
@@ -42,6 +45,9 @@ type TaskType struct {
 	execFolder        string
 	windowsScriptName string
 	linuxScriptName   string
+	windowsFullScript string
+	linuxFullScript   string
+	macFullScript     string
 	macScriptName     string
 	scriptPath        string
 	fullScript        string
@@ -64,6 +70,7 @@ func Init(DataFolder string) error {
 	sd.execFolder = "/home/mark/stable-diffusion"
 	sd.scriptFolder = filepath.Join(DataFolder, "scripts")
 	sd.windowsScriptName = "stable_diffusion.bat"
+	sd.linuxFullScript = sd_sh
 	sd.linuxScriptName = "stable_diffusion.sh"
 	sd.macScriptName = "stable_diffusion.sh"
 	sd.outputSubpath = "samples"
@@ -76,6 +83,8 @@ func Init(DataFolder string) error {
 	pg.execFolder = ""
 	pg.scriptFolder = filepath.Join(DataFolder, "scripts")
 	pg.windowsScriptName = "ping.bat"
+	pg.linuxFullScript = ping_sh
+	pg.windowsFullScript = ping_bat
 	pg.linuxScriptName = "ping.sh"
 	pg.macScriptName = "ping.sh"
 	pg.outputSubpath = ""
@@ -89,12 +98,13 @@ func Init(DataFolder string) error {
 		switch ops {
 		case "windows":
 			taskType.scriptPath = filepath.Join(taskType.scriptFolder, taskType.windowsScriptName)
-			taskType.fullScript = ld_bat
+			taskType.fullScript = taskType.windowsFullScript
 		case "darwin":
 			taskType.scriptPath = filepath.Join(taskType.scriptFolder, taskType.macScriptName)
+			taskType.fullScript = taskType.macFullScript
 		case "linux":
 			taskType.scriptPath = filepath.Join(taskType.scriptFolder, taskType.linuxScriptName)
-			taskType.fullScript = ld_sh
+			taskType.fullScript = taskType.linuxFullScript
 		default:
 			continue
 		}
