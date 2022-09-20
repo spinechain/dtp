@@ -10,6 +10,6 @@ OUT_FILE="$OUTPUT_DIR/output.txt"
 
 echo "Pinging: $TARGET to $OUTPUT_DIR"
 
-ping $TARGET -n 4 > $OUT_FILE
+ping $TARGET -c 4 > $OUT_FILE
 
 echo "done"

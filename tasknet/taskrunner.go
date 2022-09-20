@@ -6,6 +6,7 @@ import (
 	"os"
 	"spinedtp/tasktypes"
 	"spinedtp/util"
+	"strings"
 )
 
 // This file contains the thread that watches the taskpool for changes and makes appropriate actions
@@ -252,7 +253,16 @@ func ProcessAcceptedTasks() {
 			// Change status so we know we are executing this task. If there a failure it does not recover
 			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusExecuting, task.LocalWorkProviderStatus)
 
-			tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "sd", task.ID, task.Command)
+			// Get first word of the command
+			firstWord := util.FirstWords(task.Command, 1)
+			if strings.ToLower(firstWord) == "draw" {
+				tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "sd", task.ID, task.Command)
+			} else if strings.ToLower(firstWord) == "ping" {
+				tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "ping", task.ID, task.Command)
+			} else {
+				// We just do sd for now
+				tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "sd", task.ID, task.Command)
+			}
 
 		}
 

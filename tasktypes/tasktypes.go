@@ -70,6 +70,18 @@ func Init(DataFolder string) error {
 	sd.outputExtension = ".png;.txt"
 	TaskTypes = append(TaskTypes, sd)
 
+	// Create ping task type
+	var pg TaskType
+	pg.name = "ping"
+	pg.execFolder = ""
+	pg.scriptFolder = filepath.Join(DataFolder, "scripts")
+	pg.windowsScriptName = "ping.bat"
+	pg.linuxScriptName = "ping.sh"
+	pg.macScriptName = "ping.sh"
+	pg.outputSubpath = ""
+	pg.outputExtension = ".txt"
+	TaskTypes = append(TaskTypes, pg)
+
 	// Loop over all task types
 	for i, taskType := range TaskTypes {
 
