@@ -2,7 +2,7 @@
  
 echo "Win32: Welcome to thePing tasktype!"
 
-set TARGET=%1
+set TARGET=%2
 set OUTPUT_DIR=%3
 set OUT_FILE="%OUTPUT_DIR%/output.txt"
 
