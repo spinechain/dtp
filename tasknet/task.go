@@ -74,7 +74,7 @@ type Task struct {
 	BidTimeoutTimer         *time.Timer
 	BidEndTime              time.Time
 	ArrivalRoute            []*Peer
-	Result                  []TaskResult
+	Results                 []TaskResult
 	TaskHash                string // to prevent changes
 }
 

@@ -227,12 +227,20 @@ func TaskSubmissionReceived(tt *TaskSubmission) {
 		return
 	}
 
-	// Convert byte to hex
-	peek_val := bytes.NewBuffer(tt.Submission[:20]).String()
+	// Loop over all submissions
+	for i := 0; i < len(tt.Submissions); i++ {
 
-	util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(tt.Submission)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
+		// Get a submission
+		submission := tt.Submissions[i]
 
-	NetworkCallbacks.OnTaskResult(tt.TaskID, "image", tt.Submission)
+		// Convert byte to hex
+		peek_val := bytes.NewBuffer(submission.data[:20]).String()
+
+		util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(submission.data)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
+
+		NetworkCallbacks.OnTaskResult(tt.TaskID, "image", submission.data)
+
+	}
 
 }
 

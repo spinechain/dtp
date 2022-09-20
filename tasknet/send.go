@@ -59,12 +59,17 @@ func SendTaskSubmission(task *Task, submissionData *[]byte) {
 	// Get the target client ID
 	targetID := task.TaskOwnerID
 
+	var tr TaskResult
+	tr.Data = *submissionData
+	tr.MimeType = "image" // for now, we will differentiate later
+
 	// If we are connected directly to the target client, then send it directly
 	// without sending to any other clients
 	foundTarget := false
 	for _, peer := range Peers {
 		if peer.ID == targetID {
-			task.Result = *submissionData
+
+			task.Results = append(task.Results, tr)
 			peer.SubmitTaskResult(task)
 			foundTarget = true
 			break
@@ -74,7 +79,7 @@ func SendTaskSubmission(task *Task, submissionData *[]byte) {
 	// Otherwise send to all connected clients
 	if !foundTarget {
 		for _, peer := range Peers {
-			task.Result = *submissionData
+			task.Results = append(task.Results, tr)
 			peer.SubmitTaskResult(task)
 		}
 	}

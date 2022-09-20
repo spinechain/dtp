@@ -121,10 +121,25 @@ func ReceiveTaskSubmission(packet *SpinePacket) {
 	t.TaskID = packet.Body.Items["task-submission.TaskID"]
 	t.Created = created
 	t.Fee = fee
-	t.Submission = []byte(packet.Body.Items["task-submission.Submission"])
+	// t.Submission = []byte(packet.Body.Items["task-submission.Submission"])
 	t.TaskOwnerID = packet.Body.Items["task-submission.TaskOwnerID"]
 	t.Geo = packet.Body.Items["task-submission.Geo"]
 	t.ArrivalRoute = packet.PastRoute.Nodes
+
+	SubmissionCount := packet.Body.Items["task-submission.ResultCount"]
+	SubmissionCountInt, err := strconv.Atoi(SubmissionCount)
+	if err != nil {
+		fmt.Println("Invalid task bid received")
+		return
+	}
+
+	// Loop over all results
+	for i := 0; i < SubmissionCountInt; i++ {
+		var result TaskSubmissionMedia
+		result.data = []byte(packet.Body.Items["task-submission.Submission-"+strconv.Itoa(i)])
+		result.mimeType = packet.Body.Items["task-submission.SubmissionType-"+strconv.Itoa(i)]
+		t.Submissions = append(t.Submissions, result)
+	}
 
 	TaskSubmissionReceived(&t)
 }

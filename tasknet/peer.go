@@ -402,7 +402,6 @@ func (peer *Peer) SubmitTaskResult(task *Task) error {
 
 	var taskSubmit TaskSubmission
 	taskSubmit.BidderID = NetworkSettings.MyPeerID
-	taskSubmit.Submission = task.Result
 	taskSubmit.Created = time.Now()
 	taskSubmit.ID = shortuuid.New()
 	taskSubmit.TaskID = task.ID
@@ -410,6 +409,15 @@ func (peer *Peer) SubmitTaskResult(task *Task) error {
 	taskSubmit.Geo = "US"
 	taskSubmit.TaskOwnerID = task.TaskOwnerID
 	taskSubmit.ArrivalRoute = task.ArrivalRoute
+
+	// Loop over all task results
+	for _, taskResult := range task.Results {
+		// Copy to taskSubmit.Submissions
+		var tm TaskSubmissionMedia
+		tm.data = taskResult.Data
+		tm.mimeType = taskResult.MimeType
+		taskSubmit.Submissions = append(taskSubmit.Submissions, tm)
+	}
 
 	packet, err := ConstructTaskSubmissionPacket(&taskSubmit, taskSubmit.GetReturnRoute())
 	if err != nil {
