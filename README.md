@@ -2,16 +2,18 @@
 SpineChain Distributed Task Platform
 
 
-# What is the it?
+# What is it?
 
 The DTP is a tool for distributing tasks over a peer-to-peer network. It is written in golang.
+
+![Screenshot](assets/dtp.png)
 
 
 # How to use it?
 
 This is still in development, so the only way is to download the code and open it in visual studio using go run .
 
-When you do that, you will see a ui. You need to run a second copy and then add the ip of the second copy in the default_peers.txt file.
+When you do that, you will see a ui. You can run a second copy and then add the ip of the second copy in the default_peers.txt file. Afterwards, connect them to each other and they wil be able to send tasks to each other to be run.
 
 
 
