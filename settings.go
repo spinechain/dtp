@@ -66,8 +66,6 @@ func LoadSettings() string {
 		fmt.Println("error:", err)
 	}
 
-	tasknet.LoadDefaultPeerTable(default_peers)
-
 	return settings_file
 }
 
@@ -99,6 +97,8 @@ func SetNetworkSettings() {
 	tasknet.NetworkCallbacks.OnTaskReceived = nil // s.OnNewTaskReceived
 	tasknet.NetworkCallbacks.OnTaskApproved = nil //s.OnNetworkTaskApproval
 	tasknet.NetworkCallbacks.OnTaskResult = Event_TaskResultReceived
+
+	tasknet.LoadDefaultPeerTable(default_peers)
 
 	UpdateInfoStatusBar()
 }

@@ -121,6 +121,19 @@ func LoadPeerTable() error {
 func LoadDefaultPeerTable(default_peers string) {
 	fmt.Println("Loading default peers: " + default_peers)
 
+	// Check if the peers.txt in the data folder file exists
+	// If it does, we will use that instead of the default peers
+
+	peers_file := filepath.Join(NetworkSettings.DataFolder, "peers.txt")
+	if util.FileExists(peers_file) {
+		// read the file content into the default_peers string
+		fileData, _ := util.ReadFile(peers_file)
+
+		if len(fileData) > 0 {
+			default_peers = fileData
+		}
+	}
+
 	// Load default peers from file
 	single_peers := strings.Split(default_peers, "\n")
 	for _, single_peer := range single_peers {
