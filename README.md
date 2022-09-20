@@ -6,6 +6,8 @@ SpineChain Distributed Task Platform
 
 The DTP is a tool for distributing tasks over a peer-to-peer network. It is written in golang.
 
+![Screenshot](assets/dtp.png)
+
 
 # How to use it?
 
