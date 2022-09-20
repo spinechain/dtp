@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	"runtime"
 	"spinedtp/util"
 	"strings"
@@ -38,6 +39,7 @@ type TaskToExecute struct {
 
 type TaskType struct {
 	name              string
+	trigger           string
 	scriptFolder      string
 	execFolder        string
 	windowsScriptName string
@@ -47,6 +49,8 @@ type TaskType struct {
 	fullScript        string
 	outputExtension   string
 	outputSubpath     string
+	ValidationRegex   string
+	RegexCompiled     *regexp.Regexp
 }
 
 var TaskTypes []TaskType
@@ -68,6 +72,7 @@ func Init(DataFolder string) error {
 	sd.macScriptName = "stable_diffusion.sh"
 	sd.outputSubpath = "samples"
 	sd.outputExtension = ".png;.txt"
+	sd.trigger = "draw"
 	TaskTypes = append(TaskTypes, sd)
 
 	// Create ping task type
@@ -79,7 +84,11 @@ func Init(DataFolder string) error {
 	pg.linuxScriptName = "ping.sh"
 	pg.macScriptName = "ping.sh"
 	pg.outputSubpath = ""
+	pg.trigger = "ping"
 	pg.outputExtension = ".txt"
+	pg.ValidationRegex = "^(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])\\.){3}([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5])$"
+	pg.RegexCompiled, _ = regexp.Compile(pg.ValidationRegex)
+
 	TaskTypes = append(TaskTypes, pg)
 
 	// Loop over all task types
@@ -198,6 +207,14 @@ func RunTaskExecutionProcess() error {
 
 		if taskType == nil {
 			CompleteTask(&TasksToExecute[0], nil, errors.New("task type not supported"))
+			continue
+		}
+
+		te.Prompt = strings.Replace(te.Prompt, taskType.trigger, "", 1)
+		te.Prompt = strings.TrimSpace(te.Prompt)
+
+		if !taskType.RegexCompiled.MatchString(te.Prompt) {
+			util.PrintRed("Cannot match string")
 			continue
 		}
 
