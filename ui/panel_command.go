@@ -39,7 +39,7 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	command.commandBox.SetMarginStart(20)
 	command.commandBox.SetMarginEnd(20)
 
-	command.commandTextField.SetText("draw a picture of a happy spaceship")
+	command.commandTextField.SetText("ping 8.8.8.8")
 
 	// add the grid
 	command.resultGrid, err = gtk.GridNew()
