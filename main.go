@@ -65,6 +65,8 @@ func main() {
 		fmt.Println("Spine running on the command line")
 		fmt.Println("How many I help?")
 
+		util.PrintLocalIPAddresses()
+
 		go Start()
 
 		go func() {
