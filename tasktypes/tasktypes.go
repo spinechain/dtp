@@ -211,6 +211,7 @@ func RunTaskExecutionProcess() error {
 			continue
 		}
 
+		// format for execution is (interpreter) (our sh/bat file) (the folder to cd to) (the full command to execute) (where output should go)
 		var cmd *exec.Cmd
 		if filepath.Ext(taskType.scriptPath) == ".bat" {
 			// run the batch file
