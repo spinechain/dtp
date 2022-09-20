@@ -87,7 +87,7 @@ func ProcessCompletedTasks() {
 				task := OpenTaskPool.GetTask(task_exec.TaskID)
 
 				// Submit the task to the network
-				SendTaskSubmission(task, &bin)
+				SendTaskSubmission(task, task_exec.MimeType, &bin)
 			}
 		}
 

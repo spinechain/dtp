@@ -1,7 +1,6 @@
 package ui
 
 import (
-	"io/ioutil"
 	util "spinedtp/util"
 
 	"github.com/gotk3/gotk3/gdk"
@@ -15,7 +14,7 @@ type PanelCommand struct {
 	historyLabel     *gtk.Label
 	commandBox       *gtk.Box
 	resultGrid       *gtk.Grid
-	images           []gtk.Image
+	panelItems       []gtk.IWidget
 }
 
 func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
@@ -91,48 +90,67 @@ func (command *PanelCommand) Hide() {
 	command.commandBox.Hide()
 }
 
-func (command *PanelCommand) AddResult(task string, key string, data []byte) {
+func (command *PanelCommand) AddResult(task string, mimeType string, data []byte) {
 
-	// Write the tt.Submission to disk
-	err := ioutil.WriteFile("task_submissio.jpeg", data, 0644)
-	if err != nil {
-		util.PrintRed(err.Error())
-		return
+	if mimeType == "image/png" || mimeType == "image/jpeg" {
+		// load the pixbuf from the data using the loader
+		loader, err := gdk.PixbufLoaderNew()
+		if err != nil {
+			util.PrintRed(err.Error())
+			return
+		}
+
+		// write the data to the loader
+		_, err = loader.Write(data)
+		if err != nil {
+			util.PrintRed(err.Error())
+			return
+		}
+
+		// close the loader
+		err = loader.Close()
+		if err != nil {
+			util.PrintRed(err.Error())
+			return
+		}
+
+		// get the pixbuf
+		pixbuf, err := loader.GetPixbuf()
+		if err != nil {
+			util.PrintRed(err.Error())
+			return
+		}
+
+		img, err := gtk.ImageNewFromPixbuf(pixbuf)
+		if err != nil {
+			util.PrintRed(err.Error())
+			return
+		}
+
+		// append image to the list, limit to 6 items
+		command.panelItems = append(command.panelItems, img)
+
+	} else if mimeType == "text/plain" {
+		// create a label
+		label, err := gtk.LabelNew(string(data))
+		if err != nil {
+			util.PrintRed(err.Error())
+			return
+		}
+
+		// append image to the list, limit to 6 items
+		command.panelItems = append(command.panelItems, label)
 	}
 
-	// load the image to pixbuf
-	pixbuf, err := gdk.PixbufNewFromFile("task_submissio.jpeg")
-	if err != nil {
-		util.PrintRed(err.Error())
-		return
-	}
-
-	img, err := gtk.ImageNewFromPixbuf(pixbuf)
-	if err != nil {
-		util.PrintRed(err.Error())
-		return
-	}
-
-	// append image to the list, limit to 6 items
-	command.images = append(command.images, *img)
-	if len(command.images) > 6 {
-		command.images = command.images[1:]
+	if len(command.panelItems) > 6 {
+		command.panelItems = command.panelItems[1:]
 	}
 
 	// Set each image to a grid cell, limit is 6x6
-	for i, img2 := range command.images {
-		command.resultGrid.Attach(&img2, i%3, i/3, 1, 1)
+	for i, pitem := range command.panelItems {
+		command.resultGrid.Attach(pitem, i%3, i/3, 1, 1)
 	}
 
-	//for i, img2 := range command.images {
-	//	command.resultGrid.Attach(img2, i, 0, 1, 1)
-	//}
-
-	// add the image to the grid
-	//command.resultGrid.Attach(command.images[0], 0, 0, 1, 1)
-
-	// add the image to the panel
-	//command.commandBox.PackStart(command.images[0], false, false, 5)
 	command.commandBox.ShowAll()
 
 }

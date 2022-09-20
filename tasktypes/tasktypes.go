@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"spinedtp/util"
+	"strings"
 	"time"
 
 	_ "embed"
@@ -30,6 +31,7 @@ type TaskToExecute struct {
 	Prompt      string
 	Complete    bool
 	ResultFiles []string
+	MimeType    string
 	ResultError error
 	Sent        bool
 }
@@ -65,7 +67,7 @@ func Init(DataFolder string) error {
 	sd.linuxScriptName = "stable_diffusion.sh"
 	sd.macScriptName = "stable_diffusion.sh"
 	sd.outputSubpath = "samples"
-	sd.outputExtension = ".png"
+	sd.outputExtension = ".png;.txt"
 	TaskTypes = append(TaskTypes, sd)
 
 	// Loop over all task types
@@ -217,11 +219,13 @@ func RunTaskExecutionProcess() error {
 		// print the output
 		util.PrintGreen(string(data))
 
-		resultFiles := FigureOutResultFile(filepath.Join(outputDir, taskType.outputSubpath), taskType.outputExtension, startTime)
+		resultFiles, mimeType := FigureOutResultFile(filepath.Join(outputDir, taskType.outputSubpath), taskType.outputExtension, startTime)
 
 		if resultFiles == nil || len(resultFiles) == 0 {
 			err = errors.New("no result files found")
 		}
+
+		TasksToExecute[0].MimeType = mimeType
 
 		// Complete task
 		CompleteTask(&TasksToExecute[0], resultFiles, err)
@@ -232,25 +236,66 @@ func RunTaskExecutionProcess() error {
 
 // This will tell us what the result file is. If there is more than one potential result file,
 // it will fail.
-func FigureOutResultFile(filesFolder string, ext string, execStartTime time.Time) []string {
+func FigureOutResultFile(filesFolder string, ext string, execStartTime time.Time) ([]string, string) {
 
 	// find the result file
 	files, err := ioutil.ReadDir(filesFolder)
 	if err != nil {
-		log.Fatal(err)
+		return nil, ""
 	}
 
 	var resultFiles []string
 
+	var mimeType string
 	// find the result file
 	for _, f := range files {
 
 		// check if the file is the right extension
-		if filepath.Ext(f.Name()) == ext && f.ModTime().After(execStartTime) {
-			// add to the list
-			resultFiles = append(resultFiles, filepath.Join(filesFolder, f.Name()))
+		if f.ModTime().After(execStartTime) {
+
+			extensions := strings.Split(ext, ";")
+
+			for _, extension := range extensions {
+				if filepath.Ext(f.Name()) == extension {
+					resultFiles = append(resultFiles, filepath.Join(filesFolder, f.Name()))
+					mimeType = extension
+				}
+			}
 		}
 	}
 
-	return resultFiles
+	switch mimeType {
+	case ".png":
+		mimeType = "image/png"
+	case ".jpg":
+		mimeType = "image/jpeg"
+	case ".jpeg":
+		mimeType = "image/jpeg"
+	case ".gif":
+		mimeType = "image/gif"
+	case ".mp4":
+		mimeType = "video/mp4"
+	case ".mp3":
+		mimeType = "audio/mpeg"
+	case ".wav":
+		mimeType = "audio/wav"
+	case ".ogg":
+		mimeType = "audio/ogg"
+	case ".txt":
+		mimeType = "text/plain"
+	case ".html":
+		mimeType = "text/html"
+	case ".json":
+		mimeType = "application/json"
+	case ".xml":
+		mimeType = "application/xml"
+	case ".zip":
+		mimeType = "application/zip"
+	case ".pdf":
+		mimeType = "application/pdf"
+	case ".doc":
+		mimeType = "application/msword"
+	}
+
+	return resultFiles, mimeType
 }

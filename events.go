@@ -74,12 +74,12 @@ func Event_ClearTasksDB() {
 	})
 }
 
-func Event_TaskResultReceived(task string, key string, data []byte) {
+func Event_TaskResultReceived(task string, mimeType string, data []byte) {
 
 	// we switch thread to ui context
 	glib.TimeoutAdd(10, func() bool {
 
-		ui.CommandPanel.AddResult(task, key, data)
+		ui.CommandPanel.AddResult(task, mimeType, data)
 		return false
 	})
 }

@@ -52,7 +52,7 @@ func SendTaskAcceptance(task *Task, bid *TaskBid) {
 //     the task giver. This is better for network fairness, so everyone has a chance to get jobs.
 //  5. If the above method still congests the network, we will use 'judges' who will provide IP routes. They
 //     can also do the transfer for a fee. Generally, there should be a fee for those transferring results.
-func SendTaskSubmission(task *Task, submissionData *[]byte) {
+func SendTaskSubmission(task *Task, mimeType string, submissionData *[]byte) {
 
 	util.PrintBlue("Sending Task Submission for Task: " + task.ID + " (" + task.Command + ") ")
 
@@ -61,7 +61,7 @@ func SendTaskSubmission(task *Task, submissionData *[]byte) {
 
 	var tr TaskResult
 	tr.Data = *submissionData
-	tr.MimeType = "image" // for now, we will differentiate later
+	tr.MimeType = mimeType // for now, we will differentiate later
 
 	// If we are connected directly to the target client, then send it directly
 	// without sending to any other clients

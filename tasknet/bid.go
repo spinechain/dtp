@@ -238,7 +238,7 @@ func TaskSubmissionReceived(tt *TaskSubmission) {
 
 		util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(submission.data)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
 
-		NetworkCallbacks.OnTaskResult(tt.TaskID, "image", submission.data)
+		NetworkCallbacks.OnTaskResult(tt.TaskID, submission.mimeType, submission.data)
 
 	}
 
