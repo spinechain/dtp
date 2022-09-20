@@ -22,11 +22,14 @@ var WorkersPanel *PanelWorkers
 var TasksPanel *PanelTasks
 
 // Create all the windows
-func Create() {
+func Create() error {
 
-	// Create main window
+	// Create main window. This would fail on a no-UI environment
 	mainWindow = new(Window)
-	mainWindow.CreateWindow()
+	err := mainWindow.CreateWindow()
+	if err != nil {
+		return err
+	}
 
 	// Create top toolbar
 	toolbar := new(Toolbar)
@@ -67,6 +70,8 @@ func Create() {
 
 	// Select the default
 	SwitchPanel("commands")
+
+	return nil
 }
 
 // Configures all the things we want in the treeview on the left

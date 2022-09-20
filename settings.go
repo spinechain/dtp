@@ -46,7 +46,7 @@ func LoadDefaultSettings() {
 	tasknet.TasksToExecute = &tasktypes.TasksToExecute
 }
 
-func LoadSettings() {
+func LoadSettings() string {
 
 	LoadDefaultSettings()
 
@@ -55,7 +55,7 @@ func LoadSettings() {
 
 	file, err := os.Open(settings_file)
 	if err != nil {
-		return
+		return settings_file
 	}
 
 	defer file.Close()
@@ -67,6 +67,8 @@ func LoadSettings() {
 	}
 
 	tasknet.LoadDefaultPeerTable(default_peers)
+
+	return settings_file
 }
 
 func SaveSettings() {

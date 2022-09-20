@@ -1,7 +1,7 @@
 package ui
 
 import (
-	"log"
+	"spinedtp/util"
 
 	"github.com/gotk3/gotk3/gtk"
 )
@@ -14,16 +14,21 @@ type Window struct {
 	Window    *gtk.Window
 }
 
-func (window *Window) CreateWindow() {
+func (window *Window) CreateWindow() error {
 
 	// Setup the window
-	gtk.Init(nil)
+	err := gtk.InitCheck(nil)
+	if err != nil {
+		util.PrintRed("Unable to initialise GTK:" + err.Error())
+		return err
+	}
 
-	var err error
 	window.Window, err = gtk.WindowNew(gtk.WINDOW_TOPLEVEL)
 	if err != nil {
-		log.Fatal("Unable to create window:", err)
+		util.PrintRed("Unable to create window:" + err.Error())
+		return err
 	}
+
 	window.Window.SetTitle("SpineChain DTP")
 	window.Window.Connect("destroy", func() {
 		gtk.MainQuit()
@@ -33,8 +38,10 @@ func (window *Window) CreateWindow() {
 	window.Window.SetPosition(gtk.WIN_POS_CENTER)
 
 	// Create Layout for toolbar vs other parts
-	window.mainBox, _ = gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
+	window.mainBox, err = gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 	window.Window.Add(window.mainBox)
+
+	return err
 }
 
 func (window *Window) SetIcon() {

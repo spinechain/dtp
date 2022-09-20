@@ -10,6 +10,7 @@ import (
 	"spinedtp/tasktypes"
 	"spinedtp/taskworkers"
 	"spinedtp/ui"
+	"spinedtp/util"
 	"time"
 
 	"github.com/gotk3/gotk3/glib"
@@ -27,7 +28,7 @@ var TaskForSubmissionAvailable chan int
 func main() {
 	fmt.Println("Starting SpineChain DTP")
 
-	LoadSettings()
+	settingsFile := LoadSettings()
 
 	tasknet.OpenTaskPool = &tasksAvailable
 
@@ -45,7 +46,12 @@ func main() {
 		ui.OnSubmitToNetworkButton = Event_SubmitTaskToNetwork
 		ui.OnClearTasksDb = Event_ClearTasksDB
 
-		ui.Create()
+		err := ui.Create()
+		if err != nil {
+			SaveSettings()
+			util.PrintRed("Running in UI mode, but could not create UI. Please change ShowUI to false in settings file: " + settingsFile)
+			return
+		}
 
 		glib.TimeoutAdd(250, func() bool {
 
