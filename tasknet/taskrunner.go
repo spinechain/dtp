@@ -52,11 +52,12 @@ func ProcessCompletedTasks() {
 		<-TaskForSubmissionAvailable
 
 		// Loop through all completes in TasksToExecute
-		for _, task_exec := range *TasksToExecute {
+		for i, task_exec := range *TasksToExecute {
 			// Check if the task is complete
 			if task_exec.Complete && !task_exec.Sent && task_exec.ResultError == nil {
 
 				task_exec.Sent = true
+				(*TasksToExecute)[i] = task_exec
 
 				var resultFile string
 				if len(task_exec.ResultFiles) > 0 {

@@ -216,7 +216,7 @@ func RunTaskExecutionProcess() error {
 		}
 
 		if taskType == nil {
-			CompleteTask(&TasksToExecute[0], nil, errors.New("task type not supported"))
+			CompleteTask(te, nil, errors.New("task type not supported"))
 			continue
 		}
 
@@ -244,13 +244,13 @@ func RunTaskExecutionProcess() error {
 		data, err := cmd.CombinedOutput()
 		if err != nil {
 			// Complete task
-			CompleteTask(&TasksToExecute[0], nil, err)
+			CompleteTask(te, nil, err)
 			continue
 		}
 
 		if err != nil {
 			// Complete task
-			CompleteTask(&TasksToExecute[0], nil, err)
+			CompleteTask(te, nil, err)
 			continue
 		}
 
@@ -265,10 +265,10 @@ func RunTaskExecutionProcess() error {
 			err = errors.New("no result files found")
 		}
 
-		TasksToExecute[0].MimeType = mimeType
+		te.MimeType = mimeType
 
 		// Complete task
-		CompleteTask(&TasksToExecute[0], resultFiles, err)
+		CompleteTask(te, resultFiles, err)
 	}
 
 	return nil
