@@ -64,7 +64,7 @@ func main() {
 		gtk.Main()
 	} else {
 		fmt.Println("Spine running on the command line")
-		fmt.Println("How many I help?")
+		fmt.Println("How may I help?")
 
 		util.PrintLocalIPAddresses()
 

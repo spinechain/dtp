@@ -22,3 +22,4 @@ After cloning, you will have all files in a directory.
 - Install the dependencies with 'go get spinedtp'
 - Run build.sh. It takes very long to compile the first time. The screen will be blank for long.
 - At the end, you will have binaries in the build folder. Run these.
+- If you are running on the terminal, you will see a message that you should turn off ui mode. Do so in the settings file.
