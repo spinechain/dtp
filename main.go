@@ -17,7 +17,7 @@ import (
 	"github.com/gotk3/gotk3/gtk"
 )
 
-//go:embed default_peers.txt
+//go:embed assets/default_peers.txt
 var default_peers string
 
 var tasksAvailable tasknet.Taskpool
