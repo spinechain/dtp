@@ -1,4 +1,4 @@
-echo "Building SpineChain"
+echo "Building SpineChain..."
 
 set VERSION=0.0.1
 
