@@ -2,9 +2,11 @@ package ui
 
 import (
 	util "spinedtp/util"
+	"strconv"
 
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
+	"github.com/gotk3/gotk3/pango"
 )
 
 type PanelCommand struct {
@@ -14,7 +16,8 @@ type PanelCommand struct {
 	historyLabel     *gtk.Label
 	commandBox       *gtk.Box
 	resultGrid       *gtk.Grid
-	panelItems       []gtk.IWidget
+	panelFrames      []*gtk.Frame
+	panelItems       []*gtk.Widget
 }
 
 func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
@@ -57,8 +60,29 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 
 	command.commandBox.PackStart(command.resultGrid, false, false, padding)
 
-	// init the images
-	// command.images = make([]*gtk.Image, 1)
+	//	Create all the images
+	for i := 0; i < 9; i++ {
+		frm, err := gtk.FrameNew(strconv.Itoa(i))
+
+		// Set the minimum height of the frame
+		frm.SetSizeRequest(100, 200)
+
+		if err != nil {
+			util.PrintRed(err.Error())
+			return nil, err
+		}
+
+		command.panelFrames = append(command.panelFrames, frm)
+	}
+
+	for i, pitem := range command.panelFrames {
+
+		// get the row and column
+		row := i / 3
+		col := i % 3
+
+		command.resultGrid.Attach(pitem, col, row, 1, 1)
+	}
 
 	return command.commandBox, err
 }
@@ -127,8 +151,8 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 			return
 		}
 
-		// append image to the list, limit to 6 items
-		command.panelItems = append(command.panelItems, img)
+		// Add to the panel items
+		command.panelItems = append([]*gtk.Widget{img.ToWidget()}, command.panelItems...)
 
 	} else if mimeType == "text/plain" {
 		// create a label
@@ -138,17 +162,44 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 			return
 		}
 
-		// append image to the list, limit to 6 items
-		command.panelItems = append(command.panelItems, label)
+		label.SetHExpand(false)
+		label.SetVExpand(false)
+		label.SetMaxWidthChars(50)
+		label.SetLineWrap(true)
+		label.SetLineWrapMode(pango.WRAP_WORD_CHAR)
+		label.SetLines(5)
+		label.SetEllipsize(pango.ELLIPSIZE_MIDDLE)
+		label.SetMarginTop(8)
+		label.SetMarginBottom(8)
+		label.SetMarginStart(8)
+		label.SetMarginEnd(8)
+
+		// Add to the panel items
+		command.panelItems = append([]*gtk.Widget{label.ToWidget()}, command.panelItems...)
+
 	}
 
-	if len(command.panelItems) > 6 {
-		command.panelItems = command.panelItems[1:]
+	// delete the last item if more than 9
+	if len(command.panelItems) > 9 {
+		command.panelItems = command.panelItems[:len(command.panelItems)-1]
 	}
 
-	// Set each image to a grid cell, limit is 6x6
+	// Loop through the panel items and add them to the frames
 	for i, pitem := range command.panelItems {
-		command.resultGrid.Attach(pitem, i%3, i/3, 1, 1)
+
+		// Remove existing children
+		curChild, err := command.panelFrames[i].GetChild()
+		if err != nil {
+			util.PrintRed(err.Error())
+			return
+		}
+
+		if curChild != nil {
+			command.panelFrames[i].Remove(curChild)
+		}
+
+		// Add the new child
+		command.panelFrames[i].Add(pitem)
 	}
 
 	command.commandBox.ShowAll()

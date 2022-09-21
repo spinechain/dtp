@@ -56,6 +56,7 @@ func main() {
 		glib.TimeoutAdd(250, func() bool {
 
 			go Start()
+
 			return false
 		})
 
