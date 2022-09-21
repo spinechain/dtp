@@ -18,6 +18,7 @@
 data
 go.sum
 peers.txt
+package
 
 .vscode/extensions.json
 
