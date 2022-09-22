@@ -146,12 +146,17 @@ func ProcessAvailableTasks() {
 				BidForTask(task)
 			}
 
+			// We check here if we should route the task to another peer
+			RouteTaskOn(task)
 		}
 
 		switch task.LocalWorkProviderStatus {
 		case StatusNewFromLocal:
-			// Send all tasks that have not been propagated yet to peers.
-			SendNewTaskToPeers(tasks)
+
+			if !NetworkSettings.RouteOnly {
+				// Send all tasks that have not been propagated yet to peers.
+				SendNewTaskToPeers(tasks)
+			}
 
 		}
 
@@ -174,7 +179,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 		// This is a bid for another peer that is not me. We route
 		// it to the best connection we have
 		util.PrintPurple("Task bid for another client: " + tb.BidderID)
-		RoutePacketOn()
+		// RoutePacketOn()
 	}
 }
 
@@ -199,31 +204,6 @@ func BidForTask(task *Task) {
 	if !foundPeer {
 		for _, peer := range Peers {
 			peer.BidForTask(task, task_bid)
-		}
-	}
-}
-
-func SendNewTaskToPeers(myTasks []*Task) {
-
-	for _, task := range myTasks {
-
-		if !task.FullyPropagated {
-			packet, err := ConstructTaskPropagationPacket(task)
-			if err != nil {
-				continue
-			}
-
-			task.MarkAsPropagated(OpenTaskPool)
-			task.GlobalStatus = StatusWaitingForBids
-
-			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, task.LocalWorkerStatus, StatusWaitingForBidsForMe)
-
-			SendPacketToAllPeers(packet)
-
-			// Set a timeout
-			go WaitForBidExpiry(task)
-
-			break
 		}
 	}
 }

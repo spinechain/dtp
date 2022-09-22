@@ -15,6 +15,16 @@ func SendTaskToNetwork(text string) {
 	CheckForNewTasks()
 }
 
+// Sends a spine packet to every single connected peer
+func SendPacketToAllPeers(packet *SpinePacket) error {
+
+	for _, peer := range Peers {
+		peer.SendPacket(packet)
+	}
+
+	return nil
+}
+
 func SendTaskAcceptance(task *Task, bid *TaskBid) {
 
 	util.PrintBlue("Sending Task Acceptance for Task: " + task.ID + " (" + task.Command + ") to " + PeerIDToDescription(bid.BidderID))
@@ -84,4 +94,60 @@ func SendTaskSubmission(task *Task, mimeType string, submissionData *[]byte) {
 		}
 	}
 
+}
+
+func SendNewTaskToPeers(myTasks []*Task) {
+
+	for _, task := range myTasks {
+
+		if !task.FullyPropagated {
+			packet, err := ConstructTaskPropagationPacket(task)
+			if err != nil {
+				continue
+			}
+
+			task.MarkAsPropagated(OpenTaskPool)
+			task.GlobalStatus = StatusWaitingForBids
+
+			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, task.LocalWorkerStatus, StatusWaitingForBidsForMe)
+
+			SendPacketToAllPeers(packet)
+
+			// Set a timeout
+			go WaitForBidExpiry(task)
+
+			break
+		}
+	}
+}
+
+func RouteTaskOn(task *Task) {
+
+	util.PrintBlue("Routing Task On: " + task.ID + " (" + task.Command + ") ")
+
+	// We send to clients, except clients that were already on route or the task owner
+	for _, peer := range Peers {
+
+		// Check if this peer is in the arrival route
+		alreadyOnRoute := false
+		for _, routePeer := range task.ArrivalRoute {
+			if routePeer.ID == peer.ID {
+				alreadyOnRoute = true
+				break
+			}
+		}
+
+		if peer.ID != task.TaskOwnerID && !alreadyOnRoute {
+
+			packet, err := ConstructTaskPropagationPacket(task)
+			if err != nil {
+				continue
+			}
+
+			task.MarkAsPropagated(OpenTaskPool)
+			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusRoutedToNetwork, task.LocalWorkProviderStatus)
+
+			peer.SendPacket(packet)
+		}
+	}
 }

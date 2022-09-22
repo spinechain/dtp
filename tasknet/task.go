@@ -40,6 +40,7 @@ const (
 const (
 	StatusNewFromNetwork LocalTaskStatus = iota
 	StatusNewFromLocal
+	StatusRoutedToNetwork
 	StatusWaitingForBidsForMe
 	StatusBiddingPeriodExpired
 	StatusWaitingForExecution

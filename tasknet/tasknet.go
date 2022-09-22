@@ -87,10 +87,6 @@ func ExecNetworkCommand(cmd string) {
 	// OnNewTaskReceivedMine(tasks)
 }
 
-func RoutePacketOn() {
-
-}
-
 func ConnectToPeers() {
 
 	time.Sleep(2 * time.Second)
@@ -107,6 +103,11 @@ func ConnectToPeers() {
 	for _, peer := range Peers {
 
 		if peer.IsConnected() {
+			continue
+		}
+
+		// In router mode, do not do a loopback connection
+		if util.IsIPLocalIP(peer.GetFullAddress()) && NetworkSettings.RouteOnly {
 			continue
 		}
 
@@ -205,16 +206,6 @@ func MakeRoute(peer *Peer) []*Peer {
 
 	route = append(route, peer)
 	return route
-}
-
-// Sends a spine packet to every single connected peer
-func SendPacketToAllPeers(packet *SpinePacket) {
-
-	for _, peer := range Peers {
-		if peer.IsConnected() {
-			peer.conn.Write([]byte(packet.ToString()))
-		}
-	}
 }
 
 func handlePeerConnection(peer *Peer, weConnected bool) {

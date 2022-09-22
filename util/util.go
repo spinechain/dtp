@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"net"
 	"os"
+	"strings"
 )
 
 func FileExists(filename string) bool {
@@ -14,23 +15,61 @@ func FileExists(filename string) bool {
 	return !info.IsDir()
 }
 
-// GetLocalIP returns the non loopback local IP of the host
-func PrintLocalIPAddresses() string {
-	PrintGreen("Local IP Address:")
+func IsIPLocalIP(ip string) bool {
+
+	// Get addresses
+	addresses := GetLocalIPAddresses()
+
+	// loop and print addresses
+	for _, address := range addresses {
+
+		// split ip to port and ip
+		ipParts := strings.Split(ip, ":")
+
+		if len(ipParts) == 2 {
+			ip = ipParts[0]
+		} else {
+			ip = ipParts[0]
+		}
+
+		if ip == address {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Get all Local IP addresses as a list
+func GetLocalIPAddresses() []string {
 
 	addrs, err := net.InterfaceAddrs()
 	if err != nil {
-		return ""
+		return nil
 	}
+	var addresses []string
 	for _, address := range addrs {
 		// check the address type and if it is not a loopback the display it
 		if ipnet, ok := address.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
 			if ipnet.IP.To4() != nil {
-				PrintGreen("🔌 > " + ipnet.IP.String())
+				addresses = append(addresses, ipnet.IP.String())
 			}
 		}
 	}
-	return ""
+
+	return addresses
+}
+
+func PrintLocalIPAddresses() {
+	PrintGreen("Local IP Address:")
+
+	// Get addresses
+	addresses := GetLocalIPAddresses()
+
+	// loop and print addresses
+	for _, address := range addresses {
+		PrintGreen("🔌 > " + address)
+	}
 
 }
 

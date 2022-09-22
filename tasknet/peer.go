@@ -292,6 +292,18 @@ func CountPeers() (int, int) {
 	return WeConnectedCount, TheyConnectedCount
 }
 
+func (peer *Peer) SendPacket(packet *SpinePacket) error {
+	if peer.IsConnected() {
+		_, err := peer.conn.Write([]byte(packet.ToString()))
+		if err != nil {
+			util.PrintRed("Error sending packet to peer: " + err.Error())
+		}
+		return err
+	}
+
+	return errors.New("peer is not connected")
+}
+
 func (peer *Peer) RequestPeerList() error {
 	packet, err := ConstructPeerListRequestPacket()
 	if err != nil {
