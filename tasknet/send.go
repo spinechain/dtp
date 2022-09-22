@@ -137,7 +137,7 @@ func RouteTaskOn(task *Task) {
 			}
 		}
 
-		if peer.ID != task.TaskOwnerID && !alreadyOnRoute {
+		if peer.ID != task.TaskOwnerID && !alreadyOnRoute && peer.Connected {
 
 			packet, err := ConstructTaskPropagationPacket(task)
 			if err != nil {
