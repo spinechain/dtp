@@ -126,11 +126,13 @@ func ProcessAvailableTasks() {
 		switch task.GlobalStatus {
 		case StatusBiddingComplete:
 
-			util.PrintPurple("Found a task with bidding period complete")
+			if !NetworkSettings.RouteOnly {
+				util.PrintPurple("Found a task with bidding period complete")
 
-			SelectWinningBids(task)
+				SelectWinningBids(task)
 
-			OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusWaitingForExecution)
+				OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusWaitingForExecution)
+			}
 
 		}
 
@@ -140,7 +142,9 @@ func ProcessAvailableTasks() {
 		case StatusNewFromNetwork:
 			util.PrintYellow("Found a new unprocessed task: " + task.Command)
 
-			BidForTask(task)
+			if !NetworkSettings.RouteOnly {
+				BidForTask(task)
+			}
 
 		}
 
@@ -148,6 +152,7 @@ func ProcessAvailableTasks() {
 		case StatusNewFromLocal:
 			// Send all tasks that have not been propagated yet to peers.
 			SendNewTaskToPeers(tasks)
+
 		}
 
 	}

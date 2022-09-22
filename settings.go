@@ -19,6 +19,7 @@ type SpineSettings struct {
 	ClientID      string
 	DataFolder    string
 	ShowUI        bool
+	RouteOnly     bool // In this case it acts as a router only, no tasks are executed
 }
 
 var AppSettings SpineSettings
@@ -28,6 +29,7 @@ func LoadDefaultSettings() {
 	AppSettings.ListenAddress = "127.0.0.1"
 	AppSettings.ClientID = shortuuid.New()
 	AppSettings.ShowUI = true
+	AppSettings.RouteOnly = false
 
 	ex, err := os.Executable()
 	if err != nil {
@@ -93,6 +95,7 @@ func SetNetworkSettings() {
 	tasknet.NetworkSettings.BidTimeout = 5
 	tasknet.NetworkSettings.AcceptedBidsPerTask = 3
 	tasknet.NetworkSettings.DataFolder = AppSettings.DataFolder
+	tasknet.NetworkSettings.RouteOnly = AppSettings.RouteOnly
 
 	tasknet.NetworkCallbacks.OnTaskReceived = nil // s.OnNewTaskReceived
 	tasknet.NetworkCallbacks.OnTaskApproved = nil //s.OnNetworkTaskApproval

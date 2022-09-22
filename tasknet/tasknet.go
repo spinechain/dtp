@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net"
+	"os"
 	"time"
 
 	util "spinedtp/util"
@@ -24,6 +25,7 @@ type NetSettings struct {
 	AcceptedBidsPerTask int
 	OnStatusUpdate      StatusUpdateFn
 	DataFolder          string
+	RouteOnly           bool
 }
 
 type TaskReceiveFn func(string)
@@ -61,7 +63,10 @@ func Connect() {
 	go ProcessTasks()
 
 	// connect to any known peers
-	go ConnectToPeers()
+	if !NetworkSettings.RouteOnly {
+		// In routing only mode we do not connect to anyone, they all connect to us
+		go ConnectToPeers()
+	}
 }
 
 func Disconnect() {
@@ -241,6 +246,12 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 		if peer.FirstCommand == "peers" {
 			util.PrintPurple("Requesting list of peers from this peer")
 			peer.RequestPeerList()
+		}
+
+		if NetworkSettings.RouteOnly {
+			// exit the app
+			StatusBarUpdate("📡 Routing only mode but we connected. Exiting...", 0)
+			os.Exit(0)
 		}
 
 	} else {
