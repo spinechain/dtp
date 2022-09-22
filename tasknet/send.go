@@ -1,6 +1,9 @@
 package tasknet
 
-import "spinedtp/util"
+import (
+	"errors"
+	"spinedtp/util"
+)
 
 // This will create a new task in our local task pool.
 // Immediately after, it will propagate open tasks in
@@ -121,6 +124,26 @@ func SendNewTaskToPeers(myTasks []*Task) {
 	}
 }
 
+// This will bid for me on a task
+func SendMyTaskBid(peer *Peer, task *Task, taskbid *TaskBid) error {
+
+	if !peer.IsConnected() {
+		return errors.New("peer is not connected")
+	}
+
+	packet, err := ConstructTaskBidPacket(taskbid, task.GetReturnRoute())
+	if err != nil {
+		return err
+	}
+
+	count, err := peer.conn.Write([]byte(packet.ToString()))
+	if count == 0 || err != nil {
+		util.PrintRed("Error when writing to socket: " + err.Error())
+	}
+
+	return err
+}
+
 func RouteTaskOn(task *Task) {
 
 	util.PrintBlue("Routing Task On: " + task.ID + " (" + task.Command + ") ")
@@ -150,4 +173,24 @@ func RouteTaskOn(task *Task) {
 			peer.SendPacket(packet)
 		}
 	}
+}
+
+func RouteTaskBidOn(tb *TaskBid) {
+	util.PrintBlue("Routing TaskBid On: " + tb.ID + " (TaskID:" + tb.TaskID + ") ")
+
+	// first see if the target is connected directly to u
+	for _, peer := range Peers {
+
+		if peer.ID == tb.TaskOwnerID {
+
+			packet, err := ConstructTaskBidPacket(tb, tb.GetReturnRoute())
+			if err == nil {
+				// task.MarkAsPropagated(OpenTaskPool)
+				peer.SendPacket(packet)
+				return
+			}
+		}
+	}
+
+	util.PrintRed("We received a bid that is not directly connected to us. Not routing yet.")
 }

@@ -179,7 +179,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 		// This is a bid for another peer that is not me. We route
 		// it to the best connection we have
 		util.PrintPurple("Task bid for another client: " + tb.BidderID)
-		// RoutePacketOn()
+		RouteTaskBidOn(tb)
 	}
 }
 
@@ -195,7 +195,7 @@ func BidForTask(task *Task) {
 	foundPeer := false
 	for _, peer := range Peers {
 		if peer.ID == task.TaskOwnerID {
-			peer.BidForTask(task, task_bid)
+			SendMyTaskBid(peer, task, task_bid)
 			foundPeer = true
 			break
 		}
@@ -203,7 +203,7 @@ func BidForTask(task *Task) {
 
 	if !foundPeer {
 		for _, peer := range Peers {
-			peer.BidForTask(task, task_bid)
+			SendMyTaskBid(peer, task, task_bid)
 		}
 	}
 }

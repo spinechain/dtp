@@ -122,18 +122,9 @@ func CreateSpinePacket(pastroute []*Peer, futureroute []*Peer) *SpinePacket {
 	p.Body.Id = p.Header.Id
 	p.Body.Items = make(map[string]string)
 
-	// If past route is specified to nil, we set this node
-	// as the past route
-	/*
-		if pastroute == nil {
-			p.PastRoute.Nodes = append(p.PastRoute.Nodes, &mepeer)
-		} else {*/
 	p.PastRoute.Nodes = pastroute
-	// }
-	// assert.NotEqual(pastroute, nil)
-
 	p.FutureRoute.Nodes = futureroute
-	// p.Route.Nodes = append(p.Route.Nodes, &mepeer)
+
 	return &p
 }
 
