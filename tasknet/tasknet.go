@@ -292,11 +292,8 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 			continue
 		}
 
-		util.PrintYellow("New Packet Arrived")
-
 		// Process packet
 		ReceivePacket(packet, peer)
-
 	}
 
 }

@@ -2,6 +2,7 @@ package tasknet
 
 import (
 	"database/sql"
+	"spinedtp/util"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -115,11 +116,13 @@ func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus
 	// update
 	stmt, err := taskDb.Prepare("update tasks set local_worker_status=?, local_work_provider_status=?, global_status=? where tid=?")
 	if err != nil {
+		util.PrintRed("UpdateTaskStatus: " + err.Error())
 		return err
 	}
 
 	_, err = stmt.Exec(task.LocalWorkerStatus, task.LocalWorkProviderStatus, task.GlobalStatus, task.ID)
 	if err != nil {
+		util.PrintRed("UpdateTaskStatus Exec: " + err.Error())
 		return err
 	}
 
@@ -233,6 +236,8 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 	}
 
 	OpenTaskPool.IncHighestIndex(task.Index)
+
+	// Review what's going on down here
 
 	// We are
 	// We update the local statii of the existing task in the db

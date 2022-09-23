@@ -21,19 +21,14 @@ func ReceivePacket(packet *SpinePacket, peer *Peer) {
 		util.PrintPurple("Peer List Received")
 		ReceivePeerList(packet, peer)
 	case "task":
-		util.PrintPurple("Task Received")
 		ReceiveTask(packet)
 	case "task-bid":
-		util.PrintPurple("Task Bid Received")
 		ReceiveTaskBid(packet)
 	case "task-approval":
-		util.PrintPurple("Task Approval Received")
 		ReceiveTaskApproval(packet)
 	case "task-submission":
-		util.PrintPurple("Task Submission Received")
 		ReceiveTaskSubmission(packet)
 	case "task-accept":
-		util.PrintPurple("Task Acceptance Received")
 		ReceiveTaskAccept(packet)
 	default:
 		fmt.Printf("Unknown packet type received: %s.\n", packetType)
@@ -115,6 +110,25 @@ func ReceiveTask(packet *SpinePacket) {
 
 	// This will tell the network to start processing the task
 	taskForProcessingAvailable <- 1
+}
+
+// Call when a new task bid arrives. We add it to the database. When our bid
+// period expires is when we check for all bids and select the best
+func NewTaskBidArrived(tb *TaskBid) {
+
+	util.PrintPurple("New Task Bid Arrived for Task " + tb.TaskID + " from " + PeerIDToDescription(tb.BidderID))
+
+	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
+		// This is a bid for a task of mine
+
+		AddBid(taskDb, tb, false)
+
+	} else {
+		// This is a bid for another peer that is not me. We route
+		// it to the best connection we have
+		util.PrintPurple("Task bid for another client: " + tb.BidderID)
+		RouteTaskBidOn(tb)
+	}
 }
 
 func ReceiveTaskBid(packet *SpinePacket) {

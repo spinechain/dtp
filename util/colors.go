@@ -18,6 +18,10 @@ var White = "\033[97m"
 // An always incrementing index, so we have an idea what print was before what
 var printIndex int = 0
 
+func PrintWhite(str string) {
+	PrintSpine(White + str + Reset)
+}
+
 func PrintGreen(str string) {
 	PrintSpine(Green + str + Reset)
 }
