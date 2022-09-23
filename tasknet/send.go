@@ -148,6 +148,10 @@ func RouteTaskOn(task *Task) {
 
 	util.PrintBlue("Routing Task On: " + task.ID + " (" + task.Command + ") ")
 
+	// update status so we never deal with this task again
+	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusRoutedToNetwork, task.LocalWorkProviderStatus)
+	task.MarkAsPropagated(OpenTaskPool)
+
 	// We send to clients, except clients that were already on route or the task owner
 	for _, peer := range Peers {
 
@@ -166,9 +170,6 @@ func RouteTaskOn(task *Task) {
 			if err != nil {
 				continue
 			}
-
-			task.MarkAsPropagated(OpenTaskPool)
-			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusRoutedToNetwork, task.LocalWorkProviderStatus)
 
 			peer.SendPacket(packet)
 		}

@@ -238,6 +238,8 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 	// We update the local statii of the existing task in the db
 	// TODO: this looks risky, as we are taking this info from network
 	existingTask := tasks[0]
+
+	// Bug here. Tasks exists and is routed, but we change local status to new from network
 	t.UpdateTaskStatus(task, existingTask.GlobalStatus, task.LocalWorkerStatus, task.LocalWorkProviderStatus)
 
 	// We have the task. We need to update the status
