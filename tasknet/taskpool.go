@@ -2,7 +2,6 @@ package tasknet
 
 import (
 	"database/sql"
-	"errors"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -235,80 +234,19 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 
 	OpenTaskPool.IncHighestIndex(task.Index)
 
+	// We are
 	// We update the local statii of the existing task in the db
 	// TODO: this looks risky, as we are taking this info from network
-	existingTask := tasks[0]
+	// existingTask := tasks[0]
 
 	// Bug here. Tasks exists and is routed, but we change local status to new from network
-	t.UpdateTaskStatus(task, existingTask.GlobalStatus, task.LocalWorkerStatus, task.LocalWorkProviderStatus)
+	// t.UpdateTaskStatus(task, existingTask.GlobalStatus, task.LocalWorkerStatus, task.LocalWorkProviderStatus)
 
 	// We have the task. We need to update the status
 	//if existingTask.LocalStatus == StatusNewFromLocal && task.LocalStatus == StatusNewFromNetwork {
 	//	t.UpdateTaskStatus(task, task.GlobalStatus, task.LocalStatus)
 	//}
-
-	/*
-		for _, t := range taskPool.networkTasks {
-			if t.ID == task.ID {
-				util.PrintYellow("Task received we already have in taskpool")
-				return
-			}
-		}
-
-		// Add to the taskpool list
-		taskPool.networkTasks = append(taskPool.networkTasks, task)
-
-		IncHighestIndex(task.Index)
-	*/
 }
-
-func FindInNetworkTaskPool(id string) (*Task, error) {
-
-	/*
-		for _, task := range taskPool.networkTasks {
-			if task.ID == id {
-				return task, nil
-			}
-		}
-	*/
-	return nil, errors.New("task not found")
-}
-
-func FindInMyTaskPool(id string) (*Task, error) {
-
-	/*
-		for _, task := range taskPool.myTasks {
-			if task.ID == id {
-				return task, nil
-			}
-		}
-	*/
-	return nil, errors.New("task not found")
-}
-
-/*
-func GetNetworkTaskList() []string {
-	var tasks []string
-
-	for _, t := range taskPool.networkTasks {
-		tasks = append(tasks, t.Command)
-	}
-
-	return tasks
-}
-*/
-
-/*
-func GetMyTaskList() []string {
-	var tasks []string
-
-	for _, t := range taskPool.myTasks {
-		tasks = append(tasks, t.Command)
-	}
-
-	return tasks
-}
-*/
 
 func ReorganiseTaskPool() {
 
