@@ -38,6 +38,7 @@ type Peer struct {
 
 // All peers I know, connected or not
 var Peers []*Peer
+var defaultPeersLoaded bool = false
 
 // Maximum number of peers we will remember at all (not neccessarily)
 // connected right now
@@ -119,6 +120,12 @@ func LoadPeerTable() error {
 }
 
 func LoadDefaultPeerTable(default_peers string) {
+
+	if defaultPeersLoaded {
+		return
+	}
+
+	defaultPeersLoaded = true
 	fmt.Println("Loading default peers: " + default_peers)
 
 	// Check if the peers.txt in the data folder file exists
@@ -200,6 +207,7 @@ func SavePeerTable() error {
 
 func AddToPeerTable(peer *Peer) *Peer {
 
+	var peerFound bool = false
 	// It is possible that the same peer reconnected, but we have the same
 	// peer ID in our table already with an old IP. Let's first check that
 	for i, epeer := range Peers {
@@ -226,13 +234,19 @@ func AddToPeerTable(peer *Peer) *Peer {
 			return Peers[i]
 		}
 
+		if epeer.Address == peer.Address && epeer.ConnectPort == peer.ConnectPort {
+			peerFound = true
+		}
+
 		if epeer.ID == "" && epeer.Address == peer.Address && epeer.ConnectPort == peer.ConnectPort {
 			epeer.ID = peer.ID
 			return epeer
 		}
 	}
 
-	Peers = append(Peers, peer)
+	if !peerFound {
+		Peers = append(Peers, peer)
+	}
 
 	return peer
 }
