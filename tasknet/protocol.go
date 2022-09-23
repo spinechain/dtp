@@ -69,7 +69,7 @@ type TaskBid struct {
 	MyBid int
 }
 
-type TaskAccept struct {
+type TaskCompleted struct {
 	ID           string
 	Created      time.Time
 	Fee          float64
@@ -98,7 +98,7 @@ type TaskSubmission struct {
 	ArrivalRoute []*Peer
 }
 
-type TaskApproval struct {
+type TaskBidApproval struct {
 	ID           string
 	Created      time.Time
 	Fee          float64
@@ -106,6 +106,7 @@ type TaskApproval struct {
 	TaskOwnerID  string
 	BidderID     string
 	Value        float64
+	Reward       float64
 	Geo          string
 	ArrivalRoute []*Peer
 }
@@ -218,20 +219,20 @@ func ConstructTaskBidPacket(taskbid *TaskBid, returnRoute []*Peer) (*SpinePacket
 	return packet, nil
 }
 
-func ConstructTaskAcceptPacket(taskAccept *TaskAccept, returnRoute []*Peer) (*SpinePacket, error) {
+func ConstructTaskBidApprovalPacket(taskBidApproval *TaskBidApproval, returnRoute []*Peer) (*SpinePacket, error) {
 
 	pastRoute := []*Peer{GetMePeer()}
 	packet := CreateSpinePacket(pastRoute, returnRoute)
 
-	packet.Body.Type = "task-accept"
-	packet.Body.Items["task-accept.ID"] = taskAccept.ID
-	packet.Body.Items["task-accept.Created"] = taskAccept.Created.Format(time.RFC3339)
-	packet.Body.Items["task-accept.Fee"] = fmt.Sprintf("%f", taskAccept.Fee)
-	packet.Body.Items["task-accept.TaskOwnerID"] = taskAccept.TaskOwnerID
-	packet.Body.Items["task-accept.BidderID"] = taskAccept.BidderID
-	packet.Body.Items["task-accept.Reward"] = fmt.Sprintf("%f", taskAccept.Reward)
-	packet.Body.Items["task-accept.TaskID"] = taskAccept.TaskID
-	packet.Body.Items["task-accept.Hash"] = "NOHASHYET"
+	packet.Body.Type = "task-bid-approval"
+	packet.Body.Items["task-bid-approval.ID"] = taskBidApproval.ID
+	packet.Body.Items["task-bid-approval.Created"] = taskBidApproval.Created.Format(time.RFC3339)
+	packet.Body.Items["task-bid-approval.Fee"] = fmt.Sprintf("%f", taskBidApproval.Fee)
+	packet.Body.Items["task-bid-approval.TaskOwnerID"] = taskBidApproval.TaskOwnerID
+	packet.Body.Items["task-bid-approval.BidderID"] = taskBidApproval.BidderID
+	packet.Body.Items["task-bid-approval.Reward"] = fmt.Sprintf("%f", taskBidApproval.Reward)
+	packet.Body.Items["task-bid-approval.TaskID"] = taskBidApproval.TaskID
+	packet.Body.Items["task-bid-approval.Hash"] = "NOHASHYET"
 
 	return packet, nil
 }
@@ -264,19 +265,19 @@ func ConstructTaskSubmissionPacket(taskSubmit *TaskSubmission, returnRoute []*Pe
 	return packet, nil
 }
 
-func ConstructTaskApprovalPacket(taskApproval *TaskApproval, returnRoute []*Peer) (*SpinePacket, error) {
+func ConstructTaskCompletedPacket(taskCompleted *TaskCompleted, returnRoute []*Peer) (*SpinePacket, error) {
 
 	pastRoute := []*Peer{GetMePeer()}
 	packet := CreateSpinePacket(pastRoute, returnRoute)
 
-	packet.Body.Type = "task-approval"
-	packet.Body.Items["task-approval.ID"] = taskApproval.ID
-	packet.Body.Items["task-approval.Created"] = taskApproval.Created.Format(time.RFC3339)
-	packet.Body.Items["task-approval.Fee"] = "0"
-	packet.Body.Items["task-approval.TaskOwnerID"] = taskApproval.TaskOwnerID
-	packet.Body.Items["task-approval.Value"] = "0"
-	packet.Body.Items["task-approval.TaskID"] = taskApproval.TaskID
-	packet.Body.Items["task-submission.Hash"] = "NOHASHYET"
+	packet.Body.Type = "task-completed"
+	packet.Body.Items["task-completed.ID"] = taskCompleted.ID
+	packet.Body.Items["task-completed.Created"] = taskCompleted.Created.Format(time.RFC3339)
+	packet.Body.Items["task-completed.Fee"] = "0"
+	packet.Body.Items["task-completed.TaskOwnerID"] = taskCompleted.TaskOwnerID
+	packet.Body.Items["task-completed.Value"] = "0"
+	packet.Body.Items["task-completed.TaskID"] = taskCompleted.TaskID
+	packet.Body.Items["task-completed.Hash"] = "NOHASHYET"
 
 	return packet, nil
 }

@@ -131,14 +131,14 @@ func (task *Task) GetReturnRoute() []*Peer {
 	return task.ArrivalRoute
 }
 
-func (task *TaskApproval) GetReturnRoute() []*Peer {
-	return task.ArrivalRoute
+func (tba *TaskBidApproval) GetReturnRoute() []*Peer {
+	return tba.ArrivalRoute
 }
 func (task *TaskSubmission) GetReturnRoute() []*Peer {
 	return task.ArrivalRoute
 }
-func (task *TaskAccept) GetReturnRoute() []*Peer {
-	return task.ArrivalRoute
+func (tc *TaskCompleted) GetReturnRoute() []*Peer {
+	return tc.ArrivalRoute
 }
 
 func (task *TaskBid) GetReturnRoute() []*Peer {

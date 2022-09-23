@@ -3,6 +3,9 @@ package tasknet
 import (
 	"errors"
 	"spinedtp/util"
+	"time"
+
+	"github.com/lithammer/shortuuid/v3"
 )
 
 // This will create a new task in our local task pool.
@@ -28,7 +31,7 @@ func SendPacketToAllPeers(packet *SpinePacket) error {
 	return nil
 }
 
-func SendTaskAcceptance(task *Task, bid *TaskBid) {
+func SendTaskBidApproved(task *Task, bid *TaskBid) {
 
 	util.PrintBlue("Sending Task Acceptance for Task: " + task.ID + " (" + task.Command + ") to " + PeerIDToDescription(bid.BidderID))
 
@@ -40,7 +43,7 @@ func SendTaskAcceptance(task *Task, bid *TaskBid) {
 	foundTarget := false
 	for _, peer := range Peers {
 		if peer.ID == targetID {
-			peer.AcceptBid(task, bid)
+			SendTaskBidApprovedToPeer(peer, task, bid)
 			foundTarget = true
 			break
 		}
@@ -48,9 +51,37 @@ func SendTaskAcceptance(task *Task, bid *TaskBid) {
 
 	if !foundTarget {
 		for _, peer := range Peers {
-			peer.AcceptBid(task, bid)
+			SendTaskBidApprovedToPeer(peer, task, bid)
 		}
 	}
+}
+
+func SendTaskBidApprovedToPeer(peer *Peer, task *Task, taskbid *TaskBid) error {
+
+	if !peer.IsConnected() {
+		return errors.New("peer is not connected")
+	}
+
+	var t TaskBidApproval
+	t.BidderID = taskbid.BidderID
+	t.TaskOwnerID = task.TaskOwnerID
+	t.Created = time.Now()
+	t.Fee = 0
+	t.ID = shortuuid.New()
+	t.Reward = taskbid.BidValue
+	t.TaskID = task.ID
+
+	packet, err := ConstructTaskBidApprovalPacket(&t, taskbid.GetReturnRoute())
+	if err != nil {
+		return err
+	}
+
+	count, err := peer.conn.Write([]byte(packet.ToString()))
+	if count == 0 || err != nil {
+		util.PrintRed("Error when writing to socket" + err.Error())
+	}
+
+	return nil
 }
 
 // This function will need to be improved a lot. This is because the submissions can be quite large.

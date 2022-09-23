@@ -1,10 +1,8 @@
 package tasknet
 
 import (
-	"bytes"
 	"database/sql"
 	"errors"
-	"fmt"
 	"spinedtp/util"
 	"strconv"
 	"time"
@@ -29,7 +27,7 @@ func (bid *TaskBid) Scan(rows *sql.Rows) error {
 
 	var created string
 	var arrival_route string
-	err := rows.Scan(&bid.ID, &bid.TaskID, &created, &bid.Fee, &bid.BidValue, &bid.BidderID, &bid.Geo, &arrival_route, &bid.Selected, &bid.MyBid)
+	err := rows.Scan(&bid.ID, &bid.TaskID, &created, &bid.Fee, &bid.BidValue, &bid.BidderID, &bid.Geo, &arrival_route, &bid.Selected)
 	if err != nil {
 		util.PrintRed(err.Error())
 		return err
@@ -236,68 +234,10 @@ func SelectWinningBids(task *Task) error {
 			break
 		}
 
-		SendTaskAcceptance(task, &bid)
+		SendTaskBidApproved(task, &bid)
 
 		i++
 	}
 
 	return nil
-}
-
-func TaskSubmissionReceived(tt *TaskSubmission) {
-
-	if tt.TaskOwnerID != NetworkSettings.MyPeerID {
-		util.PrintYellow("Task submission for another client received.")
-		// TODO: Route this on
-		return
-	}
-
-	// Loop over all submissions
-	for i := 0; i < len(tt.Submissions); i++ {
-
-		// Get a submission
-		submission := tt.Submissions[i]
-
-		// Convert byte to hex
-		peek_val := bytes.NewBuffer(submission.data[:20]).String()
-
-		util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(submission.data)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
-
-		NetworkCallbacks.OnTaskResult(tt.TaskID, submission.mimeType, submission.data)
-
-	}
-
-}
-
-// This means that we bid for a task and we have been accepted as one of
-// those to execute the task
-func TaskAcceptanceReceived(tt *TaskAccept) {
-
-	if tt.BidderID != NetworkSettings.MyPeerID {
-		util.PrintYellow("Task acceptance for another client received: " + PeerIDToDescription(tt.BidderID))
-
-		// TODO: Route this on
-		return
-	}
-
-	util.PrintYellow("Received new task acceptance from: " + PeerIDToDescription(tt.TaskOwnerID) + " for task: " + tt.TaskID)
-
-	// We need to find the task in our taskpool. If it's not there, we should
-	// not do it
-	task := OpenTaskPool.GetTask(tt.TaskID)
-	if task == nil {
-		util.PrintRed("Invalid task found!")
-	}
-
-	// Let's check if we bid on it
-	ourBid, err := GetBids("where bidder_id=? and task_id=?", NetworkSettings.MyPeerID, tt.TaskID)
-	if err == nil && len(ourBid) >= 0 {
-		// In this case, we really did bid for this
-		// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
-		// accept it
-		OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusApprovedForMe, task.LocalWorkProviderStatus)
-		ourBid[0].MarkAsAccepted()
-		taskForExecutionAvailable <- 1
-
-	}
 }

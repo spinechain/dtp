@@ -1,6 +1,7 @@
 package tasknet
 
 import (
+	"bytes"
 	"fmt"
 	util "spinedtp/util"
 	"strconv"
@@ -24,12 +25,12 @@ func ReceivePacket(packet *SpinePacket, peer *Peer) {
 		ReceiveTask(packet)
 	case "task-bid":
 		ReceiveTaskBid(packet)
-	case "task-approval":
-		ReceiveTaskApproval(packet)
+	case "task-bid-approval":
+		ReceiveTaskBidApproval(packet)
 	case "task-submission":
 		ReceiveTaskSubmission(packet)
-	case "task-accept":
-		ReceiveTaskAccept(packet)
+	case "task-completed":
+		ReceiveTaskCompleted(packet)
 	default:
 		fmt.Printf("Unknown packet type received: %s.\n", packetType)
 	}
@@ -192,39 +193,67 @@ func ReceiveTaskBid(packet *SpinePacket) {
 	NewTaskBidArrived(&t)
 }
 
-func ReceiveTaskApproval(packet *SpinePacket) {
+func ReceiveTaskBidApproval(packet *SpinePacket) {
 
-	created, err := time.Parse(time.RFC3339, packet.Body.Items["task-bid.Created"])
+	created, err := time.Parse(time.RFC3339, packet.Body.Items["task-bid-approval.Created"])
 
 	if err != nil {
 		fmt.Println("invalid task bid time received")
 		return
 	}
 
-	fee, err := strconv.ParseFloat(packet.Body.Items["task-approval.Fee"], 64)
+	fee, err := strconv.ParseFloat(packet.Body.Items["task-bid-approval.Fee"], 64)
 	if err != nil {
 		fmt.Println("Invalid task bid received")
 		return
 	}
 
-	value, err := strconv.ParseFloat(packet.Body.Items["task-approval.Value"], 64)
+	value, err := strconv.ParseFloat(packet.Body.Items["task-bid-approval.Value"], 64)
 	if err != nil {
 		fmt.Println("invalid bid value received")
 		return
 	}
 
-	var t TaskApproval
-	t.ID = packet.Body.Items["task-approval.ID"]
-	t.TaskID = packet.Body.Items["task-approval.TaskID"]
+	var t TaskBidApproval
+	t.ID = packet.Body.Items["task-bid-approval.ID"]
+	t.TaskID = packet.Body.Items["task-bid-approval.TaskID"]
 	t.Created = created
 	t.Fee = fee
 	t.Value = value
-	t.TaskOwnerID = packet.Body.Items["task-approval.TaskOwnerID"]
-	t.Geo = packet.Body.Items["task-approval.Geo"]
+	t.TaskOwnerID = packet.Body.Items["task-bid-approval.TaskOwnerID"]
+	t.Geo = packet.Body.Items["task-bid-approval.Geo"]
 	t.ArrivalRoute = packet.PastRoute.Nodes
 
 	if NetworkCallbacks.OnTaskApproved != nil {
 		NetworkCallbacks.OnTaskApproved("yes")
+	}
+
+	if t.BidderID != NetworkSettings.MyPeerID {
+		util.PrintYellow("Task acceptance for another client received: " + PeerIDToDescription(t.BidderID))
+
+		// TODO: Route this on
+		return
+	}
+
+	util.PrintYellow("Received new task acceptance from: " + PeerIDToDescription(t.TaskOwnerID) + " for task: " + t.TaskID)
+
+	// We need to find the task in our taskpool. If it's not there, we should
+	// not do it
+	task := OpenTaskPool.GetTask(t.TaskID)
+	if task == nil {
+		util.PrintRed("Invalid task found!")
+	}
+
+	// Let's check if we bid on it
+	ourBid, err := GetBids("where bidder_id=? and task_id=?", NetworkSettings.MyPeerID, t.TaskID)
+	if err == nil && len(ourBid) >= 0 {
+		// In this case, we really did bid for this
+		// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
+		// accept it
+		OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusApprovedForMe, task.LocalWorkProviderStatus)
+		ourBid[0].MarkAsAccepted()
+		taskForExecutionAvailable <- 1
+
 	}
 }
 
@@ -271,31 +300,59 @@ func ReceiveTaskSubmission(packet *SpinePacket) {
 	TaskSubmissionReceived(&t)
 }
 
-func ReceiveTaskAccept(packet *SpinePacket) {
+func ReceiveTaskCompleted(packet *SpinePacket) {
 
-	created, err := time.Parse(time.RFC3339, packet.Body.Items["task-accept.Created"])
+	/*
+		created, err := time.Parse(time.RFC3339, packet.Body.Items["task-accept.Created"])
 
-	if err != nil {
-		fmt.Println("invalid task bid time received")
+		if err != nil {
+			fmt.Println("invalid task bid time received")
+			return
+		}
+
+		fee, err := strconv.ParseFloat(packet.Body.Items["task-accept.Fee"], 64)
+		if err != nil {
+			fmt.Println("Invalid task bid received")
+			return
+		}
+	*/
+	/*
+		var t TaskCompleted
+		t.ID = packet.Body.Items["task-accept.ID"]
+		t.TaskID = packet.Body.Items["task-accept.TaskID"]
+		t.Created = created
+		t.Fee = fee
+		t.BidderID = packet.Body.Items["task-accept.BidderID"]
+		t.TaskOwnerID = packet.Body.Items["task-accept.TaskOwnerID"]
+		t.ArrivalRoute = packet.PastRoute.Nodes
+
+		TaskCompletedReceived(&t)
+	*/
+}
+
+func TaskSubmissionReceived(tt *TaskSubmission) {
+
+	if tt.TaskOwnerID != NetworkSettings.MyPeerID {
+		util.PrintYellow("Task submission for another client received.")
+		// TODO: Route this on
 		return
 	}
 
-	fee, err := strconv.ParseFloat(packet.Body.Items["task-accept.Fee"], 64)
-	if err != nil {
-		fmt.Println("Invalid task bid received")
-		return
+	// Loop over all submissions
+	for i := 0; i < len(tt.Submissions); i++ {
+
+		// Get a submission
+		submission := tt.Submissions[i]
+
+		// Convert byte to hex
+		peek_val := bytes.NewBuffer(submission.data[:20]).String()
+
+		util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(submission.data)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
+
+		NetworkCallbacks.OnTaskResult(tt.TaskID, submission.mimeType, submission.data)
+
 	}
 
-	var t TaskAccept
-	t.ID = packet.Body.Items["task-accept.ID"]
-	t.TaskID = packet.Body.Items["task-accept.TaskID"]
-	t.Created = created
-	t.Fee = fee
-	t.BidderID = packet.Body.Items["task-accept.BidderID"]
-	t.TaskOwnerID = packet.Body.Items["task-accept.TaskOwnerID"]
-	t.ArrivalRoute = packet.PastRoute.Nodes
-
-	TaskAcceptanceReceived(&t)
 }
 
 func ReceivePeersRequest(packet *SpinePacket) {
