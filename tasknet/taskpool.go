@@ -66,7 +66,6 @@ func (t *Taskpool) AddTask(task *Task) error {
 
 func (t *Taskpool) RemoveAllTasks() error {
 
-	// delete
 	stmt, err := taskDb.Prepare("delete from tasks")
 	if err != nil {
 		return err
@@ -83,6 +82,26 @@ func (t *Taskpool) RemoveAllTasks() error {
 	}
 
 	t.Tasks = nil
+
+	stmt, err = taskDb.Prepare("delete from bids")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
+
+	stmt, err = taskDb.Prepare("delete from bids_sent")
+	if err != nil {
+		return err
+	}
+
+	_, err = stmt.Exec()
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -33,6 +33,7 @@ func ProcessTasks() {
 
 }
 
+// Triggered when a task has arrived from network or local
 func ProcessAvailableTasks() {
 
 	ProcessingThreadRunning = true
@@ -96,6 +97,7 @@ func ProcessAvailableTasks() {
 
 }
 
+// Triggered when we have been accepted to work on a task
 func ProcessAcceptedTasks() {
 
 	for {

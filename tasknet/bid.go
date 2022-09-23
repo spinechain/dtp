@@ -12,6 +12,19 @@ import (
 	"github.com/lithammer/shortuuid/v3"
 )
 
+// /// BID TIMEOUT
+// Waits till the expiry of the bid timeout for a particular task
+func WaitForBidExpiry(task *Task) {
+
+	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeout * time.Second)
+	<-task.BidTimeoutTimer.C
+	task.GlobalStatus = StatusBiddingComplete
+	OpenTaskPool.UpdateTaskStatus(task, StatusBiddingComplete, task.LocalWorkerStatus, StatusBiddingPeriodExpired)
+	taskForProcessingAvailable <- 1
+
+	util.PrintWhite("Bid timeout for task " + task.ID + " expired")
+}
+
 func (bid *TaskBid) Scan(rows *sql.Rows) error {
 
 	var created string
@@ -51,18 +64,6 @@ func (bid *TaskBid) UpdateBid(b *TaskBid) error {
 	return nil
 }
 
-// Waits till the expiry of the bid timeout for a particular task
-func WaitForBidExpiry(task *Task) {
-
-	task.BidTimeoutTimer = time.NewTimer(NetworkSettings.BidTimeout * time.Second)
-	<-task.BidTimeoutTimer.C
-	task.GlobalStatus = StatusBiddingComplete
-	OpenTaskPool.UpdateTaskStatus(task, StatusBiddingComplete, task.LocalWorkerStatus, StatusBiddingPeriodExpired)
-	taskForProcessingAvailable <- 1
-
-	util.PrintWhite("Bid timeout for task " + task.ID + " expired")
-}
-
 func CreateTaskBid(task *Task) *TaskBid {
 	var t TaskBid
 	t.BidValue = task.Reward - 0.0001
@@ -97,8 +98,7 @@ func CreateBidForTask(db *sql.DB, bid *TaskBid) error {
 	}
 
 	_, err = stmt.Exec(bid.ID, task.ID, bid.Created, bid.Fee,
-		bid.BidValue, bid.BidderID, bid.Geo,
-		arrivalRoute, 0, bid.MyBid)
+		bid.BidValue, bid.Geo, 0)
 
 	if err != nil {
 		util.PrintRed(err.Error())
@@ -113,12 +113,6 @@ func ProcessBidForMyTask(db *sql.DB, bid *TaskBid) error {
 	task := OpenTaskPool.GetTask(bid.TaskID)
 	if task == nil {
 		return errors.New("task not found")
-	}
-
-	if isMyBid {
-		if bid.MyBid != 17 {
-			panic("You must set MyBid to 17 if this is your own bid. Security reasons.")
-		}
 	}
 
 	// Check that the same person is not bidding for the same task twice
@@ -147,13 +141,13 @@ func ProcessBidForMyTask(db *sql.DB, bid *TaskBid) error {
 
 		cnt, _ := strconv.Atoi(item_count)
 		if cnt != 0 {
-			util.PrintRed("You have already bid for this task")
+			util.PrintRed("Double bid for task found")
 			return errors.New("bid exists")
 		}
 	}
 
 	// insert the bid to db
-	stmt, err = db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected, my_bid) values(?,?,?,?,?,?,?,?,?,?)")
+	stmt, err = db.Prepare("INSERT INTO bids(bid_id, task_id, created, fee, bid_value, bidder_id, geo, arrival_route, selected) values(?,?,?,?,?,?,?,?,?)")
 	if err != nil {
 		util.PrintRed(err.Error())
 		return err
@@ -166,7 +160,7 @@ func ProcessBidForMyTask(db *sql.DB, bid *TaskBid) error {
 
 	_, err = stmt.Exec(bid.ID, task.ID, bid.Created, bid.Fee,
 		bid.BidValue, bid.BidderID, bid.Geo,
-		arrivalRoute, 0, bid.MyBid)
+		arrivalRoute, 0)
 
 	if err != nil {
 		util.PrintRed(err.Error())
