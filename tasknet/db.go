@@ -80,6 +80,7 @@ func CreateTables() error {
 		return err
 	}
 
+	// These are bids from anyone in the network
 	sqlStmt = `
 	create table bids (bid_id text not null unique primary key, task_id text, 
 						created int, fee real, bid_value real, bidder_id string, 
@@ -91,6 +92,7 @@ func CreateTables() error {
 		return err
 	}
 
+	// These are the bids that I created and bid for stuff
 	sqlStmt = `
 	create table bids_sent (bid_id text not null unique primary key, task_id text, 
 						created int, fee real, bid_value real, geo string, selected int);
