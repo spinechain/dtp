@@ -299,10 +299,10 @@ func handlePeerConnection(peer *Peer, weConnected bool) {
 }
 
 func UpdatePeerCount() {
-	util.PrintGreen("Updating peer count")
 
 	WeConnectedCount, ConnectedToUsCount := CountPeers()
 
+	fmt.Println("---------------------")
 	if ConnectedToUsCount == 0 {
 		StatusBarUpdate("Server: 🌐 No connections", 0)
 	} else {
@@ -314,5 +314,6 @@ func UpdatePeerCount() {
 	} else {
 		StatusBarUpdate(fmt.Sprintf("Client: 🌐 Connected - %d peers", WeConnectedCount), 1)
 	}
+	fmt.Println("---------------------")
 
 }

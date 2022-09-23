@@ -2,6 +2,7 @@ package tasknet
 
 import (
 	"database/sql"
+	"fmt"
 	"spinedtp/util"
 	"time"
 
@@ -234,6 +235,9 @@ func (t *Taskpool) AddToTaskPool(task *Task) {
 		t.AddTask(task)
 		return
 	}
+
+	existingTask := tasks[0]
+	fmt.Print("Existing task: " + existingTask.ID + " " + existingTask.Command)
 
 	OpenTaskPool.IncHighestIndex(task.Index)
 

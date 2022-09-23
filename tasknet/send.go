@@ -129,14 +129,14 @@ func BidForTask(task *Task) {
 	util.PrintBlue("Bidding for Task: " + task.ID + " (" + task.Command + ")")
 	OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusSentBid, task.LocalWorkProviderStatus)
 
-	task_bid := CreateTaskBid(task)
+	taskBid := CreateTaskBid(task)
 
-	AddBid(taskDb, task_bid, true)
+	CreateBidForTask(taskDb, taskBid)
 
 	foundPeer := false
 	for _, peer := range Peers {
 		if peer.ID == task.TaskOwnerID {
-			SendMyTaskBid(peer, task, task_bid)
+			SendMyTaskBid(peer, task, taskBid)
 			foundPeer = true
 			break
 		}
@@ -144,7 +144,7 @@ func BidForTask(task *Task) {
 
 	if !foundPeer {
 		for _, peer := range Peers {
-			SendMyTaskBid(peer, task, task_bid)
+			SendMyTaskBid(peer, task, taskBid)
 		}
 	}
 }

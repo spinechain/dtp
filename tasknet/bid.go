@@ -78,7 +78,37 @@ func CreateTaskBid(task *Task) *TaskBid {
 	return &t
 }
 
-func AddBid(db *sql.DB, bid *TaskBid, isMyBid bool) error {
+func CreateBidForTask(db *sql.DB, bid *TaskBid) error {
+	task := OpenTaskPool.GetTask(bid.TaskID)
+	if task == nil {
+		return errors.New("task not found")
+	}
+
+	// insert the bid to db
+	stmt, err := db.Prepare("INSERT INTO bids_sent(bid_id, task_id, created, fee, bid_value, geo, selected) values(?,?,?,?,?,?,?)")
+	if err != nil {
+		util.PrintRed(err.Error())
+		return err
+	}
+
+	var arrivalRoute string
+	for i := 0; i < len(bid.ArrivalRoute); i++ {
+		arrivalRoute = bid.ArrivalRoute[i].ID + ";" + arrivalRoute
+	}
+
+	_, err = stmt.Exec(bid.ID, task.ID, bid.Created, bid.Fee,
+		bid.BidValue, bid.BidderID, bid.Geo,
+		arrivalRoute, 0, bid.MyBid)
+
+	if err != nil {
+		util.PrintRed(err.Error())
+		return err
+	}
+
+	return err
+}
+
+func ProcessBidForMyTask(db *sql.DB, bid *TaskBid) error {
 
 	task := OpenTaskPool.GetTask(bid.TaskID)
 	if task == nil {
@@ -117,6 +147,7 @@ func AddBid(db *sql.DB, bid *TaskBid, isMyBid bool) error {
 
 		cnt, _ := strconv.Atoi(item_count)
 		if cnt != 0 {
+			util.PrintRed("You have already bid for this task")
 			return errors.New("bid exists")
 		}
 	}

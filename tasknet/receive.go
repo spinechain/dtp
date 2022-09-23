@@ -98,7 +98,25 @@ func ReceiveTask(packet *SpinePacket) {
 	task.Index = OpenTaskPool.highestIndex + 1
 	task.ArrivalRoute = packet.PastRoute.Nodes
 
-	OpenTaskPool.AddToTaskPool(&task)
+	// OpenTaskPool.AddToTaskPool(&task)
+
+	// We check if we have this task already
+	tasks, err := OpenTaskPool.GetTasks("where tid=?", task.ID)
+
+	if tasks == nil || err != nil || len(tasks) == 0 {
+		// we do not have this task in our db. We can add it directly
+		OpenTaskPool.AddTask(&task)
+	} else {
+		// We have this task already
+		existingTask := tasks[0]
+		fmt.Print("Existing task: " + existingTask.ID + " " + existingTask.Command)
+
+		if existingTask.LocalWorkerStatus == StatusNewFromLocal {
+			OpenTaskPool.UpdateTaskStatus(existingTask, task.GlobalStatus, StatusNewFromNetwork, task.LocalWorkProviderStatus)
+		}
+	}
+
+	OpenTaskPool.IncHighestIndex(task.Index)
 
 	// This changes the thread and informs the UI about this new task
 	glib.TimeoutAdd(10, func() bool {
@@ -121,7 +139,7 @@ func NewTaskBidArrived(tb *TaskBid) {
 	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
 		// This is a bid for a task of mine
 
-		AddBid(taskDb, tb, false)
+		ProcessBidForMyTask(taskDb, tb)
 
 	} else {
 		// This is a bid for another peer that is not me. We route
