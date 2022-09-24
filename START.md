@@ -13,7 +13,7 @@ After cloning, you will have all files in a directory.
 - Test that go 1.19 is installed by typing go version
 
 ### Get SpineChain
-- CD to the location you want the code, and type https://github.com/spinechain/dtp.git
+- CD to the location you want the code, and type 'git clone https://github.com/spinechain/dtp.git'
 - CD into the newly created folder called dtp
 - Run with go run .
 
