@@ -2,7 +2,6 @@ package ui
 
 import (
 	util "spinedtp/util"
-	"strconv"
 
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
@@ -16,7 +15,7 @@ type PanelCommand struct {
 	historyLabel     *gtk.Label
 	commandBox       *gtk.Box
 	resultGrid       *gtk.Grid
-	panelFrames      []*gtk.Frame
+	panelFrames      []*gtk.ScrolledWindow
 	panelItems       []*gtk.Widget
 }
 
@@ -62,7 +61,14 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 
 	//	Create all the images
 	for i := 0; i < 9; i++ {
-		frm, err := gtk.FrameNew(strconv.Itoa(i))
+
+		// Create new scrolled window
+		// frm, err := gtk.ScrolledWindowNew(nil, nil)
+
+		frm, err := gtk.ScrolledWindowNew(nil, nil)
+
+		// Add frame to the scrolled window
+		frm.SetShadowType(gtk.SHADOW_ETCHED_IN)
 
 		// Set the minimum height of the frame
 		frm.SetSizeRequest(100, 200)
@@ -155,8 +161,14 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 		command.panelItems = append([]*gtk.Widget{img.ToWidget()}, command.panelItems...)
 
 	} else if mimeType == "text/plain" {
+
+		// convert to asccii
+		// data = bytes.Replace(data, []byte{0x0}, []byte{0x20}, -1)
+
+		s, _ := util.ToAscii(string(data))
+
 		// create a label
-		label, err := gtk.LabelNew(string(data))
+		label, err := gtk.LabelNew(s)
 		if err != nil {
 			util.PrintRed(err.Error())
 			return
@@ -165,7 +177,7 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 		label.SetHExpand(false)
 		label.SetVExpand(false)
 		label.SetMaxWidthChars(50)
-		label.SetLineWrap(true)
+		// label.SetLineWrap(true)
 		label.SetLineWrapMode(pango.WRAP_WORD_CHAR)
 		label.SetLines(5)
 		label.SetEllipsize(pango.ELLIPSIZE_MIDDLE)

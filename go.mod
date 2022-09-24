@@ -8,4 +8,8 @@ require (
 	github.com/mattn/go-sqlite3 v1.14.15
 )
 
-require github.com/google/uuid v1.2.0 // indirect
+require (
+	github.com/google/uuid v1.2.0 // indirect
+	golang.org/x/net v0.0.0-20220923203811-8be639271d50 // indirect
+	golang.org/x/text v0.3.7 // indirect
+)
