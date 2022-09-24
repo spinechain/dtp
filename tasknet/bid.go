@@ -23,6 +23,20 @@ func WaitForBidExpiry(task *Task) {
 	util.PrintWhite("Bid timeout for task " + task.ID + " expired")
 }
 
+func (bid *TaskBid) ScanMyBid(rows *sql.Rows) error {
+
+	var created string
+	err := rows.Scan(&bid.ID, &bid.TaskID, &created, &bid.Fee, &bid.BidValue, &bid.Geo, &bid.Selected)
+	if err != nil {
+		util.PrintRed(err.Error())
+		return err
+	}
+
+	bid.Created, _ = time.Parse("2006-01-02 15:04:05-07:00", created)
+
+	return err
+}
+
 func (bid *TaskBid) Scan(rows *sql.Rows) error {
 
 	var created string
@@ -47,7 +61,7 @@ func (bid *TaskBid) MarkAsAccepted() error {
 func (bid *TaskBid) UpdateBid(b *TaskBid) error {
 
 	// update
-	stmt, err := taskDb.Prepare("update bids set selected=? where bid_id=?")
+	stmt, err := taskDb.Prepare("update bids_sent set selected=? where bid_id=?")
 	if err != nil {
 		util.PrintRed("UpdatedBid: " + err.Error())
 		return err
@@ -168,10 +182,10 @@ func ProcessBidForMyTask(db *sql.DB, bid *TaskBid) error {
 	return nil
 }
 
-func GetBids(filter string, args ...any) ([]*TaskBid, error) {
+func GetMyBids(filter string, args ...any) ([]*TaskBid, error) {
 	// query
 
-	full_query := "SELECT * FROM bids " + filter
+	full_query := "SELECT * FROM bids_sent " + filter
 
 	stmt, err := taskDb.Prepare(full_query)
 	if err != nil {
@@ -198,7 +212,11 @@ func GetBids(filter string, args ...any) ([]*TaskBid, error) {
 	for rows.Next() {
 
 		var bid TaskBid
-		bid.Scan(rows)
+		err = bid.ScanMyBid(rows)
+		if err != nil {
+			util.PrintRed(err.Error())
+			return nil, err
+		}
 
 		bids = append(bids, &bid)
 	}

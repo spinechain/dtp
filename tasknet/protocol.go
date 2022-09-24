@@ -228,6 +228,7 @@ func ConstructTaskBidApprovalPacket(taskBidApproval *TaskBidApproval, returnRout
 	packet.Body.Items["task-bid-approval.ID"] = taskBidApproval.ID
 	packet.Body.Items["task-bid-approval.Created"] = taskBidApproval.Created.Format(time.RFC3339)
 	packet.Body.Items["task-bid-approval.Fee"] = fmt.Sprintf("%f", taskBidApproval.Fee)
+	packet.Body.Items["task-bid-approval.Value"] = "0"
 	packet.Body.Items["task-bid-approval.TaskOwnerID"] = taskBidApproval.TaskOwnerID
 	packet.Body.Items["task-bid-approval.BidderID"] = taskBidApproval.BidderID
 	packet.Body.Items["task-bid-approval.Reward"] = fmt.Sprintf("%f", taskBidApproval.Reward)

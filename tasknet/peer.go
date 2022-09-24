@@ -386,34 +386,6 @@ func (peer *Peer) SendPeerList(peerList []string) error {
 	return err
 }
 
-func (peer *Peer) AcceptBid(task *Task, taskbid *TaskBid) error {
-
-	if !peer.IsConnected() {
-		return errors.New("peer is not connected")
-	}
-
-	var t TaskAccept
-	t.BidderID = taskbid.BidderID
-	t.TaskOwnerID = task.TaskOwnerID
-	t.Created = time.Now()
-	t.Fee = 0
-	t.ID = shortuuid.New()
-	t.Reward = taskbid.BidValue
-	t.TaskID = task.ID
-
-	packet, err := ConstructTaskAcceptPacket(&t, taskbid.GetReturnRoute())
-	if err != nil {
-		return err
-	}
-
-	count, err := peer.conn.Write([]byte(packet.ToString()))
-	if count == 0 || err != nil {
-		util.PrintRed("Error when writing to socket" + err.Error())
-	}
-
-	return nil
-}
-
 func (peer *Peer) SubmitTaskResult(task *Task) error {
 
 	if !peer.IsConnected() {

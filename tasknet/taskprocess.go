@@ -27,7 +27,7 @@ var TasksToExecute *[]tasktypes.TaskToExecute
 func ProcessTasks() {
 
 	// Start the thread that will do the actual work (execution of each task)
-	go ProcessAcceptedTasks()
+	go ProcessExecutionTasks()
 	go ProcessCompletedTasks()
 	go ProcessAvailableTasks()
 
@@ -98,7 +98,7 @@ func ProcessAvailableTasks() {
 }
 
 // Triggered when we have been accepted to work on a task
-func ProcessAcceptedTasks() {
+func ProcessExecutionTasks() {
 
 	for {
 
@@ -114,13 +114,18 @@ func ProcessAcceptedTasks() {
 
 			// We confirm again that we actually bid for this task
 			// yes, we checked this before, but we need sanity checks
-			bids, err := GetBids("where task_id=? and bidder_id=? and selected=? and my_bid=17", task.ID, NetworkSettings.MyPeerID, 1)
+			bids, err := GetMyBids("where task_id=? and selected=?", task.ID, 1)
 			if err != nil {
 				util.PrintRed("☢️ Found a task for me, but we never bid on this 😨")
 				continue
 			}
 
-			if len(bids) != 1 {
+			if len(bids) == 0 {
+				util.PrintRed("🐛 We received a bid approval on a task we did not bid on. How can??? 🙆‍♂️")
+				continue
+			}
+
+			if len(bids) > 1 {
 				// It would only be greater than 1 if there is a bug. Better we know
 				util.PrintRed("🐛 It looks like we bid more than once on task. How can??? 🙆‍♂️")
 				continue

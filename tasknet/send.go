@@ -33,7 +33,7 @@ func SendPacketToAllPeers(packet *SpinePacket) error {
 
 func SendTaskBidApproved(task *Task, bid *TaskBid) {
 
-	util.PrintBlue("Sending Task Acceptance for Task: " + task.ID + " (" + task.Command + ") to " + PeerIDToDescription(bid.BidderID))
+	util.PrintBlue("Sending Task Bid Approval for Task: " + task.ID + " (" + task.Command + ") to " + PeerIDToDescription(bid.BidderID))
 
 	// Get the target client ID
 	targetID := bid.BidderID

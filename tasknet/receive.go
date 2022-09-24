@@ -221,6 +221,7 @@ func ReceiveTaskBidApproval(packet *SpinePacket) {
 	t.Fee = fee
 	t.Value = value
 	t.TaskOwnerID = packet.Body.Items["task-bid-approval.TaskOwnerID"]
+	t.BidderID = packet.Body.Items["task-bid-approval.BidderID"]
 	t.Geo = packet.Body.Items["task-bid-approval.Geo"]
 	t.ArrivalRoute = packet.PastRoute.Nodes
 
@@ -229,13 +230,13 @@ func ReceiveTaskBidApproval(packet *SpinePacket) {
 	}
 
 	if t.BidderID != NetworkSettings.MyPeerID {
-		util.PrintYellow("Task acceptance for another client received: " + PeerIDToDescription(t.BidderID))
+		util.PrintYellow("Task bid approval for another client received: " + PeerIDToDescription(t.BidderID))
 
 		// TODO: Route this on
 		return
 	}
 
-	util.PrintYellow("Received new task acceptance from: " + PeerIDToDescription(t.TaskOwnerID) + " for task: " + t.TaskID)
+	util.PrintYellow("Received new task bid approval from: " + PeerIDToDescription(t.TaskOwnerID) + " for task: " + t.TaskID)
 
 	// We need to find the task in our taskpool. If it's not there, we should
 	// not do it
@@ -245,7 +246,7 @@ func ReceiveTaskBidApproval(packet *SpinePacket) {
 	}
 
 	// Let's check if we bid on it
-	ourBid, err := GetBids("where bidder_id=? and task_id=?", NetworkSettings.MyPeerID, t.TaskID)
+	ourBid, err := GetMyBids("where task_id=?", t.TaskID)
 	if err == nil && len(ourBid) >= 0 {
 		// In this case, we really did bid for this
 		// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
