@@ -234,7 +234,7 @@ func AddToPeerTable(peer *Peer) *Peer {
 			return Peers[i]
 		}
 
-		if epeer.Address == peer.Address && epeer.ConnectPort == peer.ConnectPort {
+		if epeer.Address == peer.Address && epeer.ConnectPort == peer.ConnectPort && epeer.ID != "" && epeer.ID == peer.ID {
 			peerFound = true
 		}
 
