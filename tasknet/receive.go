@@ -247,7 +247,7 @@ func ReceiveTaskBidApproval(packet *SpinePacket) {
 
 	// Let's check if we bid on it
 	ourBid, err := GetMyBids("where task_id=?", t.TaskID)
-	if err == nil && len(ourBid) >= 0 {
+	if err == nil && len(ourBid) > 0 {
 		// In this case, we really did bid for this
 		// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
 		// accept it
@@ -255,6 +255,8 @@ func ReceiveTaskBidApproval(packet *SpinePacket) {
 		ourBid[0].MarkAsAccepted()
 		taskForExecutionAvailable <- 1
 
+	} else {
+		util.PrintRed("Did not find any bid for this task")
 	}
 }
 

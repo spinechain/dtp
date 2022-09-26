@@ -23,3 +23,5 @@ package
 .vscode/extensions.json
 
 task_submission*
+
+.vscode/settings.json
