@@ -251,3 +251,23 @@ func RouteTaskBidOn(tb *TaskBid) {
 
 	util.PrintRed("We received a bid that is not directly connected to us. Not routing yet.")
 }
+
+func RouteTaskBidApprovalOn(tb *TaskBidApproval) {
+	util.PrintBlue("Routing TaskBid On: " + tb.ID + " (TaskID:" + tb.TaskID + ") ")
+
+	// first see if the target is connected directly to u
+	for _, peer := range Peers {
+
+		if peer.ID == tb.TaskOwnerID {
+
+			packet, err := ConstructTaskBidPacket(tb, tb.GetReturnRoute())
+			if err == nil {
+				// task.MarkAsPropagated(OpenTaskPool)
+				peer.SendPacket(packet)
+				return
+			}
+		}
+	}
+
+	util.PrintRed("We received a bid that is not directly connected to us. Not routing yet.")
+}

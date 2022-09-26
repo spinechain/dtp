@@ -131,25 +131,6 @@ func ReceiveTask(packet *SpinePacket) {
 	taskForProcessingAvailable <- 1
 }
 
-// Call when a new task bid arrives. We add it to the database. When our bid
-// period expires is when we check for all bids and select the best
-func NewTaskBidArrived(tb *TaskBid) {
-
-	util.PrintPurple("New Task Bid Arrived for Task " + tb.TaskID + " from " + PeerIDToDescription(tb.BidderID))
-
-	if tb.TaskOwnerID == NetworkSettings.MyPeerID {
-		// This is a bid for a task of mine
-
-		ProcessBidForMyTask(taskDb, tb)
-
-	} else {
-		// This is a bid for another peer that is not me. We route
-		// it to the best connection we have
-		util.PrintPurple("Task bid for another client: " + tb.BidderID)
-		RouteTaskBidOn(tb)
-	}
-}
-
 func ReceiveTaskBid(packet *SpinePacket) {
 	// util.PrintPurple("Received new task bid: " + packet.Body.Items["task-bid.TaskOwnerID"])
 
@@ -190,7 +171,19 @@ func ReceiveTaskBid(packet *SpinePacket) {
 	t.Geo = packet.Body.Items["task-bid.Geo"]
 	t.ArrivalRoute = packet.PastRoute.Nodes
 
-	NewTaskBidArrived(&t)
+	util.PrintPurple("New Task Bid Arrived for Task " + t.TaskID + " from " + PeerIDToDescription(t.BidderID))
+
+	if t.TaskOwnerID == NetworkSettings.MyPeerID {
+		// This is a bid for a task of mine
+
+		ProcessBidForMyTask(taskDb, &t)
+
+	} else {
+		// This is a bid for another peer that is not me. We route
+		// it to the best connection we have
+		util.PrintPurple("Task bid for another client: " + t.BidderID)
+		RouteTaskBidOn(&t)
+	}
 }
 
 func ReceiveTaskBidApproval(packet *SpinePacket) {
@@ -229,34 +222,35 @@ func ReceiveTaskBidApproval(packet *SpinePacket) {
 		NetworkCallbacks.OnTaskApproved("yes")
 	}
 
-	if t.BidderID != NetworkSettings.MyPeerID {
-		util.PrintYellow("Task bid approval for another client received: " + PeerIDToDescription(t.BidderID))
+	if t.BidderID == NetworkSettings.MyPeerID {
 
-		// TODO: Route this on
-		return
-	}
+		util.PrintYellow("Received new task bid approval from: " + PeerIDToDescription(t.TaskOwnerID) + " for task: " + t.TaskID)
 
-	util.PrintYellow("Received new task bid approval from: " + PeerIDToDescription(t.TaskOwnerID) + " for task: " + t.TaskID)
+		// We need to find the task in our taskpool. If it's not there, we should
+		// not do it
+		task := OpenTaskPool.GetTask(t.TaskID)
+		if task == nil {
+			util.PrintRed("Invalid task found!")
+		}
 
-	// We need to find the task in our taskpool. If it's not there, we should
-	// not do it
-	task := OpenTaskPool.GetTask(t.TaskID)
-	if task == nil {
-		util.PrintRed("Invalid task found!")
-	}
+		// Let's check if we bid on it
+		ourBid, err := GetMyBids("where task_id=?", t.TaskID)
+		if err == nil && len(ourBid) > 0 {
+			// In this case, we really did bid for this
+			// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
+			// accept it
+			OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusApprovedForMe, task.LocalWorkProviderStatus)
+			ourBid[0].MarkAsAccepted()
+			taskForExecutionAvailable <- 1
 
-	// Let's check if we bid on it
-	ourBid, err := GetMyBids("where task_id=?", t.TaskID)
-	if err == nil && len(ourBid) > 0 {
-		// In this case, we really did bid for this
-		// TODO: check that if someone sends us a bid telling us that it is our ID, that we do not
-		// accept it
-		OpenTaskPool.UpdateTaskStatus(task, task.GlobalStatus, StatusApprovedForMe, task.LocalWorkProviderStatus)
-		ourBid[0].MarkAsAccepted()
-		taskForExecutionAvailable <- 1
+		} else {
+			util.PrintRed("Did not find any bid for this task")
+		}
 
 	} else {
-		util.PrintRed("Did not find any bid for this task")
+
+		util.PrintYellow("Task bid approval for another client received: " + PeerIDToDescription(t.BidderID))
+		RouteTaskBidApprovalOn(&t)
 	}
 }
 
