@@ -212,9 +212,13 @@ func ConstructTaskBidPacket(taskbid *TaskBid, returnRoute []*Peer) (*SpinePacket
 	packet.Body.Items["task-bid.BidValue"] = fmt.Sprintf("%f", taskbid.BidValue)
 	packet.Body.Items["task-bid.TaskOwnerID"] = taskbid.TaskOwnerID
 	packet.Body.Items["task-bid.TaskID"] = taskbid.TaskID
-	packet.Body.Items["task-bid.BidderID"] = NetworkSettings.MyPeerID
+	packet.Body.Items["task-bid.BidderID"] = taskbid.BidderID
 	packet.Body.Items["task-bid.Geo"] = taskbid.Geo
 	packet.Body.Items["task-bid.Hash"] = "NOHASHYET"
+
+	if len(taskbid.BidderID) < 3 {
+		util.PrintRed("The task bidder ID is too short for this!")
+	}
 
 	return packet, nil
 }
