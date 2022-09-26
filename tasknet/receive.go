@@ -30,7 +30,8 @@ func ReceivePacket(packet *SpinePacket, peer *Peer) {
 	case "task-submission":
 		ReceiveTaskSubmission(packet)
 	case "task-completed":
-		ReceiveTaskCompleted(packet)
+		util.PrintRed("Task Completed Received - NOT IMPLEMENTED YET")
+		// ReceiveTaskCompleted(packet)
 	default:
 		fmt.Printf("Unknown packet type received: %s.\n", packetType)
 	}
@@ -52,7 +53,7 @@ func ReceiveRequestForPeerList(packet *SpinePacket, peer *Peer) {
 	// Find the response peer
 	// PRepare the response protocol
 	// Get all our peers and put inside
-	// send it back to the person
+	// send it back to the person.
 	peer_list := []string{}
 	for _, epeer := range Peers {
 		peer_list = append(peer_list, epeer.GetFullAddress())
@@ -294,60 +295,26 @@ func ReceiveTaskSubmission(packet *SpinePacket) {
 		t.Submissions = append(t.Submissions, result)
 	}
 
-	TaskSubmissionReceived(&t)
-}
+	if t.BidderID == NetworkSettings.MyPeerID {
 
-func ReceiveTaskCompleted(packet *SpinePacket) {
+		// Loop over all submissions
+		for i := 0; i < len(t.Submissions); i++ {
 
-	/*
-		created, err := time.Parse(time.RFC3339, packet.Body.Items["task-accept.Created"])
+			// Get a submission
+			submission := t.Submissions[i]
 
-		if err != nil {
-			fmt.Println("invalid task bid time received")
-			return
+			// Convert byte to hex
+			peek_val := bytes.NewBuffer(submission.data[:20]).String()
+
+			util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(submission.data)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
+
+			NetworkCallbacks.OnTaskResult(t.TaskID, submission.mimeType, submission.data)
+
 		}
 
-		fee, err := strconv.ParseFloat(packet.Body.Items["task-accept.Fee"], 64)
-		if err != nil {
-			fmt.Println("Invalid task bid received")
-			return
-		}
-	*/
-	/*
-		var t TaskCompleted
-		t.ID = packet.Body.Items["task-accept.ID"]
-		t.TaskID = packet.Body.Items["task-accept.TaskID"]
-		t.Created = created
-		t.Fee = fee
-		t.BidderID = packet.Body.Items["task-accept.BidderID"]
-		t.TaskOwnerID = packet.Body.Items["task-accept.TaskOwnerID"]
-		t.ArrivalRoute = packet.PastRoute.Nodes
-
-		TaskCompletedReceived(&t)
-	*/
-}
-
-func TaskSubmissionReceived(tt *TaskSubmission) {
-
-	if tt.TaskOwnerID != NetworkSettings.MyPeerID {
-		util.PrintYellow("Task submission for another client received.")
-		// TODO: Route this on
-		return
-	}
-
-	// Loop over all submissions
-	for i := 0; i < len(tt.Submissions); i++ {
-
-		// Get a submission
-		submission := tt.Submissions[i]
-
-		// Convert byte to hex
-		peek_val := bytes.NewBuffer(submission.data[:20]).String()
-
-		util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(submission.data)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
-
-		NetworkCallbacks.OnTaskResult(tt.TaskID, submission.mimeType, submission.data)
-
+	} else {
+		// Forward the task submission to the correct client
+		RouteTaskSubmissionOn(&t)
 	}
 
 }
