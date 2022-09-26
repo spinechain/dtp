@@ -295,7 +295,7 @@ func ReceiveTaskSubmission(packet *SpinePacket) {
 		t.Submissions = append(t.Submissions, result)
 	}
 
-	if t.BidderID == NetworkSettings.MyPeerID {
+	if t.TaskOwnerID == NetworkSettings.MyPeerID {
 
 		// Loop over all submissions
 		for i := 0; i < len(t.Submissions); i++ {
