@@ -79,6 +79,8 @@ func Init(DataFolder string) error {
 	sd.macScriptName = "stable_diffusion.sh"
 	sd.outputSubpath = "samples"
 	sd.outputExtension = ".png;.txt"
+	sd.ValidationRegex = "[[:ascii:]]" // all ascii characters
+	sd.RegexCompiled, _ = regexp.Compile(sd.ValidationRegex)
 	sd.trigger = "draw"
 	TaskTypes = append(TaskTypes, sd)
 
@@ -212,6 +214,7 @@ func RunTaskExecutionProcess() error {
 		for _, tt := range TaskTypes {
 			if tt.name == te.TaskType {
 				taskType = &tt
+				break
 			}
 		}
 
@@ -225,6 +228,8 @@ func RunTaskExecutionProcess() error {
 
 		if !taskType.RegexCompiled.MatchString(te.Prompt) {
 			util.PrintRed("Received a command that does not match the regex: " + te.Prompt)
+			err := errors.New("Received a command that does not match the regex: " + te.Prompt)
+			CompleteTask(te, nil, err)
 			continue
 		}
 
