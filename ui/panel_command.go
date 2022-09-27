@@ -17,6 +17,7 @@ type PanelCommand struct {
 	resultGrid       *gtk.Grid
 	panelFrames      []*gtk.ScrolledWindow
 	panelItems       []*gtk.Widget
+	Spinning         bool
 }
 
 func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
@@ -41,7 +42,7 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	command.commandBox.SetMarginStart(20)
 	command.commandBox.SetMarginEnd(20)
 
-	command.commandTextField.SetText("ping 8.8.8.8")
+	command.commandTextField.SetText("draw a picture of a happy spaceship")
 
 	// add the grid
 	command.resultGrid, err = gtk.GridNew()
@@ -120,7 +121,22 @@ func (command *PanelCommand) Hide() {
 	command.commandBox.Hide()
 }
 
+func (command *PanelCommand) StartSpinner() {
+
+	spinner := command.ShiftResultsAddSpinner()
+
+	// Start the spinner
+	spinner.Start()
+	command.RedrawResults()
+}
+
 func (command *PanelCommand) AddResult(task string, mimeType string, data []byte) {
+
+	if command.Spinning {
+		// delete the first item in command.panelItems
+		command.panelItems = command.panelItems[1:]
+		command.Spinning = false
+	}
 
 	if mimeType == "image/png" || mimeType == "image/jpeg" {
 		// load the pixbuf from the data using the loader
@@ -150,6 +166,19 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 			util.PrintRed(err.Error())
 			return
 		}
+
+		// Scale the image
+		width := 250
+		height := 250
+
+		// maintain aspect ratio
+		if pixbuf.GetWidth() > pixbuf.GetHeight() {
+			height = int(float64(pixbuf.GetHeight()) / float64(pixbuf.GetWidth()) * float64(width))
+		} else {
+			width = int(float64(pixbuf.GetWidth()) / float64(pixbuf.GetHeight()) * float64(height))
+		}
+
+		pixbuf, _ = pixbuf.ScaleSimple(width, height, gdk.INTERP_BILINEAR)
 
 		img, err := gtk.ImageNewFromPixbuf(pixbuf)
 		if err != nil {
@@ -191,6 +220,24 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 
 	}
 
+	command.RedrawResults()
+
+}
+func (command *PanelCommand) ShiftResultsAddSpinner() *gtk.Spinner {
+
+	// Creare new spinner
+	spinner, err := gtk.SpinnerNew()
+	if err != nil {
+		util.PrintRed(err.Error())
+		return nil
+	}
+
+	command.panelItems = append([]*gtk.Widget{spinner.ToWidget()}, command.panelItems...)
+	command.Spinning = true
+	return spinner
+}
+
+func (command *PanelCommand) RedrawResults() {
 	// delete the last item if more than 9
 	if len(command.panelItems) > 9 {
 		command.panelItems = command.panelItems[:len(command.panelItems)-1]
@@ -215,5 +262,4 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 	}
 
 	command.commandBox.ShowAll()
-
 }
