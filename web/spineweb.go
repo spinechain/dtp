@@ -46,7 +46,7 @@ func ServeAPI() {
 	util.PrintBlue("Starting web server")
 	http.HandleFunc("/api/v1/info/", infoHandler)
 
-	server = &http.Server{Addr: ":8080"}
+	server = &http.Server{Addr: ":59144"}
 
 	server.ListenAndServe()
 }
