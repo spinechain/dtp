@@ -11,6 +11,7 @@ import (
 	"spinedtp/taskworkers"
 	"spinedtp/ui"
 	"spinedtp/util"
+	"spinedtp/web"
 	"time"
 
 	"github.com/gotk3/gotk3/glib"
@@ -103,6 +104,7 @@ func main() {
 
 func TestUI() {
 
+	return
 	// Load test.jpeg
 	//
 
@@ -147,6 +149,7 @@ func Start() {
 	// peer.ID = AppSettings.ClientID
 	// tasknet.AddToPeerTable(&peer)
 
+	web.Start()
 }
 
 // Return the info needed to make me a taskworker
@@ -171,6 +174,8 @@ func Shutdown() {
 	taskWorkers.Stop()
 
 	tasknet.SavePeerTable()
+
+	web.Stop()
 
 	fmt.Println("Shut down complete.")
 
