@@ -27,6 +27,7 @@ var taskWorkers taskworkers.TaskWorkers
 var TaskForSubmissionAvailable chan int
 
 func main() {
+
 	fmt.Println("Starting SpineChain DTP")
 
 	settingsFile := LoadSettings()
@@ -178,6 +179,8 @@ func Shutdown() {
 	web.Stop()
 
 	fmt.Println("Shut down complete.")
+
+	util.CloseLogFile()
 
 	os.Exit(1)
 }

@@ -2,6 +2,8 @@ package util
 
 import (
 	"fmt"
+	"log"
+	"strings"
 	"time"
 )
 
@@ -48,7 +50,18 @@ func PrintSpine(str string) {
 	// Get printIndex as a fixed width number
 	printIndexStr := fmt.Sprintf("%04d", printIndex)
 
-	fmt.Println(Gray + printIndexStr + " | " + currentTime.Format("15:04:05") + " | " + Reset + str)
+	toPrint := Gray + printIndexStr + " | " + currentTime.Format("15:04:05") + " | " + Reset + str
+	fmt.Println(toPrint)
 
+	toLog := printIndexStr + " | " + str
+
+	toLog = strings.Replace(toLog, Reset, "", -1)
+	toLog = strings.Replace(toLog, Yellow, "", -1)
+	toLog = strings.Replace(toLog, Green, "", -1)
+	toLog = strings.Replace(toLog, White, "", -1)
+	toLog = strings.Replace(toLog, Red, "", -1)
+	toLog = strings.Replace(toLog, Purple, "", -1)
+	toLog = strings.Replace(toLog, Blue, "", -1)
+	log.Println(toLog)
 	printIndex++
 }

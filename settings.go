@@ -9,6 +9,7 @@ import (
 	tasknet "spinedtp/tasknet"
 	"spinedtp/tasktypes"
 	"spinedtp/ui"
+	"spinedtp/util"
 
 	"github.com/lithammer/shortuuid/v3"
 )
@@ -67,6 +68,8 @@ func LoadSettings() string {
 	if err != nil {
 		fmt.Println("error:", err)
 	}
+
+	util.CreateLog(AppSettings.DataFolder)
 
 	return settings_file
 }
