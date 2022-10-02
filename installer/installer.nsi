@@ -3,7 +3,7 @@
 !define PRODUCT_NAME "SpineChain"
 !define PRODUCT_PUBLISHER "Mark Essien"
 !define PRODUCT_WEB_SITE "https://spinecha.in"
-!define INSTALLER_OUTPUT_FILE "spinechain-installer-${PRODUCT_VERSION}.exe"
+!define INSTALLER_OUTPUT_FILE "..\package\windows\spinechain-installer-${PRODUCT_VERSION}.exe"
 
 ;!define PRODUCT_DIR_REGKEY "Software\Microsoft\Windows\CurrentVersion\App Paths\AppMainExe.exe"
 !define PRODUCT_UNINST_ROOT_KEY "HKLM"
@@ -380,7 +380,7 @@ Function .onInit
 		
 	
 
-	!insertmacro INSTALLOPTIONS_EXTRACT "nsi_pathpage.ini"
+	; !insertmacro INSTALLOPTIONS_EXTRACT "nsi_pathpage.ini"
 
 	StrCpy $SEC_TRANSLATIONS_INSTALLED "0"  ; set to 1 in appropriate section
 

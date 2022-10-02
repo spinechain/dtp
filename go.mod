@@ -11,5 +11,6 @@ require (
 
 require (
 	github.com/google/uuid v1.2.0 // indirect
+	github.com/kirsle/configdir v0.0.0-20170128060238-e45d2f54772f // indirect
 	golang.org/x/net v0.0.0-20220923203811-8be639271d50 // indirect
 )

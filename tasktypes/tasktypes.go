@@ -65,14 +65,14 @@ var TaskTypes []TaskType
 var TasksToExecute []TaskToExecute
 var TaskForSubmissionAvailable chan int
 
-func Init(DataFolder string) error {
+func Init(TaskTypesFolder string) error {
 	// copy the emebeded scripts to the data folder
 
 	// Create stable diffusion task type
 	var sd TaskType
 	sd.name = "sd"
 	sd.execFolder = "/home/mark/stable-diffusion"
-	sd.scriptFolder = filepath.Join(DataFolder, "scripts")
+	sd.scriptFolder = filepath.Join(TaskTypesFolder, "scripts")
 	sd.windowsScriptName = "stable_diffusion.bat"
 	sd.linuxFullScript = sd_sh
 	sd.linuxScriptName = "stable_diffusion.sh"
@@ -88,7 +88,7 @@ func Init(DataFolder string) error {
 	var pg TaskType
 	pg.name = "ping"
 	pg.execFolder = ""
-	pg.scriptFolder = filepath.Join(DataFolder, "scripts")
+	pg.scriptFolder = filepath.Join(TaskTypesFolder, "scripts")
 	pg.windowsScriptName = "ping.bat"
 	pg.linuxFullScript = ping_sh
 	pg.windowsFullScript = ping_bat

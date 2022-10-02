@@ -24,7 +24,8 @@ type NetSettings struct {
 	BidTimeout          time.Duration
 	AcceptedBidsPerTask int
 	OnStatusUpdate      StatusUpdateFn
-	DataFolder          string
+	TaskTypeFolder      string
+	DbFolder            string
 	RouteOnly           bool
 }
 

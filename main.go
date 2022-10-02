@@ -124,16 +124,16 @@ func TestUI() {
 func Start() {
 	SaveSettings()
 
-	tasksAvailable.Start(filepath.Join(AppSettings.DataFolder, "tasks_available.db"), false)
+	tasksAvailable.Start(filepath.Join(AppSettings.DbFolder, "tasks_available.db"), false)
 	tasksAvailable.OnTaskAdded = Event_TaskAdded
 
-	tasksCompleted.Start(filepath.Join(AppSettings.DataFolder, "tasks_done.db"), false)
+	tasksCompleted.Start(filepath.Join(AppSettings.DbFolder, "tasks_done.db"), false)
 	tasksCompleted.OnTaskAdded = Event_TaskAdded
 
 	// load the existing items to listview
 	Event_TaskAdded("-1", "")
 
-	taskWorkers.Start(filepath.Join(AppSettings.DataFolder, "tasks_workers.db"), false)
+	taskWorkers.Start(filepath.Join(AppSettings.DbFolder, "tasks_workers.db"), false)
 	taskWorkers.OnTaskWorkersAdded = Event_TaskWorkerAdded
 	taskWorkers.AddTaskWorker(GetMeAsTaskWorker())
 

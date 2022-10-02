@@ -68,7 +68,7 @@ func CreatePeerFromIPAndPort(ip string, port int) *Peer {
 
 func LoadPeerTable() error {
 
-	filePath := filepath.Join(NetworkSettings.DataFolder, "peers.db")
+	filePath := filepath.Join(NetworkSettings.DbFolder, "peers.db")
 	var create bool
 	if !util.FileExists(filePath) {
 		create = true
@@ -131,7 +131,7 @@ func LoadDefaultPeerTable(default_peers string) {
 	// Check if the peers.txt in the data folder file exists
 	// If it does, we will use that instead of the default peers
 
-	peers_file := filepath.Join(NetworkSettings.DataFolder, "peers.txt")
+	peers_file := filepath.Join(NetworkSettings.DbFolder, "peers.txt")
 	if util.FileExists(peers_file) {
 		// read the file content into the default_peers string
 		fileData, _ := util.ReadFile(peers_file)
@@ -168,7 +168,7 @@ func LoadDefaultPeerTable(default_peers string) {
 
 func SavePeerTable() error {
 
-	filePath := filepath.Join(NetworkSettings.DataFolder, "peers.db")
+	filePath := filepath.Join(NetworkSettings.DbFolder, "peers.db")
 	db, err := sql.Open("sqlite3", filePath)
 	if err != nil {
 		return err

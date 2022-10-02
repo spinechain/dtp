@@ -137,12 +137,12 @@ func ProcessExecutionTasks() {
 			// Get first word of the command
 			firstWord := util.FirstWords(task.Command, 1)
 			if strings.ToLower(firstWord) == "draw" {
-				tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "sd", task.ID, task.Command)
+				tasktypes.AddToTaskExecutionQueue(NetworkSettings.TaskTypeFolder, "sd", task.ID, task.Command)
 			} else if strings.ToLower(firstWord) == "ping" {
-				tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "ping", task.ID, task.Command)
+				tasktypes.AddToTaskExecutionQueue(NetworkSettings.TaskTypeFolder, "ping", task.ID, task.Command)
 			} else {
 				// We just do sd for now
-				tasktypes.AddToTaskExecutionQueue(NetworkSettings.DataFolder, "sd", task.ID, task.Command)
+				tasktypes.AddToTaskExecutionQueue(NetworkSettings.TaskTypeFolder, "sd", task.ID, task.Command)
 			}
 
 		}
