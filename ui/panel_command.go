@@ -267,7 +267,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 func (command *PanelCommand) RedrawResults() {
 
 	// Loop through the panel items and add them to the frames
-	for i, pitem := range command.taskResults {
+	for i, result := range command.taskResults {
 
 		// we only show 9 results for now
 		if i == 9 {
@@ -286,7 +286,27 @@ func (command *PanelCommand) RedrawResults() {
 		}
 
 		// Add the new child
-		command.panelFrames[i].Add(pitem.widget)
+		command.panelFrames[i].Add(result.widget)
+
+		if result.task.LocalWorkProviderStatus == tasknet.StatusTimeout {
+
+			// Write timeout on the widget
+			label, err := gtk.LabelNew("Timeout")
+			if err != nil {
+				util.PrintRed(err.Error())
+				return
+			}
+
+			label.SetHExpand(false)
+			label.SetVExpand(false)
+			label.SetMarginTop(8)
+			label.SetMarginBottom(8)
+			label.SetMarginStart(8)
+			label.SetMarginEnd(8)
+
+			command.panelFrames[i].Add(label.ToWidget())
+
+		}
 	}
 
 	command.commandBox.ShowAll()

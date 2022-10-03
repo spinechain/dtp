@@ -91,6 +91,7 @@ func Event_TaskStatusUpdate() {
 		tasks, _ := tasksAvailable.GetAllTasks()
 
 		ui.TasksPanel.UpdateList(tasks)
+		ui.CommandPanel.RedrawResults()
 		return false
 	})
 }
