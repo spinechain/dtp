@@ -122,8 +122,8 @@ func ReceiveTask(packet *SpinePacket) {
 
 	// This changes the thread and informs the UI about this new task
 	glib.TimeoutAdd(10, func() bool {
-		if NetworkCallbacks.OnTaskReceived != nil {
-			NetworkCallbacks.OnTaskReceived(packet.Body.Items["task.Command"])
+		if NetworkCallbacks.OnTaskStatusUpdate != nil {
+			NetworkCallbacks.OnTaskStatusUpdate()
 		}
 		return false
 	})
@@ -219,8 +219,8 @@ func ReceiveTaskBidApproval(packet *SpinePacket) {
 	t.Geo = packet.Body.Items["task-bid-approval.Geo"]
 	t.ArrivalRoute = packet.PastRoute.Nodes
 
-	if NetworkCallbacks.OnTaskApproved != nil {
-		NetworkCallbacks.OnTaskApproved("yes")
+	if NetworkCallbacks.OnTaskStatusUpdate != nil {
+		NetworkCallbacks.OnTaskStatusUpdate()
 	}
 
 	if t.BidderID == NetworkSettings.MyPeerID {

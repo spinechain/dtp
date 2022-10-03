@@ -83,3 +83,15 @@ func Event_TaskResultReceived(task string, mimeType string, data []byte) {
 		return false
 	})
 }
+
+func Event_TaskStatusUpdate() {
+
+	// we switch thread to ui context
+	glib.TimeoutAdd(10, func() bool {
+
+		tasks, _ := tasksAvailable.GetAllTasks()
+
+		ui.TasksPanel.UpdateList(tasks)
+		return false
+	})
+}

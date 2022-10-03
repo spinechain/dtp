@@ -50,19 +50,6 @@ func ProcessAvailableTasks() {
 		// status.
 		for _, task := range tasks {
 
-			switch task.GlobalStatus {
-			case StatusBiddingComplete:
-
-				if !NetworkSettings.RouteOnly {
-					util.PrintPurple("Found a task with bidding period complete")
-
-					SelectWinningBids(task)
-
-					OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusWaitingForExecution)
-				}
-
-			}
-
 			switch task.LocalWorkerStatus {
 			// A task comes in that we need to bid for. In this iteration we bid for all tasks, but later
 			// we will discriminate a bit
@@ -85,6 +72,18 @@ func ProcessAvailableTasks() {
 					SendNewTaskToPeers(tasks)
 				}
 
+			case StatusBiddingPeriodExpired:
+				if !NetworkSettings.RouteOnly {
+					util.PrintPurple("Found a task with bidding period complete")
+
+					foundBid, _ := SelectWinningBids(task)
+
+					if foundBid {
+						OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusWaitingForExecution)
+					} else {
+						OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusTimeout)
+					}
+				}
 			}
 
 		}

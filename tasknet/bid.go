@@ -224,24 +224,25 @@ func GetMyBids(filter string, args ...any) ([]*TaskBid, error) {
 	return bids, nil
 }
 
-func SelectWinningBids(task *Task) error {
+func SelectWinningBids(task *Task) (bool, error) {
 
 	// Check that the same person is not bidding for the same task twice
 	full_query := "SELECT * FROM bids where task_id=? ORDER BY bid_value ASC"
 	stmt, err := taskDb.Prepare(full_query)
 	if err != nil {
 		util.PrintRed(err.Error())
-		return err
+		return false, err
 	}
 
 	rows, err := stmt.Query(task.ID)
 	if err != nil {
 		util.PrintRed(err.Error())
-		return err
+		return false, err
 	}
 
 	defer rows.Close()
 
+	var suitableBidFound bool = false
 	var i int
 	for rows.Next() {
 
@@ -253,9 +254,10 @@ func SelectWinningBids(task *Task) error {
 		}
 
 		SendTaskBidApproved(task, &bid)
+		suitableBidFound = true
 
 		i++
 	}
 
-	return nil
+	return suitableBidFound, nil
 }

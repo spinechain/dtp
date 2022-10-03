@@ -29,14 +29,12 @@ type NetSettings struct {
 	RouteOnly           bool
 }
 
-type TaskReceiveFn func(string)
-type TaskApprovedFn func(string)
+type TaskStatusUpdateFn func()
 type TaskResultFn func(string, string, []byte)
 
 type NetCallbacks struct {
-	OnTaskReceived TaskReceiveFn
-	OnTaskApproved TaskApprovedFn
-	OnTaskResult   TaskResultFn
+	OnTaskStatusUpdate TaskStatusUpdateFn
+	OnTaskResult       TaskResultFn
 }
 
 // For storing everything we need to participate in the Spine network

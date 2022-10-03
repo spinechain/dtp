@@ -44,6 +44,7 @@ const (
 	StatusWaitingForBidsForMe
 	StatusBiddingPeriodExpired
 	StatusWaitingForExecution
+	StatusTimeout
 	StatusSentBid
 	StatusNotGoingToBid
 	StatusSubmittedResults
@@ -122,6 +123,8 @@ func (task *Task) LocalStatusAsString(status LocalTaskStatus) string {
 		return "Task Cancelled"
 	case StatusSuccessfullAndPaid:
 		return "Accepted - Paid"
+	case StatusTimeout:
+		return "Timeout"
 	}
 
 	return "Unknown Status"

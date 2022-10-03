@@ -146,6 +146,10 @@ func (t *Taskpool) UpdateTaskStatus(task *Task, newGlobalStatus GlobalTaskStatus
 		return err
 	}
 
+	if NetworkCallbacks.OnTaskStatusUpdate != nil {
+		NetworkCallbacks.OnTaskStatusUpdate()
+	}
+
 	return nil
 }
 

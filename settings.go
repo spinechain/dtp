@@ -141,8 +141,7 @@ func SetNetworkSettings() {
 	tasknet.NetworkSettings.DbFolder = AppSettings.DbFolder
 	tasknet.NetworkSettings.RouteOnly = AppSettings.RouteOnly
 
-	tasknet.NetworkCallbacks.OnTaskReceived = nil // s.OnNewTaskReceived
-	tasknet.NetworkCallbacks.OnTaskApproved = nil //s.OnNetworkTaskApproval
+	tasknet.NetworkCallbacks.OnTaskStatusUpdate = Event_TaskStatusUpdate
 	tasknet.NetworkCallbacks.OnTaskResult = Event_TaskResultReceived
 
 	tasknet.LoadDefaultPeerTable(default_peers)
