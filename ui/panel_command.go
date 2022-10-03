@@ -1,12 +1,21 @@
 package ui
 
 import (
+	"spinedtp/tasknet"
 	util "spinedtp/util"
 
 	"github.com/gotk3/gotk3/gdk"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/gotk3/gotk3/pango"
 )
+
+type TaskResult struct {
+	task     *tasknet.Task
+	widget   *gtk.Widget
+	mimeType string
+	data     []byte
+	filePath string
+}
 
 type PanelCommand struct {
 	cmdLabel         *gtk.Label
@@ -16,7 +25,7 @@ type PanelCommand struct {
 	commandBox       *gtk.Box
 	resultGrid       *gtk.Grid
 	panelFrames      []*gtk.ScrolledWindow
-	panelItems       []*gtk.Widget
+	taskResults      []*TaskResult
 	Spinning         bool
 }
 
@@ -121,22 +130,56 @@ func (command *PanelCommand) Hide() {
 	command.commandBox.Hide()
 }
 
-func (command *PanelCommand) StartSpinner() {
+func (command *PanelCommand) PrepareForNewResult(task *tasknet.Task) {
 
-	spinner := command.ShiftResultsAddSpinner()
+	var newResult TaskResult
+	newResult.task = task
+
+	// Create a new spinner
+	spinner, err := gtk.SpinnerNew()
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	newResult.widget = spinner.ToWidget()
+
+	command.taskResults = append([]*TaskResult{&newResult}, command.taskResults...)
+	command.Spinning = true
 
 	// Start the spinner
 	spinner.Start()
 	command.RedrawResults()
 }
 
-func (command *PanelCommand) AddResult(task string, mimeType string, data []byte) {
+func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data []byte) {
 
-	if command.Spinning {
-		// delete the first item in command.panelItems
-		command.panelItems = command.panelItems[1:]
-		command.Spinning = false
+	var taskResult *TaskResult
+
+	// Loop over all task result and identify the one with this task
+	for _, result := range command.taskResults {
+
+		if result.task.ID == task.ID {
+			taskResult = result
+			break
+		}
 	}
+
+	if taskResult == nil {
+		util.PrintRed("Could not find task result for task " + task.ID)
+		return
+	}
+
+	taskResult.mimeType = mimeType
+	taskResult.data = data
+
+	/*
+		if command.Spinning {
+			// delete the first item in command.panelItems
+			command.panelItems = command.panelItems[1:]
+			command.Spinning = false
+		}
+	*/
 
 	if mimeType == "image/png" || mimeType == "image/jpeg" {
 		// load the pixbuf from the data using the loader
@@ -147,7 +190,7 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 		}
 
 		// write the data to the loader
-		_, err = loader.Write(data)
+		_, err = loader.Write(taskResult.data)
 		if err != nil {
 			util.PrintRed(err.Error())
 			return
@@ -187,14 +230,14 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 		}
 
 		// Add to the panel items
-		command.panelItems = append([]*gtk.Widget{img.ToWidget()}, command.panelItems...)
+		taskResult.widget = img.ToWidget()
 
 	} else if mimeType == "text/plain" {
 
 		// convert to asccii
 		// data = bytes.Replace(data, []byte{0x0}, []byte{0x20}, -1)
 
-		s, _ := util.ToAscii(string(data))
+		s, _ := util.ToAscii(string(taskResult.data))
 
 		// create a label
 		label, err := gtk.LabelNew(s)
@@ -215,36 +258,21 @@ func (command *PanelCommand) AddResult(task string, mimeType string, data []byte
 		label.SetMarginStart(8)
 		label.SetMarginEnd(8)
 
-		// Add to the panel items
-		command.panelItems = append([]*gtk.Widget{label.ToWidget()}, command.panelItems...)
-
 	}
 
 	command.RedrawResults()
 
 }
-func (command *PanelCommand) ShiftResultsAddSpinner() *gtk.Spinner {
-
-	// Creare new spinner
-	spinner, err := gtk.SpinnerNew()
-	if err != nil {
-		util.PrintRed(err.Error())
-		return nil
-	}
-
-	command.panelItems = append([]*gtk.Widget{spinner.ToWidget()}, command.panelItems...)
-	command.Spinning = true
-	return spinner
-}
 
 func (command *PanelCommand) RedrawResults() {
-	// delete the last item if more than 9
-	if len(command.panelItems) > 9 {
-		command.panelItems = command.panelItems[:len(command.panelItems)-1]
-	}
 
 	// Loop through the panel items and add them to the frames
-	for i, pitem := range command.panelItems {
+	for i, pitem := range command.taskResults {
+
+		// we only show 9 results for now
+		if i == 9 {
+			break
+		}
 
 		// Remove existing children
 		curChild, err := command.panelFrames[i].GetChild()
@@ -258,7 +286,7 @@ func (command *PanelCommand) RedrawResults() {
 		}
 
 		// Add the new child
-		command.panelFrames[i].Add(pitem)
+		command.panelFrames[i].Add(pitem.widget)
 	}
 
 	command.commandBox.ShowAll()

@@ -7,12 +7,11 @@ import (
 	"github.com/gotk3/gotk3/glib"
 )
 
-func Event_SubmitTaskToNetwork(taskStr string) {
+func Event_SubmitTaskToNetwork(taskStr string) *tasknet.Task {
 
 	SetNetworkSettings()
 
-	tasknet.SendTaskToNetwork(taskStr)
-	// tasknet.ExecNetworkCommand(taskStr)
+	return tasknet.SendTaskToNetwork(taskStr)
 }
 
 func Event_BuildConnectionToTaskNetwork() {
@@ -74,7 +73,7 @@ func Event_ClearTasksDB() {
 	})
 }
 
-func Event_TaskResultReceived(task string, mimeType string, data []byte) {
+func Event_TaskResultReceived(task *tasknet.Task, mimeType string, data []byte) {
 
 	// we switch thread to ui context
 	glib.TimeoutAdd(10, func() bool {

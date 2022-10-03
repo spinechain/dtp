@@ -30,7 +30,7 @@ type NetSettings struct {
 }
 
 type TaskStatusUpdateFn func()
-type TaskResultFn func(string, string, []byte)
+type TaskResultFn func(*Task, string, []byte)
 
 type NetCallbacks struct {
 	OnTaskStatusUpdate TaskStatusUpdateFn
@@ -77,13 +77,6 @@ func Disconnect() {
 	SavePeerTable()
 
 	ShutDownTaskRunner()
-}
-
-func ExecNetworkCommand(cmd string) {
-	SendTaskToNetwork(cmd)
-
-	// tasks := GetMyTaskList()
-	// OnNewTaskReceivedMine(tasks)
 }
 
 func ConnectToPeers() {

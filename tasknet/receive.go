@@ -308,7 +308,10 @@ func ReceiveTaskSubmission(packet *SpinePacket) {
 
 			util.PrintPurple("Received task submission with length: " + fmt.Sprint(len(submission.data)) + ", Peek Data: " + util.Red + peek_val + util.Reset)
 
-			NetworkCallbacks.OnTaskResult(t.TaskID, submission.mimeType, submission.data)
+			// Get the task
+			task := OpenTaskPool.GetTask(t.TaskID)
+
+			NetworkCallbacks.OnTaskResult(task, submission.mimeType, submission.data)
 
 		}
 

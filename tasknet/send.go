@@ -14,11 +14,12 @@ import (
 // the latest task we just droppped of course, but it will
 // also handle other open tasks it may have received
 // from other nodes.
-func SendTaskToNetwork(text string) {
+func SendTaskToNetwork(text string) *Task {
 
 	task := CreateNewTask(text)
 	OpenTaskPool.AddTask(task)
 	CheckForNewTasks()
+	return task
 }
 
 // Sends a spine packet to every single connected peer
