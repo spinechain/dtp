@@ -290,12 +290,15 @@ func (peer *Peer) ValidateConnectString(reader *bufio.Reader) error {
 	return nil
 }
 
-func CountPeers() (int, int) {
+func CountPeers() (int, int, string) {
 	WeConnectedCount := 0
 	TheyConnectedCount := 0
+	var peerName string
 	for _, peer := range Peers {
 		if peer.OutConnection && peer.IsConnected() {
 			WeConnectedCount = WeConnectedCount + 1
+
+			peerName = peer.Address
 		}
 
 		if peer.InConnection && peer.IsConnected() {
@@ -303,7 +306,7 @@ func CountPeers() (int, int) {
 		}
 	}
 
-	return WeConnectedCount, TheyConnectedCount
+	return WeConnectedCount, TheyConnectedCount, peerName
 }
 
 func (peer *Peer) SendPacket(packet *SpinePacket) error {
