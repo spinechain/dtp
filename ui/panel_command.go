@@ -149,7 +149,7 @@ func (command *PanelCommand) PrepareForNewResult(task *tasknet.Task) {
 
 	// Start the spinner
 	spinner.Start()
-	command.RedrawResults()
+	command.UpdateTask(task)
 }
 
 func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data []byte) {
@@ -260,52 +260,68 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 
 	}
 
-	command.RedrawResults()
+	command.UpdateTask(task)
 
 }
 
-func (command *PanelCommand) RedrawResults() {
+func (command *PanelCommand) UpdateTasks(tasks []*tasknet.Task) {
+
+	for _, task := range tasks {
+		command.UpdateTask(task)
+	}
+
+}
+
+func (command *PanelCommand) UpdateTask(task *tasknet.Task) {
+
+	// Find the task result
 
 	// Loop through the panel items and add them to the frames
 	for i, result := range command.taskResults {
 
-		// we only show 9 results for now
-		if i == 9 {
-			break
-		}
+		if result.task.ID == task.ID {
+			command.taskResults[i].task = task
 
-		// Remove existing children
-		curChild, err := command.panelFrames[i].GetChild()
-		if err != nil {
-			util.PrintRed(err.Error())
-			return
-		}
+			// we only show 9 results for now
+			if i == 9 {
+				break
+			}
 
-		if curChild != nil {
-			command.panelFrames[i].Remove(curChild)
-		}
-
-		// Add the new child
-		command.panelFrames[i].Add(result.widget)
-
-		if result.task.LocalWorkProviderStatus == tasknet.StatusTimeout {
-
-			// Write timeout on the widget
-			label, err := gtk.LabelNew("Timeout")
+			// Remove existing children
+			curChild, err := command.panelFrames[i].GetChild()
 			if err != nil {
 				util.PrintRed(err.Error())
 				return
 			}
 
-			label.SetHExpand(false)
-			label.SetVExpand(false)
-			label.SetMarginTop(8)
-			label.SetMarginBottom(8)
-			label.SetMarginStart(8)
-			label.SetMarginEnd(8)
+			if curChild != nil {
+				command.panelFrames[i].Remove(curChild)
+			}
 
-			command.panelFrames[i].Add(label.ToWidget())
+			if result.task.LocalWorkProviderStatus == tasknet.StatusTimeout {
 
+				// Write timeout on the widget
+				label, err := gtk.LabelNew("Timeout")
+				if err != nil {
+					util.PrintRed(err.Error())
+					return
+				}
+
+				label.SetHExpand(false)
+				label.SetVExpand(false)
+				label.SetMarginTop(8)
+				label.SetMarginBottom(8)
+				label.SetMarginStart(8)
+				label.SetMarginEnd(8)
+
+				command.panelFrames[i].Add(label.ToWidget())
+
+			} else {
+				// Add the new child
+				command.panelFrames[i].Add(result.widget)
+			}
+
+			break
 		}
 	}
 
