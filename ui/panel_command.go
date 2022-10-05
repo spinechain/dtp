@@ -24,7 +24,7 @@ type PanelCommand struct {
 	historyLabel     *gtk.Label
 	commandBox       *gtk.Box
 	resultGrid       *gtk.Grid
-	panelFrames      []*gtk.ScrolledWindow
+	panelBoxes       []*gtk.Box
 	taskResults      []*TaskResult
 	Spinning         bool
 }
@@ -72,26 +72,23 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	//	Create all the images
 	for i := 0; i < 9; i++ {
 
-		// Create new scrolled window
-		// frm, err := gtk.ScrolledWindowNew(nil, nil)
-
-		frm, err := gtk.ScrolledWindowNew(nil, nil)
-
-		// Add frame to the scrolled window
-		frm.SetShadowType(gtk.SHADOW_ETCHED_IN)
-
-		// Set the minimum height of the frame
-		frm.SetSizeRequest(100, 200)
-
+		// Create a new box
+		box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
 		if err != nil {
 			util.PrintRed(err.Error())
 			return nil, err
 		}
 
-		command.panelFrames = append(command.panelFrames, frm)
+		// Create new scrolled window
+		frm, _ := command.MakeScrolledWindow()
+
+		// Add the frame to the box
+		box.PackStart(frm, true, true, 0)
+
+		command.panelBoxes = append(command.panelBoxes, box)
 	}
 
-	for i, pitem := range command.panelFrames {
+	for i, pitem := range command.panelBoxes {
 
 		// get the row and column
 		row := i / 3
@@ -101,6 +98,23 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	}
 
 	return command.commandBox, err
+}
+
+func (command *PanelCommand) MakeScrolledWindow() (*gtk.ScrolledWindow, error) {
+	frm, err := gtk.ScrolledWindowNew(nil, nil)
+
+	// Add frame to the scrolled window
+	frm.SetShadowType(gtk.SHADOW_ETCHED_IN)
+
+	// Set the minimum height of the frame
+	frm.SetSizeRequest(100, 200)
+
+	if err != nil {
+		util.PrintRed(err.Error())
+		return nil, err
+	}
+
+	return frm, nil
 }
 
 func (command *PanelCommand) Destroy() {
@@ -258,6 +272,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 		label.SetMarginStart(8)
 		label.SetMarginEnd(8)
 
+		taskResult.widget = label.ToWidget()
 	}
 
 	command.UpdateTask(task)
@@ -287,17 +302,29 @@ func (command *PanelCommand) UpdateTask(task *tasknet.Task) {
 				break
 			}
 
-			// Remove existing children
-			curChild, err := command.panelFrames[i].GetChild()
-			if err != nil {
-				util.PrintRed(err.Error())
-				return
-			}
+			// remove all children of the box
+			command.panelBoxes[i].GetChildren().Foreach(func(child interface{}) {
 
-			if curChild != nil {
-				command.panelFrames[i].Remove(curChild)
-			}
+				item := child.(gtk.IWidget)
+				// item.GetChild()
 
+				command.panelBoxes[i].Remove(item)
+			})
+
+			/*
+				// Remove existing children
+				curChild, err := command.panelFrames[i].GetChild()
+				if err != nil {
+					util.PrintRed(err.Error())
+					return
+				}
+
+				if curChild != nil {
+					command.panelFrames[i].Remove(curChild)
+				}
+			*/
+
+			// This section is for full failure
 			if result.task.LocalWorkProviderStatus == tasknet.StatusTimeout {
 
 				// Write timeout on the widget
@@ -314,11 +341,32 @@ func (command *PanelCommand) UpdateTask(task *tasknet.Task) {
 				label.SetMarginStart(8)
 				label.SetMarginEnd(8)
 
-				command.panelFrames[i].Add(label.ToWidget())
+				command.panelBoxes[i].Add(label.ToWidget())
 
 			} else {
+
+				// Create new scrolled window
+				frm, _ := command.MakeScrolledWindow()
+				frm.Add(result.widget)
+
 				// Add the new child
-				command.panelFrames[i].Add(result.widget)
+				command.panelBoxes[i].PackStart(frm, true, true, 0)
+
+				if result.task.LocalWorkProviderStatus == tasknet.StatusWaitingForExecution {
+					label, err := gtk.LabelNew("Executing...")
+					if err != nil {
+						util.PrintRed(err.Error())
+						return
+					}
+					label.SetHExpand(false)
+					label.SetVExpand(false)
+					label.SetMarginTop(8)
+					label.SetMarginBottom(8)
+					label.SetMarginStart(8)
+					label.SetMarginEnd(8)
+
+					command.panelBoxes[i].Add(label)
+				}
 			}
 
 			break

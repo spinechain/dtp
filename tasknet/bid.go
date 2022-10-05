@@ -240,8 +240,6 @@ func SelectWinningBids(task *Task) (bool, error) {
 		return false, err
 	}
 
-	defer rows.Close()
-
 	var suitableBidFound bool = false
 	var i int
 	for rows.Next() {
@@ -257,6 +255,12 @@ func SelectWinningBids(task *Task) (bool, error) {
 		suitableBidFound = true
 
 		i++
+	}
+
+	rows.Close()
+
+	if suitableBidFound {
+		OpenTaskPool.UpdateTaskStatus(task, StatusAcceptedWorkers, task.LocalWorkerStatus, StatusInExecutionPhase)
 	}
 
 	return suitableBidFound, nil

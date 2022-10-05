@@ -1,6 +1,7 @@
 package tasknet
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/lithammer/shortuuid/v3"
@@ -44,6 +45,7 @@ const (
 	StatusWaitingForBidsForMe
 	StatusBiddingPeriodExpired
 	StatusWaitingForExecution
+	StatusInExecutionPhase
 	StatusTimeout
 	StatusSentBid
 	StatusNotGoingToBid
@@ -97,7 +99,7 @@ func (task *Task) GlobalStatusAsString() string {
 		return "Timeout - Dead"
 	}
 
-	return "Unknown Status"
+	return "Unknown Status" + strconv.Itoa(int(task.GlobalStatus))
 }
 
 func (task *Task) LocalStatusAsString(status LocalTaskStatus) string {
@@ -113,6 +115,8 @@ func (task *Task) LocalStatusAsString(status LocalTaskStatus) string {
 		return "Waiting for Bids"
 	case StatusSentBid:
 		return "Sent Bid"
+	case StatusWaitingForExecution:
+		return "Waiting for Execution"
 	case StatusNotGoingToBid:
 		return "Not bidding"
 	case StatusApprovedForMe:
@@ -125,9 +129,11 @@ func (task *Task) LocalStatusAsString(status LocalTaskStatus) string {
 		return "Accepted - Paid"
 	case StatusTimeout:
 		return "Timeout"
+	case StatusInExecutionPhase:
+		return "In Execution Phase"
 	}
 
-	return "Unknown Status"
+	return "Unknown Status: " + strconv.Itoa(int(status))
 }
 
 func (task *Task) GetReturnRoute() []*Peer {
