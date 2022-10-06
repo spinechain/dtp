@@ -1,6 +1,7 @@
 package ui
 
 import (
+	"os"
 	"spinedtp/tasknet"
 	util "spinedtp/util"
 
@@ -11,10 +12,11 @@ import (
 
 type TaskResult struct {
 	task     *tasknet.Task
-	widget   *gtk.Widget
+	box      *ResultBox // The box that this result is in
 	mimeType string
 	data     []byte
 	filePath string
+	spinning bool
 }
 
 type PanelCommand struct {
@@ -24,9 +26,8 @@ type PanelCommand struct {
 	historyLabel     *gtk.Label
 	commandBox       *gtk.Box
 	resultGrid       *gtk.Grid
-	panelBoxes       []*gtk.Box
+	resultBoxes      []*ResultBox
 	taskResults      []*TaskResult
-	Spinning         bool
 }
 
 func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
@@ -69,8 +70,10 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 
 	command.commandBox.PackStart(command.resultGrid, false, false, padding)
 
-	//	Create all the images
+	//	Create all the result boxes
 	for i := 0; i < 9; i++ {
+
+		var resultBox ResultBox
 
 		// Create a new box
 		box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
@@ -79,25 +82,44 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 			return nil, err
 		}
 
+		resultBox.box = box
+
 		// Create new scrolled window
 		frm, _ := command.MakeScrolledWindow()
+
+		resultBox.scroller = frm
 
 		// Add the frame to the box
 		box.PackStart(frm, true, true, 0)
 
-		command.panelBoxes = append(command.panelBoxes, box)
+		command.resultBoxes = append(command.resultBoxes, &resultBox)
 	}
 
-	for i, pitem := range command.panelBoxes {
+	// Add all the boxes to the grid
+	for i, rbox := range command.resultBoxes {
 
 		// get the row and column
 		row := i / 3
 		col := i % 3
 
-		command.resultGrid.Attach(pitem, col, row, 1, 1)
+		command.resultGrid.Attach(rbox.box, col, row, 1, 1)
 	}
 
 	return command.commandBox, err
+}
+
+func (command *PanelCommand) TestUI() {
+	var t tasknet.Task
+	t.ID = "123"
+	t.Command = "draw a picture of a happy spaceship"
+
+	command.PrepareForNewResult(&t)
+
+	// load sample image
+	data, _ := os.ReadFile("assets/test.jpg")
+
+	command.AddResult(&t, "image/jpeg", data)
+
 }
 
 func (command *PanelCommand) MakeScrolledWindow() (*gtk.ScrolledWindow, error) {
@@ -144,25 +166,19 @@ func (command *PanelCommand) Hide() {
 	command.commandBox.Hide()
 }
 
+// Shift the boxes by one to the right so the new result is in the first pos
 func (command *PanelCommand) PrepareForNewResult(task *tasknet.Task) {
 
 	var newResult TaskResult
 	newResult.task = task
 
-	// Create a new spinner
-	spinner, err := gtk.SpinnerNew()
-	if err != nil {
-		util.PrintRed(err.Error())
-		return
+	command.taskResults = append([]*TaskResult{&newResult}, command.taskResults...)
+
+	for i, result := range command.taskResults {
+		result.box = command.resultBoxes[i]
+		result.spinning = true
 	}
 
-	newResult.widget = spinner.ToWidget()
-
-	command.taskResults = append([]*TaskResult{&newResult}, command.taskResults...)
-	command.Spinning = true
-
-	// Start the spinner
-	spinner.Start()
 	command.UpdateTask(task)
 }
 
@@ -186,14 +202,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 
 	taskResult.mimeType = mimeType
 	taskResult.data = data
-
-	/*
-		if command.Spinning {
-			// delete the first item in command.panelItems
-			command.panelItems = command.panelItems[1:]
-			command.Spinning = false
-		}
-	*/
+	taskResult.spinning = false
 
 	if mimeType == "image/png" || mimeType == "image/jpeg" {
 		// load the pixbuf from the data using the loader
@@ -244,7 +253,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 		}
 
 		// Add to the panel items
-		taskResult.widget = img.ToWidget()
+		taskResult.box.image = img
 
 	} else if mimeType == "text/plain" {
 
@@ -272,7 +281,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 		label.SetMarginStart(8)
 		label.SetMarginEnd(8)
 
-		taskResult.widget = label.ToWidget()
+		taskResult.box.label = label
 	}
 
 	command.UpdateTask(task)
@@ -302,72 +311,7 @@ func (command *PanelCommand) UpdateTask(task *tasknet.Task) {
 				break
 			}
 
-			// remove all children of the box
-			command.panelBoxes[i].GetChildren().Foreach(func(child interface{}) {
-
-				item := child.(gtk.IWidget)
-				// item.GetChild()
-
-				command.panelBoxes[i].Remove(item)
-			})
-
-			/*
-				// Remove existing children
-				curChild, err := command.panelFrames[i].GetChild()
-				if err != nil {
-					util.PrintRed(err.Error())
-					return
-				}
-
-				if curChild != nil {
-					command.panelFrames[i].Remove(curChild)
-				}
-			*/
-
-			// This section is for full failure
-			if result.task.LocalWorkProviderStatus == tasknet.StatusTimeout {
-
-				// Write timeout on the widget
-				label, err := gtk.LabelNew("Timeout")
-				if err != nil {
-					util.PrintRed(err.Error())
-					return
-				}
-
-				label.SetHExpand(false)
-				label.SetVExpand(false)
-				label.SetMarginTop(8)
-				label.SetMarginBottom(8)
-				label.SetMarginStart(8)
-				label.SetMarginEnd(8)
-
-				command.panelBoxes[i].Add(label.ToWidget())
-
-			} else {
-
-				// Create new scrolled window
-				frm, _ := command.MakeScrolledWindow()
-				frm.Add(result.widget)
-
-				// Add the new child
-				command.panelBoxes[i].PackStart(frm, true, true, 0)
-
-				if result.task.LocalWorkProviderStatus == tasknet.StatusWaitingForExecution {
-					label, err := gtk.LabelNew("Executing...")
-					if err != nil {
-						util.PrintRed(err.Error())
-						return
-					}
-					label.SetHExpand(false)
-					label.SetVExpand(false)
-					label.SetMarginTop(8)
-					label.SetMarginBottom(8)
-					label.SetMarginStart(8)
-					label.SetMarginEnd(8)
-
-					command.panelBoxes[i].Add(label)
-				}
-			}
+			command.taskResults[i].box.AdaptToCircumstances(command.taskResults[i])
 
 			break
 		}

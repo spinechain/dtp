@@ -105,17 +105,10 @@ func main() {
 
 func TestUI() {
 
-	return
-	// Load test.jpeg
-	//
-
-	// ui.CommandPanel.PrepareForNewResult()
-
 	// Delay a bit, then load the image
 	glib.TimeoutAdd(2250, func() bool {
 
-		// data, _ := os.ReadFile("assets/test.jpg")
-		// ui.CommandPanel.AddResult("meh", "image/jpeg", data)
+		ui.CommandPanel.TestUI()
 
 		return false
 	})
