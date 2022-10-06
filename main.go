@@ -58,15 +58,17 @@ func main() {
 		glib.TimeoutAdd(250, func() bool {
 
 			go Start()
-			TestUI()
+			// TestUI()
 
 			return false
 		})
 
-		glib.TimeoutAdd(10250, func() bool {
-			TestUI()
-			return false
-		})
+		/*
+			glib.TimeoutAdd(10250, func() bool {
+				TestUI()
+				return false
+			})
+		*/
 
 		// Start the windowing thread
 		gtk.Main()

@@ -1,6 +1,8 @@
 package ui
 
 import (
+	util "spinedtp/util"
+
 	"github.com/gotk3/gotk3/gtk"
 )
 
@@ -11,44 +13,70 @@ type ResultBox struct {
 	scroller *gtk.ScrolledWindow
 	image    *gtk.Image
 	spinner  *gtk.Spinner
+	text     string
 }
 
 func (b *ResultBox) SwitchToSpinner() {
+
+	curChild, err := b.scroller.GetChild()
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	if curChild != nil {
+		b.scroller.Remove(curChild)
+	}
 
 	if b.spinner == nil {
 		spinner, _ := gtk.SpinnerNew()
 		b.spinner = spinner
 	}
 
+	b.scroller.Add(b.spinner)
+
+	if b.label != nil {
+		b.box.Remove(b.label)
+		b.label.SetText(b.text)
+		b.box.PackStart(b.label, false, false, 0)
+		b.box.ShowAll()
+	}
+
+	b.scroller.ShowAll()
+	b.spinner.ShowAll()
+
 	b.spinner.Start()
-	b.box.PackStart(b.spinner, false, false, 0)
-	b.box.ShowAll()
+
 }
 
 func (b *ResultBox) SwitchToImage() {
 
-	// Add a scroller to the box
-	//scroller, _ := gtk.ScrolledWindowNew(nil, nil)
-	//b.scroller = scroller
-	//b.scroller.SetHExpand(true)
-	//b.scroller.SetVExpand(true)
+	curChild, err := b.scroller.GetChild()
+	if err != nil {
+		util.PrintRed(err.Error())
+		return
+	}
+
+	if curChild != nil {
+		b.scroller.Remove(curChild)
+	}
 
 	// Add the image to the scroller
 	b.scroller.Add(b.image)
 
-	// Add the scroller to the box
-	b.box.PackStart(b.scroller, true, true, 0)
-	b.box.ShowAll()
-
 	// Add the label below the scrolled window
-	b.box.PackStart(b.label, false, false, 0)
-	b.box.ShowAll()
+	if b.label != nil {
+		b.box.Remove(b.label)
+		b.label.SetText(b.text)
+		b.box.PackStart(b.label, false, false, 0)
+		b.box.ShowAll()
+	}
 
 }
 
 func (b *ResultBox) AdaptToCircumstances(taskResult *TaskResult) {
 
-	if b.spinner != nil {
+	if taskResult.spinning {
 		b.SwitchToSpinner()
 	} else if b.image != nil {
 		b.SwitchToImage()

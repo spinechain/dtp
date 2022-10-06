@@ -6,6 +6,7 @@ import (
 	util "spinedtp/util"
 
 	"github.com/gotk3/gotk3/gdk"
+	"github.com/gotk3/gotk3/glib"
 	"github.com/gotk3/gotk3/gtk"
 	"github.com/gotk3/gotk3/pango"
 )
@@ -92,6 +93,15 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 		// Add the frame to the box
 		box.PackStart(frm, true, true, 0)
 
+		// Create a new label
+		label, err := gtk.LabelNew("")
+		if err != nil {
+			util.PrintRed(err.Error())
+			return nil, err
+		}
+
+		resultBox.label = label
+
 		command.resultBoxes = append(command.resultBoxes, &resultBox)
 	}
 
@@ -115,10 +125,26 @@ func (command *PanelCommand) TestUI() {
 
 	command.PrepareForNewResult(&t)
 
-	// load sample image
-	data, _ := os.ReadFile("assets/test.jpg")
+	// Delay a bit, then load the image
+	glib.TimeoutAdd(3250, func() bool {
 
-	command.AddResult(&t, "image/jpeg", data)
+		// load sample image
+		data, _ := os.ReadFile("assets/test.jpg")
+
+		command.AddResult(&t, "image/jpeg", data)
+
+		glib.TimeoutAdd(3250, func() bool {
+			var t tasknet.Task
+			t.ID = "124"
+			t.Command = "another one"
+
+			command.PrepareForNewResult(&t)
+
+			return false
+		})
+
+		return false
+	})
 
 }
 
@@ -177,6 +203,7 @@ func (command *PanelCommand) PrepareForNewResult(task *tasknet.Task) {
 	for i, result := range command.taskResults {
 		result.box = command.resultBoxes[i]
 		result.spinning = true
+		result.box.text = "Loading...."
 	}
 
 	command.UpdateTask(task)
@@ -203,6 +230,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 	taskResult.mimeType = mimeType
 	taskResult.data = data
 	taskResult.spinning = false
+	taskResult.box.text = "Done"
 
 	if mimeType == "image/png" || mimeType == "image/jpeg" {
 		// load the pixbuf from the data using the loader
