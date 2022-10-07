@@ -11,6 +11,11 @@ func Event_SubmitTaskToNetwork(taskStr string) *tasknet.Task {
 
 	SetNetworkSettings()
 
+	if taskStr == "test" {
+		TestUI()
+		return nil
+	}
+
 	return tasknet.SendTaskToNetwork(taskStr)
 }
 

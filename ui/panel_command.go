@@ -139,6 +139,7 @@ func (command *PanelCommand) TestUI() {
 			t.Command = "another one"
 
 			command.PrepareForNewResult(&t)
+			command.UpdateTasks(nil)
 
 			return false
 		})
@@ -197,13 +198,32 @@ func (command *PanelCommand) PrepareForNewResult(task *tasknet.Task) {
 
 	var newResult TaskResult
 	newResult.task = task
+	newResult.spinning = true
 
 	command.taskResults = append([]*TaskResult{&newResult}, command.taskResults...)
 
+	var firstText string
 	for i, result := range command.taskResults {
-		result.box = command.resultBoxes[i]
-		result.spinning = true
-		result.box.text = "Loading...."
+
+		if i > 0 {
+			curImg := result.box.image
+			curText := result.box.text
+
+			if i == 1 {
+				curText = firstText
+			}
+
+			result.box = command.resultBoxes[i]
+
+			result.box.image = curImg
+			result.box.text = curText
+
+		} else {
+			result.box = command.resultBoxes[i]
+			firstText = result.box.text
+			result.box.text = "Loading...."
+		}
+
 	}
 
 	command.UpdateTask(task)
@@ -318,8 +338,16 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 
 func (command *PanelCommand) UpdateTasks(tasks []*tasknet.Task) {
 
-	for _, task := range tasks {
-		command.UpdateTask(task)
+	if tasks == nil {
+		// Loop over all results
+		for _, result := range command.taskResults {
+			command.UpdateTask(result.task)
+		}
+
+	} else {
+		for _, task := range tasks {
+			command.UpdateTask(task)
+		}
 	}
 
 }
@@ -340,8 +368,6 @@ func (command *PanelCommand) UpdateTask(task *tasknet.Task) {
 			}
 
 			command.taskResults[i].box.AdaptToCircumstances(command.taskResults[i])
-
-			break
 		}
 	}
 
