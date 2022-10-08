@@ -1,6 +1,8 @@
 package ui
 
 import (
+	"fmt"
+	"math/rand"
 	"os"
 	"spinedtp/tasknet"
 	util "spinedtp/util"
@@ -12,12 +14,14 @@ import (
 )
 
 type TaskResult struct {
-	task     *tasknet.Task
-	box      *ResultBox // The box that this result is in
-	mimeType string
-	data     []byte
-	filePath string
-	spinning bool
+	task       *tasknet.Task
+	box        *ResultBox // The box that this result is in
+	mimeType   string
+	data       []byte
+	filePath   string
+	spinning   bool
+	image      *gtk.Image
+	statusText string
 }
 
 type PanelCommand struct {
@@ -29,12 +33,17 @@ type PanelCommand struct {
 	resultGrid       *gtk.Grid
 	resultBoxes      []*ResultBox
 	taskResults      []*TaskResult
+	maxResultBoxes   int
 }
+
+var testUIFlipBit bool = false
 
 func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 
 	var err error
 	command.commandBox, err = gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
+
+	command.maxResultBoxes = 9
 
 	command.cmdLabel, _ = gtk.LabelNew("Enter the command you would like to send to the network:")
 	command.commandTextField, _ = gtk.EntryNew()
@@ -72,35 +81,10 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 	command.commandBox.PackStart(command.resultGrid, false, false, padding)
 
 	//	Create all the result boxes
-	for i := 0; i < 9; i++ {
+	for i := 0; i < command.maxResultBoxes; i++ {
 
 		var resultBox ResultBox
-
-		// Create a new box
-		box, err := gtk.BoxNew(gtk.ORIENTATION_VERTICAL, 0)
-		if err != nil {
-			util.PrintRed(err.Error())
-			return nil, err
-		}
-
-		resultBox.box = box
-
-		// Create new scrolled window
-		frm, _ := command.MakeScrolledWindow()
-
-		resultBox.scroller = frm
-
-		// Add the frame to the box
-		box.PackStart(frm, true, true, 0)
-
-		// Create a new label
-		label, err := gtk.LabelNew("")
-		if err != nil {
-			util.PrintRed(err.Error())
-			return nil, err
-		}
-
-		resultBox.label = label
+		resultBox.Create()
 
 		command.resultBoxes = append(command.resultBoxes, &resultBox)
 	}
@@ -119,8 +103,15 @@ func (command *PanelCommand) Create(title string) (*gtk.Box, error) {
 }
 
 func (command *PanelCommand) TestUI() {
+
+	// generate random ID
+	val := rand.Intn(100000)
+
+	// val to string
+	s := fmt.Sprint(val)
+
 	var t tasknet.Task
-	t.ID = "123"
+	t.ID = s
 	t.Command = "draw a picture of a happy spaceship"
 
 	command.PrepareForNewResult(&t)
@@ -129,41 +120,32 @@ func (command *PanelCommand) TestUI() {
 	glib.TimeoutAdd(3250, func() bool {
 
 		// load sample image
-		data, _ := os.ReadFile("assets/test.jpg")
+		if testUIFlipBit {
+			data, _ := os.ReadFile("assets/test1.jpg")
+			command.AddResult(&t, "image/jpeg", data)
+			testUIFlipBit = false
+		} else {
+			data, _ := os.ReadFile("assets/test2.jpg")
+			command.AddResult(&t, "image/jpeg", data)
+			testUIFlipBit = true
+		}
 
-		command.AddResult(&t, "image/jpeg", data)
+		/*
+			glib.TimeoutAdd(3250, func() bool {
+				var t tasknet.Task
+				t.ID = "124"
+				t.Command = "another one"
 
-		glib.TimeoutAdd(3250, func() bool {
-			var t tasknet.Task
-			t.ID = "124"
-			t.Command = "another one"
+				command.PrepareForNewResult(&t)
+				command.UpdateTasks(nil)
 
-			command.PrepareForNewResult(&t)
-			command.UpdateTasks(nil)
-
-			return false
-		})
+				return false
+			})
+		*/
 
 		return false
 	})
 
-}
-
-func (command *PanelCommand) MakeScrolledWindow() (*gtk.ScrolledWindow, error) {
-	frm, err := gtk.ScrolledWindowNew(nil, nil)
-
-	// Add frame to the scrolled window
-	frm.SetShadowType(gtk.SHADOW_ETCHED_IN)
-
-	// Set the minimum height of the frame
-	frm.SetSizeRequest(100, 200)
-
-	if err != nil {
-		util.PrintRed(err.Error())
-		return nil, err
-	}
-
-	return frm, nil
 }
 
 func (command *PanelCommand) Destroy() {
@@ -199,31 +181,20 @@ func (command *PanelCommand) PrepareForNewResult(task *tasknet.Task) {
 	var newResult TaskResult
 	newResult.task = task
 	newResult.spinning = true
+	newResult.statusText = "Loading..."
 
 	command.taskResults = append([]*TaskResult{&newResult}, command.taskResults...)
 
-	var firstText string
 	for i, result := range command.taskResults {
 
-		if i > 0 {
-			curImg := result.box.image
-			curText := result.box.text
-
-			if i == 1 {
-				curText = firstText
-			}
-
-			result.box = command.resultBoxes[i]
-
-			result.box.image = curImg
-			result.box.text = curText
-
-		} else {
-			result.box = command.resultBoxes[i]
-			firstText = result.box.text
-			result.box.text = "Loading...."
+		if i == command.maxResultBoxes {
+			break
 		}
 
+		result.box = command.resultBoxes[i]
+
+		// make the result box show the main thing
+		result.box.AdaptToCircumstances(result)
 	}
 
 	command.UpdateTask(task)
@@ -250,7 +221,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 	taskResult.mimeType = mimeType
 	taskResult.data = data
 	taskResult.spinning = false
-	taskResult.box.text = "Done"
+	taskResult.statusText = "Done"
 
 	if mimeType == "image/png" || mimeType == "image/jpeg" {
 		// load the pixbuf from the data using the loader
@@ -301,7 +272,7 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 		}
 
 		// Add to the panel items
-		taskResult.box.image = img
+		taskResult.image = img
 
 	} else if mimeType == "text/plain" {
 
@@ -329,7 +300,8 @@ func (command *PanelCommand) AddResult(task *tasknet.Task, mimeType string, data
 		label.SetMarginStart(8)
 		label.SetMarginEnd(8)
 
-		taskResult.box.label = label
+		// TODO, put this label in the scroller
+		taskResult.statusText = s
 	}
 
 	command.UpdateTask(task)
@@ -362,8 +334,8 @@ func (command *PanelCommand) UpdateTask(task *tasknet.Task) {
 		if result.task.ID == task.ID {
 			command.taskResults[i].task = task
 
-			// we only show 9 results for now
-			if i == 9 {
+			// we only show limited results on ui
+			if i == command.maxResultBoxes {
 				break
 			}
 

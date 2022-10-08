@@ -28,8 +28,10 @@ func onBtnSubmitToNetworkClick() {
 		task := OnSubmitToNetworkButton(s)
 
 		// start spinner
-		CommandPanel.PrepareForNewResult(task)
-		CommandPanel.AddToHistory("Submitted: " + s)
+		if task != nil {
+			CommandPanel.PrepareForNewResult(task)
+			CommandPanel.AddToHistory("Submitted: " + s)
+		}
 
 	}
 
